@@ -595,7 +595,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
     Map<Sha256Hash, Long> advObjWeRequested = peer.getAdvObjWeRequested();
     Map<BlockId, Long> syncBlockRequested = peer.getSyncBlockRequested();
     BlockId blockId = blkMsg.getBlockId();
-    logger.info("huzhenyuan Handle block, number = {} , from peer {}", blkMsg.getBlockId().getNum(), peer);
+    logger.info("huzhenyuan Handle block, from peer {}, number = {} ", peer, blkMsg.getBlockId().getNum());
 
     if (advObjWeRequested.containsKey(blockId)) {
       //broadcast mode
@@ -972,9 +972,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
       ids.addAll(blockIds);
       if (!ids.isEmpty()) {
         peer.sendMessage(new FetchInvDataMessage(ids, InventoryType.BLOCK));
-      }
-      for (BlockId blockId : blockIds) {
-        logger.info("huzhenyuan Send block request, number = {} , to peer {}", blockId.getNum(), peer);
+        logger.info("huzhenyuan Send block request, peer = {},  number = {} - {}", peer, blockIds.get(0).getNum(), blockIds.get(blockIds.size() - 1).getNum());
       }
     });
 

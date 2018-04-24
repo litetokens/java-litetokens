@@ -70,6 +70,10 @@ public class Args {
   private String storageDirectory = "";
 
   @Getter
+  @Parameter(names = {"--address"}, description = "Account address")
+  private String address = "";
+
+  @Getter
   private Storage storage;
 
   @Getter

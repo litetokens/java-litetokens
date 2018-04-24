@@ -30,7 +30,6 @@ import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.tron.common.overlay.message.Message;
 import org.tron.common.overlay.message.ReasonCode;
@@ -72,7 +71,6 @@ import org.tron.protos.Protocol.Inventory.InventoryType;
 public class NodeImpl extends PeerConnectionDelegate implements Node {
 
   @Autowired
-  @Lazy
   private SyncPool pool;
 
   Cache<Sha256Hash, TransactionMessage> TrxCache = CacheBuilder.newBuilder()
@@ -286,7 +284,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
 
   @Override
   public void listen() {
-    pool.init();
+    pool.init(this);
     isAdvertiseActive = true;
     isFetchActive = true;
     activeTronPump();

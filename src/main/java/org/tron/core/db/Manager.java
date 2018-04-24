@@ -708,13 +708,12 @@ public class Manager {
         this.khaosDb.getBranch(
             getDynamicPropertiesStore().getLatestBlockHeaderHash(), forkBlockHash);
 
-    LinkedList<BlockId> result =
-        branch
-            .getValue()
-            .stream()
-            .map(blockCapsule -> blockCapsule.getBlockId())
-            .collect(Collectors.toCollection(LinkedList::new));
-    result.add(branch.getValue().peekLast().getParentBlockId());
+    LinkedList<BlockId> result = branch.getValue().stream()
+        .map(BlockCapsule::getBlockId)
+        .collect(Collectors.toCollection(LinkedList::new));
+    if (CollectionUtils.isNotEmpty(branch.getValue())) {
+      result.add(branch.getValue().peekLast().getParentBlockId());
+    }
     return result;
   }
 
@@ -975,6 +974,23 @@ public class Manager {
       JMonitor.countAndDuration("UpdateLatestSolidifiedBlockTotalCount",
           session.getDurationInMillis());
     }
+    long size = witnessController.getActiveWitnesses().size();
+    int solidifiedPosition = (int) (size * (1 - SOLIDIFIED_THRESHOLD));
+    if (solidifiedPosition < 0) {
+      logger.warn(
+          "updateLatestSolidifiedBlock error, solidifiedPosition:{},wits.size:{}",
+          solidifiedPosition,
+          size);
+      return;
+    }
+    long latestSolidifiedBlockNum = numbers.get(solidifiedPosition);
+    //if current value is less than the previous value，keep the previous value.
+    if (latestSolidifiedBlockNum < getDynamicPropertiesStore().getLatestSolidifiedBlockNum()) {
+      logger.warn("latestSolidifiedBlockNum = 0,LatestBlockNum:{}", numbers);
+      return;
+    }
+    getDynamicPropertiesStore().saveLatestSolidifiedBlockNum(latestSolidifiedBlockNum);
+    logger.info("update solid block, num = {}", latestSolidifiedBlockNum);
   }
 
   public long getSyncBeginNumber() {

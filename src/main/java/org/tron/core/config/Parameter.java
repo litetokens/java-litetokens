@@ -1,7 +1,5 @@
 package org.tron.core.config;
 
-import org.springframework.transaction.TransactionException;
-
 public interface Parameter {
 
   interface ChainConstant {

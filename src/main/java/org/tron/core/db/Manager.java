@@ -6,8 +6,6 @@ import static org.tron.protos.Protocol.Transaction.Contract.ContractType.Transfe
 import static org.tron.protos.Protocol.Transaction.Contract.ContractType.TransferContract;
 
 import com.carrotsearch.sizeof.RamUsageEstimator;
-import com.dianping.cat.Cat;
-import com.dianping.cat.message.Event;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
 import java.util.Collections;
@@ -30,6 +28,8 @@ import org.tron.common.storage.leveldb.LevelDbDataSourceImpl;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.DialogOptional;
 import org.tron.common.utils.JMonitor;
+import org.tron.common.utils.JMonitor.Event;
+import org.tron.common.utils.JMonitor.Session;
 import org.tron.common.utils.Sha256Hash;
 import org.tron.common.utils.StringUtil;
 import org.tron.common.utils.Time;
@@ -464,9 +464,8 @@ public class Manager {
 
   private void applyBlock(BlockCapsule block)
       throws ContractValidateException, ContractExeException, ValidateSignatureException {
-    com.dianping.cat.message.Transaction catTransaction = Cat.newTransaction("Exec", "ApplyBlock");
-    catTransaction.setStatus(com.dianping.cat.message.Transaction.SUCCESS);
-    Cat.logMetricForCount("ApplyBlockTotalCount");
+    Session session = JMonitor.newSession("Exec", "ApplyBlock");
+    session.setStatus(Session.SUCCESS);
 
     try {
       processBlock(block);
@@ -474,7 +473,8 @@ public class Manager {
       this.blockStore.put(block.getBlockId().getBytes(), block);
       this.blockIndexStore.put(block.getBlockId());
     } finally {
-      catTransaction.complete();
+      session.complete();
+      JMonitor.countAndDuration("ApplyBlockTotalCount", session.getDurationInMillis());
     }
   }
 
@@ -531,10 +531,8 @@ public class Manager {
   public synchronized void pushBlock(final BlockCapsule block)
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
       UnLinkedBlockException, ValidateScheduleException {
-    com.dianping.cat.message.Transaction catTransaction = Cat.newTransaction("Exec", "PushBlock");
-    catTransaction.setStatus(com.dianping.cat.message.Transaction.SUCCESS);
-    Cat.logMetricForCount("PushBlockTotalCount");
-    long start = System.currentTimeMillis();
+    Session session = JMonitor.newSession("Exec", "PushBlock");
+    session.setStatus(Session.SUCCESS);
 
     try (PendingManager pm = new PendingManager(this)) {
 
@@ -542,8 +540,8 @@ public class Manager {
         if (!block.validateSignature()) {
           logger.info("The siganature is not validated.");
           //TODO: throw exception here.
-          catTransaction.setStatus(CatTransactionStatus.VALIDATE_SIGANATURE);
-          Cat.logEvent("Error", CatTransactionStatus.VALIDATE_SIGANATURE);
+          session.setStatus(CatTransactionStatus.VALIDATE_SIGANATURE);
+          JMonitor.logEvent("Error", CatTransactionStatus.VALIDATE_SIGANATURE);
           // TODO: throw exception here.
           return;
         }
@@ -555,16 +553,16 @@ public class Manager {
                   + " , the headers is "
                   + block.getMerkleRoot());
           // TODO:throw exception here.
-          catTransaction.setStatus(CatTransactionStatus.VALIDATE_MERKLER);
-          Cat.logEvent("Error", CatTransactionStatus.VALIDATE_MERKLER);
+          session.setStatus(CatTransactionStatus.VALIDATE_MERKLER);
+          JMonitor.logEvent("Error", CatTransactionStatus.VALIDATE_MERKLER);
           return;
         }
       }
 
       // checkWitness
       if (!witnessController.validateWitnessSchedule(block)) {
-        catTransaction.setStatus(CatTransactionStatus.VALIDATE_WITNESS_SCHEDULE);
-        Cat.logEvent("Error", CatTransactionStatus.VALIDATE_WITNESS_SCHEDULE);
+        session.setStatus(CatTransactionStatus.VALIDATE_WITNESS_SCHEDULE);
+        JMonitor.logEvent("Error", CatTransactionStatus.VALIDATE_WITNESS_SCHEDULE);
         throw new ValidateScheduleException("validateWitnessSchedule error");
       }
 
@@ -573,14 +571,14 @@ public class Manager {
       // DB don't need lower block
       if (getDynamicPropertiesStore().getLatestBlockHeaderHash() == null) {
         if (newBlock.getNum() != 0) {
-          catTransaction.setStatus(CatTransactionStatus.LOWER_BLOCK);
-          Cat.logEvent("Error", CatTransactionStatus.LOWER_BLOCK);
+          session.setStatus(CatTransactionStatus.LOWER_BLOCK);
+          JMonitor.logEvent("Error", CatTransactionStatus.LOWER_BLOCK);
           return;
         }
       } else {
         if (newBlock.getNum() <= getDynamicPropertiesStore().getLatestBlockHeaderNumber()) {
-          catTransaction.setStatus(CatTransactionStatus.LOWER_BLOCK);
-          Cat.logEvent("Error", CatTransactionStatus.LOWER_BLOCK);
+          session.setStatus(CatTransactionStatus.LOWER_BLOCK);
+          JMonitor.logEvent("Error", CatTransactionStatus.LOWER_BLOCK);
           return;
         }
         // switch fork
@@ -631,9 +629,9 @@ public class Manager {
                   + ", khaosDb unlinkMiniStore size: "
                   + khaosDb.getMiniUnlinkedStore().size());
 
-          catTransaction.setStatus(CatTransactionStatus.SWITCH_FORK);
-          Cat.logEvent("Error", CatTransactionStatus.SWITCH_FORK);
-          Cat.logMetricForCount("SwitchForkCount");
+          session.setStatus(CatTransactionStatus.SWITCH_FORK);
+          JMonitor.logEvent("Error", CatTransactionStatus.SWITCH_FORK);
+          JMonitor.logMetricForCount("SwitchForkCount");
           return;
         }
         try (Dialog tmpDialog = revokingStore.buildDialog()) {
@@ -643,25 +641,24 @@ public class Manager {
           this.blockIndexStore
               .put(ByteArray.fromLong(block.getNum()),
                   new BytesCapsule(block.getBlockId().getBytes()));
-          Cat.logEvent("Info", Event.SUCCESS);
-          Cat.logMetricForCount("PushBlockSuccessCount");
+          JMonitor.logEvent("Info", Event.SUCCESS);
+          JMonitor.logMetricForCount("PushBlockSuccessCount");
         } catch (RevokingStoreIllegalStateException e) {
           logger.debug(e.getMessage(), e);
-          catTransaction.setStatus(CatTransactionStatus.REVOKING_STORE_ERROR);
-          Cat.logEvent("Error", CatTransactionStatus.REVOKING_STORE_ERROR);
+          session.setStatus(CatTransactionStatus.REVOKING_STORE_ERROR);
+          JMonitor.logEvent("Error", CatTransactionStatus.REVOKING_STORE_ERROR);
         }
       }
       logger.info("save block: " + newBlock);
     } finally {
-      JMonitor.countAndDuration("pushBlock", System.currentTimeMillis() - start);
-      catTransaction.complete();
+      session.complete();
+      JMonitor.countAndDuration("PushBlockTotalCount", session.getDurationInMillis());
     }
   }
 
   public void updateDynamicProperties(BlockCapsule block) {
-    com.dianping.cat.message.Transaction catTransaction = Cat.newTransaction("Exec", "UpdateDynamicProperties");
-    catTransaction.setStatus(com.dianping.cat.message.Transaction.SUCCESS);
-    Cat.logMetricForCount("UpdateDynamicPropertiesTotalCount");
+    Session session = JMonitor.newSession("Exec", "UpdateDynamicProperties");
+    session.setStatus(Session.SUCCESS);
 
     try {
       long slot = 1;
@@ -671,7 +668,8 @@ public class Manager {
       for (int i = 1; i < slot; ++i) {
         if (!witnessController.getScheduledWitness(i).equals(block.getWitnessAddress())) {
           WitnessCapsule w =
-              this.witnessStore.get(StringUtil.createDbKey(witnessController.getScheduledWitness(i)));
+              this.witnessStore
+                  .get(StringUtil.createDbKey(witnessController.getScheduledWitness(i)));
           w.setTotalMissed(w.getTotalMissed() + 1);
           this.witnessStore.put(w.createDbKey(), w);
           logger.info(
@@ -697,7 +695,8 @@ public class Manager {
                       - dynamicPropertiesStore.getLatestSolidifiedBlockNum()
                       + 1));
     } finally {
-      catTransaction.complete();
+      session.complete();
+      JMonitor.countAndDuration("UpdateDynamicPropertiesTotalCount", session.getDurationInMillis());
     }
   }
 
@@ -773,9 +772,8 @@ public class Manager {
    */
   public boolean processTransaction(final TransactionCapsule trxCap)
       throws ValidateSignatureException, ContractValidateException, ContractExeException {
-    com.dianping.cat.message.Transaction catTransaction = Cat.newTransaction("Exec", "ProcessTransaction");
-    catTransaction.setStatus(com.dianping.cat.message.Transaction.SUCCESS);
-    Cat.logMetricForCount("ProcessTransactionTotalCount");
+    Session session = JMonitor.newSession("Exec", "ProcessTransaction");
+    session.setStatus(Session.SUCCESS);
 
     try {
       TransactionResultCapsule transRet;
@@ -791,9 +789,10 @@ public class Manager {
         trxCap.setResult(ret);
       }
       transactionStore.put(trxCap.getTransactionId().getBytes(), trxCap);
-      Cat.logMetricForCount("ProcessTransactionSuccessCount");
+      JMonitor.logMetricForCount("ProcessTransactionSuccessCount");
     } finally {
-      catTransaction.complete();
+      session.complete();
+      JMonitor.countAndDuration("ProcessTransactionTotalCount", session.getDurationInMillis());
     }
 
     return true;
@@ -912,9 +911,8 @@ public class Manager {
    */
   public void processBlock(BlockCapsule block)
       throws ValidateSignatureException, ContractValidateException, ContractExeException {
-    com.dianping.cat.message.Transaction catTransaction = Cat.newTransaction("Exec", "ProcessBlock");
-    catTransaction.setStatus(com.dianping.cat.message.Transaction.SUCCESS);
-    Cat.logMetricForCount("ProcessBlockTotalCount");
+    Session session = JMonitor.newSession("Exec", "ProcessBlock");
+    session.setStatus(Session.SUCCESS);
 
     try {
       // todo set revoking db max size.
@@ -937,7 +935,8 @@ public class Manager {
       updateMaintenanceState(needMaint);
       witnessController.updateWitnessSchedule();
     } finally {
-      catTransaction.complete();
+      session.complete();
+      JMonitor.countAndDuration("ProcessBlockTotalCount", session.getDurationInMillis());
     }
   }
 
@@ -945,9 +944,8 @@ public class Manager {
    * update the latest solidified block.
    */
   public void updateLatestSolidifiedBlock() {
-    com.dianping.cat.message.Transaction catTransaction = Cat.newTransaction("Exec", "UpdateLatestSolidifiedBlock");
-    catTransaction.setStatus(com.dianping.cat.message.Transaction.SUCCESS);
-    Cat.logMetricForCount("UpdateLatestSolidifiedBlockTotalCount");
+    Session session = JMonitor.newSession("Exec", "UpdateLatestSolidifiedBlock");
+    session.setStatus(Session.SUCCESS);
 
     try {
       List<Long> numbers =
@@ -965,15 +963,17 @@ public class Manager {
             "updateLatestSolidifiedBlock error, solidifiedPosition:{},wits.size:{}",
             solidifiedPosition,
             size);
-        catTransaction.setStatus(CatTransactionStatus.UPDATE_LATEST_SOLIDIFIED_BLOCK_ERROR);
+        session.setStatus(CatTransactionStatus.UPDATE_LATEST_SOLIDIFIED_BLOCK_ERROR);
         return;
       }
       long latestSolidifiedBlockNum = numbers.get(solidifiedPosition);
       getDynamicPropertiesStore().saveLatestSolidifiedBlockNum(latestSolidifiedBlockNum);
       logger.info("update solid block, num = {}", latestSolidifiedBlockNum);
-      Cat.logMetricForCount("UpdateLatestSolidifiedBlockSuccessCount");
+      JMonitor.logMetricForCount("UpdateLatestSolidifiedBlockSuccessCount");
     } finally {
-      catTransaction.complete();
+      session.complete();
+      JMonitor.countAndDuration("UpdateLatestSolidifiedBlockTotalCount",
+          session.getDurationInMillis());
     }
   }
 
@@ -1006,9 +1006,8 @@ public class Manager {
    * block num 2. pay the trx to witness. 3. the latest slot num.
    */
   public void updateSignedWitness(BlockCapsule block) {
-    com.dianping.cat.message.Transaction catTransaction = Cat.newTransaction("Exec", "UpdateSignedWitness");
-    catTransaction.setStatus(com.dianping.cat.message.Transaction.SUCCESS);
-    Cat.logMetricForCount("UpdateSignedWitnessTotalCount");
+    Session session = JMonitor.newSession("Exec", "UpdateSignedWitness");
+    session.setStatus(Session.SUCCESS);
 
     try {
       // TODO: add verification
@@ -1047,7 +1046,8 @@ public class Manager {
           block.getNum(),
           witnessCapsule.getTotalProduced());
     } finally {
-      catTransaction.complete();
+      session.complete();
+      JMonitor.countAndDuration("UpdateSignedWitnessTotalCount", session.getDurationInMillis());
     }
   }
 

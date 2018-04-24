@@ -1,6 +1,5 @@
 package org.tron.core.witness;
 
-import com.dianping.cat.Cat;
 import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 import java.util.ArrayList;
@@ -12,6 +11,8 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
 import org.tron.common.utils.ByteArray;
+import org.tron.common.utils.JMonitor;
+import org.tron.common.utils.JMonitor.Session;
 import org.tron.common.utils.StringUtil;
 import org.tron.common.utils.Time;
 import org.tron.core.capsule.AccountCapsule;
@@ -140,9 +141,8 @@ public class WitnessController {
    * validate witness schedule.
    */
   public boolean validateWitnessSchedule(BlockCapsule block) {
-    com.dianping.cat.message.Transaction catTransaction = Cat.newTransaction("Exec", "ValidateWitnessSchedule");
-    catTransaction.setStatus(com.dianping.cat.message.Transaction.SUCCESS);
-    Cat.logMetricForCount("ValidateWitnessScheduleTotalCount");
+    Session session = JMonitor.newSession("Exec", "ValidateWitnessSchedule");
+    session.setStatus(Session.SUCCESS);
 
     try {
       ByteString witnessAddress = block.getInstance().getBlockHeader().getRawData()
@@ -159,7 +159,7 @@ public class WitnessController {
               ByteArray.toHexString(scheduledWitness.toByteArray()),
               ByteArray.toHexString(witnessAddress.toByteArray()), new DateTime(block.getTimeStamp()),
               slot);
-          Cat.logMetricForCount("ValidateWitnessScheduleOutOfOrderCount");
+          JMonitor.logMetricForCount("ValidateWitnessScheduleOutOfOrderCount");
           return false;
         }
       }
@@ -167,7 +167,8 @@ public class WitnessController {
       logger.debug("Validate witnessSchedule successfully,scheduledWitness:{}",
           ByteArray.toHexString(witnessAddress.toByteArray()));
     } finally {
-      catTransaction.complete();
+      session.complete();
+      JMonitor.countAndDuration("ValidateWitnessScheduleTotalCount", session.getDurationInMillis());
     }
 
     return true;
@@ -177,9 +178,8 @@ public class WitnessController {
    * get ScheduledWitness by slot.
    */
   public ByteString getScheduledWitness(final long slot) {
-    com.dianping.cat.message.Transaction catTransaction = Cat.newTransaction("Exec", "GetScheduledWitness");
-    catTransaction.setStatus(com.dianping.cat.message.Transaction.SUCCESS);
-    Cat.logMetricForCount("GetScheduledWitnessTotalCount");
+    Session session = JMonitor.newSession("Exec", "GetScheduledWitness");
+    session.setStatus(session.SUCCESS);
 
     final ByteString scheduledWitness;
 
@@ -187,16 +187,16 @@ public class WitnessController {
       final long currentSlot = getHeadSlot() + slot;
 
       if (currentSlot < 0) {
-        catTransaction.setStatus(CatTransactionStatus.GET_WITNESS_ERROR_SLOT);
-        Cat.logEvent("Error", CatTransactionStatus.GET_WITNESS_ERROR_SLOT);
+        session.setStatus(CatTransactionStatus.GET_WITNESS_ERROR_SLOT);
+        JMonitor.logEvent("Error", CatTransactionStatus.GET_WITNESS_ERROR_SLOT);
         throw new RuntimeException("currentSlot should be positive.");
       }
 
       int numberActiveWitness = this.getActiveWitnesses().size();
       int sigleRepeat = this.manager.getDynamicPropertiesStore().getSingleRepeat();
       if (numberActiveWitness <= 0) {
-        catTransaction.setStatus(CatTransactionStatus.GET_WITNESS_ERROR_NULL);
-        Cat.logEvent("Error", CatTransactionStatus.GET_WITNESS_ERROR_NULL);
+        session.setStatus(CatTransactionStatus.GET_WITNESS_ERROR_NULL);
+        JMonitor.logEvent("Error", CatTransactionStatus.GET_WITNESS_ERROR_NULL);
         throw new RuntimeException("Active Witnesses is null.");
       }
       int witnessIndex = (int) currentSlot % (numberActiveWitness * sigleRepeat);
@@ -208,9 +208,10 @@ public class WitnessController {
       scheduledWitness = this.getActiveWitnesses().get(witnessIndex);
       logger.info("scheduledWitness:" + ByteArray.toHexString(scheduledWitness.toByteArray())
           + ", currentSlot:" + currentSlot);
-      Cat.logMetricForCount("GetScheduledWitnessSuccessCount");
+      JMonitor.logMetricForCount("GetScheduledWitnessSuccessCount");
     } finally {
-      catTransaction.complete();
+      session.complete();
+      JMonitor.countAndDuration("GetScheduledWitnessTotalCount", session.getDurationInMillis());
     }
 
     return scheduledWitness;

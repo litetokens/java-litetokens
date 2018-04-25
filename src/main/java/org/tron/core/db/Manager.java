@@ -5,7 +5,6 @@ import static org.tron.core.config.Parameter.ChainConstant.WITNESS_PAY_PER_BLOCK
 import static org.tron.protos.Protocol.Transaction.Contract.ContractType.TransferAssetContract;
 import static org.tron.protos.Protocol.Transaction.Contract.ContractType.TransferContract;
 
-import com.carrotsearch.sizeof.RamUsageEstimator;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
 import java.util.Arrays;
@@ -304,6 +303,15 @@ public class Manager {
         this.khaosDb.start(genesisBlock);
       }
     }
+  }
+
+  public void resetToGenesisBlock() {
+    this.dynamicPropertiesStore.resetToGenesisBlock();
+
+    this.initAccount();
+    this.initWitness();
+    this.witnessController.initWits();
+    this.khaosDb.start(genesisBlock);
   }
 
   /**

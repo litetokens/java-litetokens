@@ -390,6 +390,7 @@ public class Manager {
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
       HighFreqException, DupTransactionException {
     logger.info("push transaction");
+    logger.info("head TrxLeft[" + pendingTransactions.size() + "]");
 
     if (getTransactionStore().get(trx.getTransactionId().getBytes()) != null) {
       logger.debug(getTransactionStore().get(trx.getTransactionId().getBytes()).toString());
@@ -413,6 +414,8 @@ public class Manager {
     } catch (RevokingStoreIllegalStateException e) {
       logger.debug(e.getMessage(), e);
     }
+
+    logger.info("tail TrxLeft[" + pendingTransactions.size() + "]");
     return true;
   }
 

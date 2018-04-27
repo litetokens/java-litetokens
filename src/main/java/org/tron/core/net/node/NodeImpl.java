@@ -636,6 +636,10 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
         processAdvBlock(peer, blkMsg.getBlockCapsule());
         startFetchItem();
       } else if (syncBlockRequested.containsKey(blockId)) {
+        if (!peer.getSyncFlag()){
+          logger.info("rcv a block {} from no need sync peer {}", blockId.getNum(), peer.getNode());
+          return;
+        }
         //sync mode
         syncBlockRequested.remove(blockId);
         //peer.getSyncBlockToFetch().remove(blockId);
@@ -756,10 +760,20 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
       ReasonCode finalReason = reason;
       getActivePeer().stream()
           .filter(peer -> peer.getBlockInProc().contains(block.getBlockId()))
-          .forEach(peer -> disconnectPeer(peer, finalReason));
+          .forEach(peer -> cleanUpSyncPeer(peer, finalReason));
     }
 
     isHandleSyncBlockActive = true;
+  }
+
+  private void cleanUpSyncPeer(PeerConnection peer, ReasonCode reasonCode){
+    peer.setSyncFlag(false);
+    while (!peer.getSyncBlockToFetch().isEmpty()){
+      BlockId blockId = peer.getSyncBlockToFetch().pop();
+      blockWaitToProc.remove(blockId);
+      blockJustReceived.remove(blockId);
+    }
+    disconnectPeer(peer, reasonCode);
   }
 
   private void onHandleTransactionMessage(PeerConnection peer, TransactionMessage trxMsg) {
@@ -770,19 +784,16 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
       //logger.info("on handle transaction message");
       try {
         if (!peer.getAdvObjWeRequested().containsKey(trxMsg.getMessageId())) {
-          session.setStatus(CatTransactionStatus.TRAITOR_PEER_EXCEPTION);
           throw new TraitorPeerException("We don't send fetch request to" + peer);
         } else {
           peer.getAdvObjWeRequested().remove(trxMsg.getMessageId());
           del.handleTransaction(trxMsg.getTransactionCapsule());
-          JMonitor.logMetricForCount("OnHandleTransactionMessageSuccessCount");
+          broadcast(trxMsg);
         }
       } catch (TraitorPeerException e) {
-        session.setStatus(CatTransactionStatus.TRAITOR_PEER_EXCEPTION);
         logger.error(e.getMessage());
         banTraitorPeer(peer);
       } catch (BadTransactionException e) {
-        session.setStatus(CatTransactionStatus.BAD_TRANSACTION_EXCEPTION);
         badAdvObj.put(trxMsg.getMessageId(), System.currentTimeMillis());
       }
     } finally {

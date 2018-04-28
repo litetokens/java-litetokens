@@ -52,6 +52,7 @@ import org.tron.protos.Protocol.Transaction.TransactionType;
 public class TransactionCapsule implements ProtoCapsule<Transaction> {
 
   private Transaction transaction;
+  private boolean isValidated = false;
 
   /**
    * constructor TransactionCapsule.
@@ -307,9 +308,14 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     session.setStatus(Session.SUCCESS);
 
     try {
+      if (isValidated == true) {
+        return true;
+      }
+
       if (this.getInstance().getSignatureCount() !=
           this.getInstance().getRawData().getContractCount()) {
         session.setStatus(CatTransactionStatus.TRANSACTION_VALIDATE_SIGNATURE_ERROR);
+
         throw new ValidateSignatureException("miss sig or contract");
       }
 
@@ -321,10 +327,12 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
           byte[] address = ECKey.signatureToAddress(getRawHash().getBytes(),
               getBase64FromByteString(this.transaction.getSignature(i)));
           if (!Arrays.equals(owner, address)) {
+            isValidated = false;
             session.setStatus(CatTransactionStatus.TRANSACTION_VALIDATE_SIGNATURE_ERROR);
             throw new ValidateSignatureException("sig error");
           }
         } catch (SignatureException e) {
+          isValidated = false;
           session.setStatus(CatTransactionStatus.TRANSACTION_VALIDATE_SIGNATURE_ERROR);
           throw new ValidateSignatureException(e.getMessage());
         }
@@ -335,6 +343,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
           session.getDurationInMillis());
     }
 
+    isValidated = true;
     JMonitor.logMetricForCount("TransactionValidateSignatureSuccessCount");
     return true;
   }
@@ -395,7 +404,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
             e.printStackTrace();
           }
         }
-        if ( this.transaction.getSignatureList().size() >= i.get() + 1) {
+        if (this.transaction.getSignatureList().size() >= i.get() + 1) {
           toStringBuff.append("sign=").append(getBase64FromByteString(
               this.transaction.getSignature(i.getAndIncrement()))).append("\n");
         }

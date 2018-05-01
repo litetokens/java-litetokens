@@ -1,12 +1,10 @@
 package org.tron.common.overlay.discover.message;
 
-import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.tron.common.overlay.discover.Node;
-import org.tron.common.utils.ByteArray;
 import org.tron.protos.Discover;
 import org.tron.protos.Discover.Endpoint;
 import org.tron.protos.Discover.Neighbours;
@@ -32,20 +30,12 @@ public class NeighborsMessage extends Message {
         .setTimestamp(System.currentTimeMillis());
 
     neighbours.forEach(neighbour -> {
-      Endpoint endpoint = Endpoint.newBuilder()
-          .setAddress(ByteString.copyFrom(ByteArray.fromString(neighbour.getHost())))
-          .setPort(neighbour.getPort())
-          .setNodeId(ByteString.copyFrom(neighbour.getId()))
-          .build();
+      Endpoint endpoint = buildEndpoint(neighbour);
 
       builder.addNeighbours(endpoint);
     });
 
-    Endpoint fromEndpoint = Endpoint.newBuilder()
-        .setAddress(ByteString.copyFrom(ByteArray.fromString(from.getHost())))
-        .setPort(from.getPort())
-        .setNodeId(ByteString.copyFrom(from.getId()))
-        .build();
+    Endpoint fromEndpoint = buildEndpoint(from);
 
     builder.setFrom(fromEndpoint);
 
@@ -56,10 +46,7 @@ public class NeighborsMessage extends Message {
 
   public List<Node> getNodes(){
     List<Node> nodes = new ArrayList<>();
-    neighbours.getNeighboursList().forEach(neighbour -> nodes.add(
-            new Node(neighbour.getNodeId().toByteArray(),
-                ByteArray.toStr(neighbour.getAddress().toByteArray()),
-                neighbour.getPort())));
+    neighbours.getNeighboursList().forEach(neighbour -> nodes.add(makeNode(neighbour)));
     return nodes;
   }
 

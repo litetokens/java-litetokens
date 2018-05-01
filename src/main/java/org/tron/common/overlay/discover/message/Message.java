@@ -1,7 +1,11 @@
 package org.tron.common.overlay.discover.message;
 
+import com.google.protobuf.ByteString;
 import org.apache.commons.lang3.ArrayUtils;
+import org.tron.common.overlay.discover.Node;
+import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Sha256Hash;
+import org.tron.protos.Discover;
 
 public abstract class Message {
 
@@ -62,4 +66,18 @@ public abstract class Message {
         throw new IllegalArgumentException("No such message");
     }
   }
+
+  Discover.Endpoint buildEndpoint(Node node) {
+    return Discover.Endpoint.newBuilder()
+            .setNodeId(ByteString.copyFrom(node.getId()))
+            .setPort(node.getPort())
+            .setAddress(ByteString.copyFrom(ByteArray.fromString(node.getHost())))
+            .build();
+  }
+
+  Node makeNode(Discover.Endpoint endpoint) {
+    return new Node(endpoint.getNodeId().toByteArray(),
+            ByteArray.toStr(endpoint.getAddress().toByteArray()), endpoint.getPort());
+  }
+
 }

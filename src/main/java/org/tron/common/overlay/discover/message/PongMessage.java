@@ -1,10 +1,8 @@
 package org.tron.common.overlay.discover.message;
 
-import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.tron.common.overlay.discover.Node;
-import org.tron.common.utils.ByteArray;
 import org.tron.core.config.args.Args;
 import org.tron.protos.Discover;
 import org.tron.protos.Discover.Endpoint;
@@ -25,11 +23,7 @@ public class PongMessage extends Message {
 
   public PongMessage(Node from) {
     super(Message.PONG, null);
-    Endpoint toEndpoint = Endpoint.newBuilder()
-        .setAddress(ByteString.copyFrom(ByteArray.fromString(from.getHost())))
-        .setPort(from.getPort())
-        .setNodeId(ByteString.copyFrom(from.getId()))
-        .build();
+    Endpoint toEndpoint = buildEndpoint(from);
     this.pongMessage = Discover.PongMessage.newBuilder()
         .setFrom(toEndpoint)
         .setEcho(Args.getInstance().getNodeP2pVersion())
@@ -40,9 +34,7 @@ public class PongMessage extends Message {
 
   public Node getFrom(){
     Endpoint from = this.pongMessage.getFrom();
-    Node node = new Node(from.getNodeId().toByteArray(),
-        ByteArray.toStr(from.getAddress().toByteArray()), from.getPort());
-    return node;
+    return makeNode(from);
   }
 
   @Override

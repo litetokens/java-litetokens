@@ -4,7 +4,6 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.tron.common.overlay.discover.Node;
-import org.tron.common.utils.ByteArray;
 import org.tron.protos.Discover;
 import org.tron.protos.Discover.Endpoint;
 import org.tron.protos.Discover.FindNeighbours;
@@ -25,11 +24,7 @@ public class FindNodeMessage extends Message {
 
   public FindNodeMessage(Node from, byte[] targetId) {
     super(Message.FINE_PEERS, null);
-    Endpoint fromEndpoint = Endpoint.newBuilder()
-        .setAddress(ByteString.copyFrom(ByteArray.fromString(from.getHost())))
-        .setPort(from.getPort())
-        .setNodeId(ByteString.copyFrom(from.getId()))
-        .build();
+    Endpoint fromEndpoint = buildEndpoint(from);
     this.findNeighbours = FindNeighbours.newBuilder()
         .setFrom(fromEndpoint)
         .setTargetId(ByteString.copyFrom(targetId))

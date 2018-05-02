@@ -8,6 +8,7 @@ import static org.tron.protos.Protocol.Transaction.Contract.ContractType.Transfe
 import com.carrotsearch.sizeof.RamUsageEstimator;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -24,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.tron.common.crypto.ECKey;
 import org.tron.common.overlay.discover.Node;
+import org.tron.common.utils.ByteArray;
 import org.tron.common.storage.leveldb.LevelDbDataSourceImpl;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.DialogOptional;
@@ -57,6 +59,7 @@ import org.tron.core.exception.HeaderNotFound;
 import org.tron.core.exception.HighFreqException;
 import org.tron.core.exception.ItemNotFoundException;
 import org.tron.core.exception.RevokingStoreIllegalStateException;
+import org.tron.core.exception.TaposException;
 import org.tron.core.exception.UnLinkedBlockException;
 import org.tron.core.exception.ValidateScheduleException;
 import org.tron.core.exception.ValidateSignatureException;
@@ -88,7 +91,12 @@ public class Manager {
   @Autowired
   private WitnessScheduleStore witnessScheduleStore;
   @Autowired
+  private RecentBlockStore recentBlockStore;
+
+  // for network
+  @Autowired
   private PeersStore peersStore;
+
 
   @Autowired
   private KhaosDatabase khaosDb;
@@ -367,8 +375,26 @@ public class Manager {
     if (amount < 0 && balance < -amount) {
       throw new BalanceInsufficientException(accountAddress + " Insufficient");
     }
-    account.setBalance(balance + amount);
+    account.setBalance(Math.addExact(balance, amount));
     this.getAccountStore().put(account.getAddress().toByteArray(), account);
+  }
+
+
+  void validateTapos(TransactionCapsule transactionCapsule) throws TaposException {
+    byte[] refBlockHash = transactionCapsule.getInstance().
+        getRawData().getRefBlockHash().toByteArray();
+    byte[] refBlockNumBytes = transactionCapsule.getInstance().
+        getRawData().getRefBlockBytes().toByteArray();
+    try {
+      byte[] blockHash = this.recentBlockStore.get(refBlockNumBytes).getData();
+      if (Arrays.equals(blockHash, refBlockHash)) {
+        return;
+      } else {
+        throw new TaposException("tapos failed");
+      }
+    } catch (ItemNotFoundException e) {
+      throw new TaposException("tapos failed");
+    }
   }
 
   /**
@@ -376,7 +402,7 @@ public class Manager {
    */
   public synchronized boolean pushTransactions(final TransactionCapsule trx)
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
-      HighFreqException, DupTransactionException {
+      HighFreqException, DupTransactionException, TaposException {
     logger.info("push transaction");
     logger.info("head TrxLeft[" + pendingTransactions.size() + "]");
 
@@ -385,9 +411,12 @@ public class Manager {
       throw new DupTransactionException("dup trans");
     }
 
+
     if (!trx.validateSignature()) {
       throw new ValidateSignatureException("trans sig validate failed");
     }
+
+    //validateTapos(trx);
 
     validateFreq(trx);
 
@@ -780,9 +809,11 @@ public class Manager {
     session.setStatus(Session.SUCCESS);
 
     try {
-      TransactionResultCapsule transRet;
-      if (trxCap == null || !trxCap.validateSignature()) {
+      if (trxCap == null) {
         return false;
+      }
+      if (!trxCap.validateSignature()) {
+        throw new ValidateSignatureException("trans sig validate failed");
       }
       final List<Actuator> actuatorList = ActuatorFactory.createActuator(trxCap, this);
       TransactionResultCapsule ret = new TransactionResultCapsule();
@@ -942,6 +973,12 @@ public class Manager {
       session.complete();
       JMonitor.countAndDuration("ProcessBlockTotalCount", session.getDurationInMillis());
     }
+  }
+
+  public void updateRecentBlock(BlockCapsule block) {
+    this.recentBlockStore.put(ByteArray.subArray(
+        ByteArray.fromLong(block.getNum()), 6, 8),
+        new BytesCapsule(ByteArray.subArray(block.getBlockId().getBytes(), 8, 16)));
   }
 
   /**

@@ -10,6 +10,7 @@ import org.tron.core.exception.ContractExeException;
 import org.tron.core.exception.ContractValidateException;
 import org.tron.core.exception.DupTransactionException;
 import org.tron.core.exception.HighFreqException;
+import org.tron.core.exception.TaposException;
 import org.tron.core.exception.ValidateSignatureException;
 
 @Slf4j
@@ -50,6 +51,8 @@ public class PendingManager implements AutoCloseable {
             logger.debug(e.getMessage(), e);
           } catch (DupTransactionException e) {
             logger.debug("pending manager: dup trans", e);
+          } catch (TaposException e) {
+            logger.debug("pending manager: tapos exception", e);
           }
         });
     dbManager.getPoppedTransactions().stream()
@@ -68,6 +71,8 @@ public class PendingManager implements AutoCloseable {
             logger.debug(e.getMessage(), e);
           } catch (DupTransactionException e) {
             logger.debug("pending manager: dup trans", e);
+          } catch (TaposException e) {
+            logger.debug("pending manager: tapos exception", e);
           }
         });
     dbManager.getPoppedTransactions().clear();

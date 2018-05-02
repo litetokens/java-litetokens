@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.tron.common.crypto.ECKey;
 import org.tron.common.crypto.ECKey.ECDSASignature;
 import org.tron.common.utils.ByteArray;
+import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.JMonitor;
 import org.tron.common.utils.JMonitor.Session;
 import org.tron.common.utils.Sha256Hash;
@@ -40,6 +41,7 @@ import org.tron.core.Wallet;
 import org.tron.core.config.Parameter.CatTransactionStatus;
 import org.tron.core.db.AccountStore;
 import org.tron.core.exception.ValidateSignatureException;
+import org.tron.protos.Contract.AccountUpdateContract;
 import org.tron.protos.Contract.AccountCreateContract;
 import org.tron.protos.Contract.ParticipateAssetIssueContract;
 import org.tron.protos.Contract.TransferAssetContract;
@@ -135,8 +137,11 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
   }
 
   public void setReference(long blockNum, byte[] blockHash) {
-    Transaction.raw rawData = this.transaction.getRawData().toBuilder().setRefBlockNum(blockNum)
-        .setRefBlockHash(ByteString.copyFrom(blockHash)).build();
+    byte[] refBlockNum = ByteArray.fromLong(blockNum);
+    Transaction.raw rawData = this.transaction.getRawData().toBuilder()
+        .setRefBlockHash(ByteString.copyFrom(ByteArray.subArray(blockHash, 8, 16)))
+        .setRefBlockBytes(ByteString.copyFrom(ByteArray.subArray(refBlockNum, 6, 8)))
+        .build();
     this.transaction = this.transaction.toBuilder().setRawData(rawData).build();
   }
 
@@ -248,6 +253,9 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
           break;
         case ParticipateAssetIssueContract:
           owner = contractParameter.unpack(ParticipateAssetIssueContract.class).getOwnerAddress();
+          break;
+        case AccountUpdateContract:
+          owner = contractParameter.unpack(AccountUpdateContract.class).getOwnerAddress();
           break;
         // todo add other contract
 

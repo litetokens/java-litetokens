@@ -427,9 +427,9 @@ public class Manager {
     }
 
 
-//    if (!trx.validateSignature()) {
-//      throw new ValidateSignatureException("trans sig validate failed");
-//    }
+    if (!trx.validateSignature()) {
+      throw new ValidateSignatureException("trans sig validate failed");
+    }
     consumeBandwidth(trx);
 
     //validateTapos(trx);
@@ -856,9 +856,9 @@ public class Manager {
       if (trxCap == null) {
         return false;
       }
-//      if (!trxCap.validateSignature()) {
-//        throw new ValidateSignatureException("trans sig validate failed");
-//      }
+      if (!trxCap.validateSignature()) {
+        throw new ValidateSignatureException("trans sig validate failed");
+      }
       final List<Actuator> actuatorList = ActuatorFactory.createActuator(trxCap, this);
       TransactionResultCapsule ret = new TransactionResultCapsule();
 

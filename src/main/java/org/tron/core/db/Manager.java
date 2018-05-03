@@ -920,6 +920,9 @@ public class Manager {
       currentTrxSize += RamUsageEstimator.sizeOf(trx);
       // judge block size
       if (currentTrxSize > ChainConstant.TRXS_SIZE) {
+        if (postponedTrxCount == 0) {
+          logger.info("first postponed trx size: {}", RamUsageEstimator.sizeOf(trx));
+        }
         postponedTrxCount++;
         continue;
       }

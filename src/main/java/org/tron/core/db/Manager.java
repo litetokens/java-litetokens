@@ -944,7 +944,7 @@ public class Manager {
     dialog.reset();
 
     if (postponedTrxCount > 0) {
-      logger.info("{} transactions over the block size limit, current trx size: {} Bytes", postponedTrxCount, currentTrxSize);
+      logger.info("{} transactions over the block size limit, current block capsule size: {} Bytes", postponedTrxCount, RamUsageEstimator.sizeOf(blockCapsule));
     }
 
     logger.info(

@@ -12,7 +12,7 @@ public interface Parameter {
     double SOLIDIFIED_THRESHOLD = 0.6;
     int PRIVATE_KEY_LENGTH = 64;
     int MAX_ACTIVE_WITNESS_NUM = 15;
-    int TRXS_SIZE = 2_000_000; // < 2GiB
+    int TRXS_SIZE = 2_000_000_000; // < 2GiB
     int BLOCK_PRODUCED_INTERVAL = 5000; //ms,produce block period, must be divisible by 60. millisecond
     long CLOCK_MAX_DELAY = 3600 * 1000; //ms
   }

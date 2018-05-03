@@ -430,7 +430,7 @@ public class Manager {
     if (!trx.validateSignature()) {
       throw new ValidateSignatureException("trans sig validate failed");
     }
-    //consumeBandwidth(trx);
+    consumeBandwidth(trx);
 
     //validateTapos(trx);
 

@@ -61,6 +61,7 @@ import org.tron.core.exception.ItemNotFoundException;
 import org.tron.core.exception.RevokingStoreIllegalStateException;
 import org.tron.core.exception.TaposException;
 import org.tron.core.exception.UnLinkedBlockException;
+import org.tron.core.exception.ValidateBandwidthException;
 import org.tron.core.exception.ValidateScheduleException;
 import org.tron.core.exception.ValidateSignatureException;
 import org.tron.core.witness.WitnessController;
@@ -379,12 +380,26 @@ public class Manager {
     this.getAccountStore().put(account.getAddress().toByteArray(), account);
   }
 
+  public void adjustAllowance(byte[] accountAddress, long amount)
+      throws BalanceInsufficientException {
+    AccountCapsule account = getAccountStore().get(accountAddress);
+    long allowance = account.getAllowance();
+    if (amount == 0) {
+      return;
+    }
+
+    if (amount < 0 && allowance < -amount) {
+      throw new BalanceInsufficientException(accountAddress + " Insufficient");
+    }
+    account.setAllowance(allowance + amount);
+    this.getAccountStore().put(account.createDbKey(), account);
+  }
 
   void validateTapos(TransactionCapsule transactionCapsule) throws TaposException {
-    byte[] refBlockHash = transactionCapsule.getInstance().
-        getRawData().getRefBlockHash().toByteArray();
-    byte[] refBlockNumBytes = transactionCapsule.getInstance().
-        getRawData().getRefBlockBytes().toByteArray();
+    byte[] refBlockHash = transactionCapsule.getInstance()
+        .getRawData().getRefBlockHash().toByteArray();
+    byte[] refBlockNumBytes = transactionCapsule.getInstance()
+        .getRawData().getRefBlockBytes().toByteArray();
     try {
       byte[] blockHash = this.recentBlockStore.get(refBlockNumBytes).getData();
       if (Arrays.equals(blockHash, refBlockHash)) {
@@ -402,7 +417,7 @@ public class Manager {
    */
   public synchronized boolean pushTransactions(final TransactionCapsule trx)
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
-      HighFreqException, DupTransactionException, TaposException {
+      ValidateBandwidthException, DupTransactionException, TaposException {
     logger.info("push transaction");
     logger.info("head TrxLeft[" + pendingTransactions.size() + "]");
 
@@ -415,10 +430,11 @@ public class Manager {
     if (!trx.validateSignature()) {
       throw new ValidateSignatureException("trans sig validate failed");
     }
+    consumeBandwidth(trx);
 
     //validateTapos(trx);
 
-    validateFreq(trx);
+    //validateFreq(trx);
 
     if (!dialog.valid()) {
       dialog.setValue(revokingStore.buildDialog());
@@ -436,6 +452,33 @@ public class Manager {
     return true;
   }
 
+
+  public void consumeBandwidth(TransactionCapsule trx) throws ValidateBandwidthException {
+    List<org.tron.protos.Protocol.Transaction.Contract> contracts =
+        trx.getInstance().getRawData().getContractList();
+    for (Transaction.Contract contract : contracts) {
+      byte[] address = TransactionCapsule.getOwner(contract);
+      AccountCapsule accountCapsule = this.getAccountStore().get(address);
+      if (accountCapsule == null) {
+        throw new ValidateBandwidthException("account not exists");
+      }
+      long bandwidth = accountCapsule.getBandwidth();
+      long now = Time.getCurrentMillis();
+      long latestOperationTime = accountCapsule.getLatestOperationTime();
+      if (now - latestOperationTime < 5 * 60 * 1000) {
+        return;
+      }
+      long bandwidthPerTransaction = getDynamicPropertiesStore().getBandwidthPerTransaction();
+      if (bandwidth < bandwidthPerTransaction) {
+          throw new ValidateBandwidthException("bandwidth is not enough");
+      }
+      accountCapsule.setBandwidth(bandwidth - bandwidthPerTransaction);
+      accountCapsule.setLatestOperationTime(Time.getCurrentMillis());
+      this.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
+    }
+  }
+
+  @Deprecated
   private void validateFreq(TransactionCapsule trx) throws HighFreqException {
     List<org.tron.protos.Protocol.Transaction.Contract> contracts =
         trx.getInstance().getRawData().getContractList();
@@ -444,7 +487,7 @@ public class Manager {
         byte[] address = TransactionCapsule.getOwner(contract);
         AccountCapsule accountCapsule = this.getAccountStore().get(address);
         if (accountCapsule == null) {
-          throw new HighFreqException("account is not exist");
+          throw new HighFreqException("account not exists");
         }
         long balance = accountCapsule.getBalance();
         long latestOperationTime = accountCapsule.getLatestOperationTime();
@@ -457,6 +500,7 @@ public class Manager {
     }
   }
 
+  @Deprecated
   private void doValidateFreq(long balance, int transNumber, long latestOperationTime)
       throws HighFreqException {
     long now = Time.getCurrentMillis();
@@ -968,7 +1012,7 @@ public class Manager {
         }
       }
       updateMaintenanceState(needMaint);
-      witnessController.updateWitnessSchedule();
+      //witnessController.updateWitnessSchedule();
     } finally {
       session.complete();
       JMonitor.countAndDuration("ProcessBlockTotalCount", session.getDurationInMillis());
@@ -1076,7 +1120,7 @@ public class Manager {
         logger.debug(e.getMessage(), e);
       }
       try {
-        adjustBalance(witnessCapsule.getAddress().toByteArray(), WITNESS_PAY_PER_BLOCK);
+        adjustAllowance(witnessCapsule.getAddress().toByteArray(), WITNESS_PAY_PER_BLOCK);
       } catch (BalanceInsufficientException e) {
         logger.debug(e.getMessage(), e);
       }

@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import org.tron.core.Constant;
 import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.capsule.TransactionCapsule;
@@ -39,16 +40,17 @@ public class DupTrx {
   }
 
   public static Map<String, List<Long>> getResult(BlockStore blockStore) {
-    Iterator<BlockCapsule> iterator = blockStore.iterator();
+    Iterator<Entry<byte[], BlockCapsule>> iterator = blockStore.iterator();
 
     Map<String, List<Long>> result = new HashMap<>();
 
     while (iterator.hasNext()) {
-      BlockCapsule next = iterator.next();
+      Entry<byte[], BlockCapsule> next = iterator.next();
 
-      Long num = next.getNum();
+      BlockCapsule value = next.getValue();
+      long num = value.getNum();
 
-      List<TransactionCapsule> transactions = next.getTransactions();
+      List<TransactionCapsule> transactions = value.getTransactions();
 
       transactions.stream().forEach(t -> {
         List<Long> longs = result.get(t.getTransactionId().toString());

@@ -9,8 +9,8 @@ import org.tron.core.capsule.TransactionCapsule;
 import org.tron.core.exception.ContractExeException;
 import org.tron.core.exception.ContractValidateException;
 import org.tron.core.exception.DupTransactionException;
-import org.tron.core.exception.HighFreqException;
 import org.tron.core.exception.TaposException;
+import org.tron.core.exception.ValidateBandwidthException;
 import org.tron.core.exception.ValidateSignatureException;
 
 @Slf4j
@@ -47,7 +47,7 @@ public class PendingManager implements AutoCloseable {
             logger.debug(e.getMessage(), e);
           } catch (ContractExeException e) {
             logger.debug(e.getMessage(), e);
-          } catch (HighFreqException e) {
+          } catch (ValidateBandwidthException e) {
             logger.debug(e.getMessage(), e);
           } catch (DupTransactionException e) {
             logger.debug("pending manager: dup trans", e);
@@ -67,7 +67,7 @@ public class PendingManager implements AutoCloseable {
             logger.debug(e.getMessage(), e);
           } catch (ContractExeException e) {
             logger.debug(e.getMessage(), e);
-          } catch (HighFreqException e) {
+          } catch (ValidateBandwidthException e) {
             logger.debug(e.getMessage(), e);
           } catch (DupTransactionException e) {
             logger.debug("pending manager: dup trans", e);

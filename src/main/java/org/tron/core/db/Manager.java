@@ -917,11 +917,12 @@ public class Manager {
     Iterator iterator = pendingTransactions.iterator();
     while (iterator.hasNext()) {
       TransactionCapsule trx = (TransactionCapsule) iterator.next();
-      currentTrxSize += RamUsageEstimator.sizeOf(trx);
+      currentTrxSize += RamUsageEstimator.sizeOf(trx.getData());
+          //RamUsageEstimator.sizeOf(trx);
       // judge block size
       if (currentTrxSize > ChainConstant.TRXS_SIZE) {
         if (postponedTrxCount == 0) {
-          logger.info("first postponed trx size: {}, current trx size: {}", RamUsageEstimator.sizeOf(trx), currentTrxSize);
+          logger.info("first postponed trx size: {}, current trx size: {}, serialized size: {}", RamUsageEstimator.sizeOf(trx.getData()), currentTrxSize, trx.getInstance().getSerializedSize());
         }
         postponedTrxCount++;
         continue;

@@ -730,9 +730,9 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
     isHandleSyncBlockActive = true;
   }
 
-  private void cleanUpSyncPeer(PeerConnection peer, ReasonCode reasonCode){
+  private void cleanUpSyncPeer(PeerConnection peer, ReasonCode reasonCode) {
     peer.setSyncFlag(false);
-    while (!peer.getSyncBlockToFetch().isEmpty()){
+    while (!peer.getSyncBlockToFetch().isEmpty()) {
       BlockId blockId = peer.getSyncBlockToFetch().pop();
       blockWaitToProc.remove(blockId);
       blockJustReceived.remove(blockId);

@@ -14,8 +14,8 @@ import org.tron.core.exception.ValidateSignatureException;
 @Slf4j
 public class PendingManager implements AutoCloseable {
 
-  List<TransactionCapsule> tmpTransactions = new ArrayList<>();
-  Manager dbManager;
+  private List<TransactionCapsule> tmpTransactions = new ArrayList<>();
+  private Manager dbManager;
 
   public PendingManager(Manager db) {
     this.dbManager = db;

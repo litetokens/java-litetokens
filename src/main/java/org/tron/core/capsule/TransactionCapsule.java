@@ -52,7 +52,6 @@ import org.tron.protos.Contract.UnfreezeBalanceContract;
 import org.tron.protos.Contract.WithdrawBalanceContract;
 import org.tron.protos.Protocol.Transaction;
 import org.tron.protos.Protocol.Transaction.Contract.ContractType;
-import org.tron.protos.Protocol.Transaction.TransactionType;
 
 @Slf4j
 public class TransactionCapsule implements ProtoCapsule<Transaction> {
@@ -78,6 +77,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     }
   }
 
+  /*lll
   public TransactionCapsule(byte[] key, long value) throws IllegalArgumentException {
     if (!Wallet.addressValid(key)) {
       throw new IllegalArgumentException("Invalidate address");
@@ -87,13 +87,12 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
         .setOwnerAddress(ByteString.copyFrom(ByteArray.fromHexString("a099357684bc659f5166046b56c95a0e99f1265cbd")))
         .setToAddress(ByteString.copyFrom(key))
         .build();
-    Transaction.raw.Builder transactionBuilder = Transaction.raw.newBuilder().setType(
-        TransactionType.ContractType).addContract(
+    Transaction.raw.Builder transactionBuilder = Transaction.raw.newBuilder().addContract(
         Transaction.Contract.newBuilder().setType(ContractType.TransferContract).setParameter(
             Any.pack(transferContract)).build());
     logger.info("Transaction create succeeded！");
     transaction = Transaction.newBuilder().setRawData(transactionBuilder.build()).build();
-  }
+  }*/
 
 
   public TransactionCapsule(AccountCreateContract contract, AccountStore accountStore) {
@@ -162,8 +161,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
 
 
   public TransactionCapsule(com.google.protobuf.Message message, ContractType contractType) {
-    Transaction.raw.Builder transactionBuilder = Transaction.raw.newBuilder().setType(
-        TransactionType.ContractType).addContract(
+    Transaction.raw.Builder transactionBuilder = Transaction.raw.newBuilder().addContract(
         Transaction.Contract.newBuilder().setType(contractType).setParameter(
             Any.pack(message)).build());
     logger.info("Transaction create succeeded！");
@@ -173,8 +171,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
 
   @Deprecated
   public void createTransaction(com.google.protobuf.Message message, ContractType contractType) {
-    Transaction.raw.Builder transactionBuilder = Transaction.raw.newBuilder().setType(
-        TransactionType.ContractType).addContract(
+    Transaction.raw.Builder transactionBuilder = Transaction.raw.newBuilder().addContract(
         Transaction.Contract.newBuilder().setType(contractType).setParameter(
             Any.pack(message)).build());
     logger.info("Transaction create succeeded！");

@@ -615,7 +615,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
       processAdvBlock(peer, blkMsg.getBlockCapsule());
       startFetchItem();
     } else if (syncBlockRequested.containsKey(blockId)) {
-      if (!peer.getSyncFlag()){
+      if (!peer.getSyncFlag()) {
         logger.info("rcv a block {} from no need sync peer {}", blockId.getNum(), peer.getNode());
         return;
       }
@@ -874,10 +874,12 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
             }
           }
 
-          if (del.getHeadBlockId().getNum() > 0){
-            long maxRemainTime = ChainConstant.CLOCK_MAX_DELAY + System.currentTimeMillis() - del.getHeadBlockTimeStamp();
-            long maxFutureNum =  maxRemainTime / ChainConstant.BLOCK_PRODUCED_INTERVAL + del.getHeadBlockId().getNum();
-            if (blockIdWeGet.peekLast().getNum() + msg.getRemainNum() > maxFutureNum){
+          if (del.getHeadBlockId().getNum() > 0) {
+            long maxRemainTime = ChainConstant.CLOCK_MAX_DELAY
+                + System.currentTimeMillis() - del.getHeadBlockTimeStamp();
+            long maxFutureNum = maxRemainTime / ChainConstant.BLOCK_PRODUCED_INTERVAL
+                + del.getHeadBlockId().getNum();
+            if (blockIdWeGet.peekLast().getNum() + msg.getRemainNum() > maxFutureNum) {
               throw new TraitorPeerException(
                   "Block num " + blockIdWeGet.peekLast().getNum() + "+" + msg.getRemainNum()
                       + " is gt future max num " + maxFutureNum + " from " + peer);
@@ -1044,7 +1046,8 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
   }
 
   private void updateBlockWeBothHave(PeerConnection peer, BlockCapsule block) {
-    logger.info("update peer {} block both we have {}", peer.getNode().getHost(), block.getBlockId().getString());
+    logger.info("update peer {} block both we have {}",
+        peer.getNode().getHost(), block.getBlockId().getString());
     peer.setHeadBlockWeBothHave(block.getBlockId());
     peer.setHeadBlockTimeWeBothHave(block.getTimeStamp());
   }

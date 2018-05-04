@@ -27,6 +27,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -379,20 +380,21 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
         logger.debug(e.getMessage(), e);
       }
     }
-    synchronized (advObjToFetch) {
+    Collection<PeerConnection> filterActivePeer = getActivePeer().stream()
+        .filter(peer -> !peer.isBusy()).collect(Collectors.toList());
+    if (filterActivePeer.size() > 0) {
       InvToSend sendPackage = new InvToSend();
       advObjToFetch.entrySet()
-          .forEach(idToFetch ->
-              getActivePeer().stream().filter(peer -> !peer.isBusy()
-                  && peer.getAdvObjSpreadToUs().containsKey(idToFetch.getKey()))
-                  .findFirst()
-                  .ifPresent(peer -> {
-                    //TODO: don't fetch too much obj from only one peer
-                    sendPackage.add(idToFetch, peer);
-                    advObjToFetch.remove(idToFetch.getKey());
-                    peer.getAdvObjWeRequested()
-                        .put(idToFetch.getKey(), Time.getCurrentMillis());
-                  }));
+          .forEach(idToFetch -> filterActivePeer.stream()
+              .filter(peer -> peer.getAdvObjSpreadToUs().containsKey(idToFetch.getKey()))
+              .findFirst()
+              .ifPresent(peer -> {
+                //TODO: don't fetch too much obj from only one peer
+                sendPackage.add(idToFetch, peer);
+                advObjToFetch.remove(idToFetch.getKey());
+                peer.getAdvObjWeRequested()
+                    .put(idToFetch.getKey(), Time.getCurrentMillis());
+              }));
       sendPackage.sendFetch();
     }
   }

@@ -324,49 +324,48 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
    * validate signature
    */
   public boolean validateSignature() throws ValidateSignatureException {
+    Session session = JMonitor.newSession("Exec", "TransactionValidateSignature");
+    session.setStatus(Session.SUCCESS);
+
+    try {
+      if (isValidated == true) {
+        return true;
+      }
+
+      if (this.getInstance().getSignatureCount() !=
+          this.getInstance().getRawData().getContractCount()) {
+        session.setStatus(CatTransactionStatus.TRANSACTION_VALIDATE_SIGNATURE_ERROR);
+
+        throw new ValidateSignatureException("miss sig or contract");
+      }
+
+      List<Transaction.Contract> listContract = this.transaction.getRawData().getContractList();
+      for (int i = 0; i < this.transaction.getSignatureCount(); ++i) {
+        try {
+          Transaction.Contract contract = listContract.get(i);
+          byte[] owner = getOwner(contract);
+          byte[] address = ECKey.signatureToAddress(getRawHash().getBytes(),
+              getBase64FromByteString(this.transaction.getSignature(i)));
+          if (!Arrays.equals(owner, address)) {
+            isValidated = false;
+            session.setStatus(CatTransactionStatus.TRANSACTION_VALIDATE_SIGNATURE_ERROR);
+            throw new ValidateSignatureException("sig error");
+          }
+        } catch (SignatureException e) {
+          isValidated = false;
+          session.setStatus(CatTransactionStatus.TRANSACTION_VALIDATE_SIGNATURE_ERROR);
+          throw new ValidateSignatureException(e.getMessage());
+        }
+      }
+    } finally {
+      session.complete();
+      JMonitor.countAndDuration("TransactionValidateSignatureTotalCount",
+          session.getDurationInMillis());
+    }
+
+    isValidated = true;
+    JMonitor.logMetricForCount("TransactionValidateSignatureSuccessCount");
     return true;
-//    Session session = JMonitor.newSession("Exec", "TransactionValidateSignature");
-//    session.setStatus(Session.SUCCESS);
-//
-//    try {
-//      if (isValidated == true) {
-//        return true;
-//      }
-//
-//      if (this.getInstance().getSignatureCount() !=
-//          this.getInstance().getRawData().getContractCount()) {
-//        session.setStatus(CatTransactionStatus.TRANSACTION_VALIDATE_SIGNATURE_ERROR);
-//
-//        throw new ValidateSignatureException("miss sig or contract");
-//      }
-//
-//      List<Transaction.Contract> listContract = this.transaction.getRawData().getContractList();
-//      for (int i = 0; i < this.transaction.getSignatureCount(); ++i) {
-//        try {
-//          Transaction.Contract contract = listContract.get(i);
-//          byte[] owner = getOwner(contract);
-//          byte[] address = ECKey.signatureToAddress(getRawHash().getBytes(),
-//              getBase64FromByteString(this.transaction.getSignature(i)));
-//          if (!Arrays.equals(owner, address)) {
-//            isValidated = false;
-//            session.setStatus(CatTransactionStatus.TRANSACTION_VALIDATE_SIGNATURE_ERROR);
-//            throw new ValidateSignatureException("sig error");
-//          }
-//        } catch (SignatureException e) {
-//          isValidated = false;
-//          session.setStatus(CatTransactionStatus.TRANSACTION_VALIDATE_SIGNATURE_ERROR);
-//          throw new ValidateSignatureException(e.getMessage());
-//        }
-//      }
-//    } finally {
-//      session.complete();
-//      JMonitor.countAndDuration("TransactionValidateSignatureTotalCount",
-//          session.getDurationInMillis());
-//    }
-//
-//    isValidated = true;
-//    JMonitor.logMetricForCount("TransactionValidateSignatureSuccessCount");
-//    return true;
   }
 
 

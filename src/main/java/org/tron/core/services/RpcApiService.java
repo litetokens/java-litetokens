@@ -49,7 +49,6 @@ import org.tron.core.db.Manager;
 import org.tron.core.exception.ContractValidateException;
 import org.tron.core.exception.StoreException;
 import org.tron.protos.Contract;
-import org.tron.protos.Contract.AccountCreateContract;
 import org.tron.protos.Contract.AssetIssueContract;
 import org.tron.protos.Contract.ParticipateAssetIssueContract;
 import org.tron.protos.Contract.TransferAssetContract;
@@ -384,22 +383,6 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void createAccount(AccountCreateContract request,
-        StreamObserver<Transaction> responseObserver) {
-      try {
-        responseObserver.onNext(
-            createTransactionCapsule(request, ContractType.AccountCreateContract).getInstance());
-      } catch (ContractValidateException e) {
-        responseObserver
-            .onNext(null);
-        logger.debug("ContractValidateException", e.getMessage());
-        responseObserver.onNext(null);
-      }
-      responseObserver.onCompleted();
-    }
-
-
-    @Override
     public void createAssetIssue(AssetIssueContract request,
         StreamObserver<Transaction> responseObserver) {
       try {
@@ -580,14 +563,13 @@ public class RpcApiService implements Service {
     @Override
     public void transferAsset(TransferAssetContract request,
         StreamObserver<Transaction> responseObserver) {
-      ByteString fromBs = request.getOwnerAddress();
-
-      if (fromBs != null) {
-
-        Transaction trx = wallet.createTransaction(request);
-        responseObserver.onNext(trx);
-      } else {
-        responseObserver.onNext(null);
+      try {
+        responseObserver
+            .onNext(createTransactionCapsule(request, ContractType.TransferAssetContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver
+            .onNext(null);
+        logger.debug("ContractValidateException", e.getMessage());
       }
       responseObserver.onCompleted();
     }
@@ -595,13 +577,13 @@ public class RpcApiService implements Service {
     @Override
     public void participateAssetIssue(ParticipateAssetIssueContract request,
         StreamObserver<Transaction> responseObserver) {
-      ByteString fromBs = request.getOwnerAddress();
-
-      if (fromBs != null) {
-        Transaction trx = wallet.createTransaction(request);
-        responseObserver.onNext(trx);
-      } else {
-        responseObserver.onNext(null);
+      try {
+        responseObserver
+            .onNext(createTransactionCapsule(request, ContractType.ParticipateAssetIssueContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver
+            .onNext(null);
+        logger.debug("ContractValidateException", e.getMessage());
       }
       responseObserver.onCompleted();
     }

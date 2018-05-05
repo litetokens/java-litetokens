@@ -24,12 +24,13 @@ public interface Parameter {
     long MAX_BLOCKS_ALREADY_FETCHED = 800;
     long MAX_BLOCKS_SYNC_FROM_ONE_PEER = 1000;
     long SYNC_CHAIN_LIMIT_NUM = 500;
+    long BROAD_FETCH_BATCH_NUM = 1000;
   }
 
 
   interface NetConstants {
 
-    long ADV_TIME_OUT = 5000L;
+    long ADV_TIME_OUT = 20000L;
     long SYNC_TIME_OUT = 5000L;
     long HEAD_NUM_MAX_DELTA = 1000L;
     long HEAD_NUM_CHECK_TIME = 60000L;

@@ -13,6 +13,7 @@ import org.tron.core.db.Manager;
 import org.tron.core.exception.ContractExeException;
 import org.tron.core.exception.ContractValidateException;
 import org.tron.core.exception.UnLinkedBlockException;
+import org.tron.core.exception.ValidateBandwidthException;
 import org.tron.core.exception.ValidateScheduleException;
 import org.tron.core.exception.ValidateSignatureException;
 import org.tron.protos.Protocol.Block;
@@ -34,7 +35,11 @@ public class PushBlock {
 
     Block block;
     while ((block = Block.parseDelimitedFrom(fis)) != null) {
-      dbManager.pushBlock(new BlockCapsule(Block.newBuilder(block).build()));
+      try {
+        dbManager.pushBlock(new BlockCapsule(Block.newBuilder(block).build()));
+      } catch (ValidateBandwidthException e) {
+        e.printStackTrace();
+      }
     }
 
     removeDb();

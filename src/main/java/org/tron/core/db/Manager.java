@@ -431,7 +431,7 @@ public class Manager {
       throw new ValidateSignatureException("trans sig validate failed");
     }
 
-    validateTapos(trx);
+    //validateTapos(trx);
 
     //validateFreq(trx);
 
@@ -440,7 +440,7 @@ public class Manager {
     }
 
     try (RevokingStore.Dialog tmpDialog = revokingStore.buildDialog()) {
-      consumeBandwidth(trx);
+      //consumeBandwidth(trx);
       processTransaction(trx);
       pendingTransactions.add(trx);
       tmpDialog.merge();
@@ -866,7 +866,7 @@ public class Manager {
       final List<Actuator> actuatorList = ActuatorFactory.createActuator(trxCap, this);
       TransactionResultCapsule ret = new TransactionResultCapsule();
 
-      consumeBandwidth(trxCap);
+      //consumeBandwidth(trxCap);
 
       for (Actuator act : actuatorList) {
         act.validate();

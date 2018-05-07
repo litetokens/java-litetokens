@@ -576,7 +576,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     this.saveLatestSolidifiedBlockNum(0);
     this.saveBlockFilledSlotsIndex(0);
 
-    int[] blockFilledSlots = new int[BLOCK_FILLED_SLOTS_NUMBER];
+    int[] blockFilledSlots = new int[getBlockFilledSlotsNumber()];
     Arrays.fill(blockFilledSlots, 1);
     this.saveBlockFilledSlots(blockFilledSlots);
 

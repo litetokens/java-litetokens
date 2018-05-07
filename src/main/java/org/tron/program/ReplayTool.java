@@ -16,6 +16,7 @@ import org.tron.core.exception.BadBlockException;
 import org.tron.core.exception.ContractExeException;
 import org.tron.core.exception.ContractValidateException;
 import org.tron.core.exception.UnLinkedBlockException;
+import org.tron.core.exception.ValidateBandwidthException;
 import org.tron.core.exception.ValidateScheduleException;
 import org.tron.core.exception.ValidateSignatureException;
 
@@ -105,6 +106,8 @@ public class ReplayTool {
         throw new BadBlockException("validate contract exe exception");
       } catch (ValidateScheduleException e) {
         throw new BadBlockException("validate schedule exception");
+      } catch (ValidateBandwidthException e) {
+        e.printStackTrace();
       }
     }
 

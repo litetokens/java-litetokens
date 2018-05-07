@@ -923,8 +923,7 @@ public class Manager {
     Iterator iterator = pendingTransactions.iterator();
     while (iterator.hasNext()) {
       TransactionCapsule trx = (TransactionCapsule) iterator.next();
-      currentTrxSize += RamUsageEstimator.sizeOf(trx.getData());
-          //RamUsageEstimator.sizeOf(trx);
+      currentTrxSize += trx.getSerializedSize();
       // judge block size
       if (currentTrxSize > ChainConstant.TRXS_SIZE) {
         if (postponedTrxCount == 0) {
@@ -1086,6 +1085,15 @@ public class Manager {
             + (dynamicPropertiesStore.getLatestBlockHeaderNumber() - revokingStore.size()));
     logger.info("solidBlockNumber:" + dynamicPropertiesStore.getLatestSolidifiedBlockNum());
     return dynamicPropertiesStore.getLatestBlockHeaderNumber() - revokingStore.size();
+  }
+
+  public BlockId getSolidBlockId() {
+    try{
+      long num = dynamicPropertiesStore.getLatestSolidifiedBlockNum();
+      return getBlockIdByNum(num);
+    }catch (Exception e){
+      return getGenesisBlockId();
+    }
   }
 
   /**

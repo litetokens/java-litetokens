@@ -47,7 +47,7 @@ src/test/java/org/tron/consensus2
 
 /output_manager/
 /output_witness/
-
+output*
 nodeId.properties
 
 blocks.txt

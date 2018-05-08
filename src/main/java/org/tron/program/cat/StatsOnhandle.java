@@ -15,6 +15,7 @@ import java.util.function.Consumer;
 @Slf4j
 @Value(staticConstructor = "of")
 public class StatsOnhandle implements Consumer<PeerConnection> {
+  public static final long ONE_MINUTE = 60 * 1000L;
   private static final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
   private static final ConcurrentHashMap<Long, AtomicLong> stats = new ConcurrentHashMap<>();
 //  private Message message;
@@ -26,6 +27,6 @@ public class StatsOnhandle implements Consumer<PeerConnection> {
 
   @Override
   public void accept(PeerConnection peerConnection) {
-    stats.computeIfAbsent(System.currentTimeMillis()/1000L, AtomicLong::new).incrementAndGet();
+    stats.computeIfAbsent(System.currentTimeMillis()/ONE_MINUTE, AtomicLong::new).incrementAndGet();
   }
 }

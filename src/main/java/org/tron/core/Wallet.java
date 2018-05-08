@@ -53,6 +53,7 @@ import org.tron.core.exception.ValidateBandwidthException;
 import org.tron.core.exception.ValidateSignatureException;
 import org.tron.core.net.message.TransactionMessage;
 import org.tron.core.net.node.NodeImpl;
+import org.tron.program.cat.StatsConsumer;
 import org.tron.protos.Contract.AccountCreateContract;
 import org.tron.protos.Contract.AssetIssueContract;
 import org.tron.protos.Contract.ParticipateAssetIssueContract;
@@ -214,21 +215,22 @@ public class Wallet {
       if (message.getData().length > Constant.TRANSACTION_MAX_BYTE_SIZE) {
         throw new TooBigTransactionException("too big transaction, the size is " + message.getData().length + " bytes");
       }
-      dbManager.pushTransactions(trx);
-      p2pNode.broadcast(message);
+//      dbManager.pushTransactions(trx);
+      p2pNode.peerConsume(StatsConsumer.of(message));
+//      p2pNode.broadcast(message);
       return true;
-    } catch (ValidateSignatureException e) {
-      logger.error(e.getMessage(), e);
-    } catch (ContractValidateException e) {
-      logger.error(e.getMessage(), e);
-    } catch (ContractExeException e) {
-      logger.error(e.getMessage(), e);
-    } catch (ValidateBandwidthException e) {
-      logger.error("high freq", e);
-    } catch (DupTransactionException e) {
-      logger.error("dup trans", e);
-    } catch (TaposException e) {
-      logger.debug("tapos error", e);
+//    } catch (ValidateSignatureException e) {
+//      logger.error(e.getMessage(), e);
+//    } catch (ContractValidateException e) {
+//      logger.error(e.getMessage(), e);
+//    } catch (ContractExeException e) {
+//      logger.error(e.getMessage(), e);
+//    } catch (ValidateBandwidthException e) {
+//      logger.error("high freq", e);
+//    } catch (DupTransactionException e) {
+//      logger.error("dup trans", e);
+//    } catch (TaposException e) {
+//      logger.debug("tapos error", e);
     } catch (TooBigTransactionException e) {
       logger.debug("transaction error", e);
     } catch (Exception e){

@@ -21,12 +21,15 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.tron.common.overlay.discover.dht.Peer;
 import org.tron.common.overlay.message.Message;
 import org.tron.common.overlay.message.ReasonCode;
 import org.tron.common.overlay.server.Channel.TronState;
@@ -61,6 +64,7 @@ import org.tron.core.net.message.TransactionMessage;
 import org.tron.core.net.message.TronMessage;
 import org.tron.core.net.peer.PeerConnection;
 import org.tron.core.net.peer.PeerConnectionDelegate;
+import org.tron.program.cat.StatsOnhandle;
 import org.tron.protos.Protocol.Inventory.InventoryType;
 
 @Slf4j
@@ -804,16 +808,17 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
     try {
       //logger.info("on handle transaction message");
       try {
-        if (!peer.getAdvObjWeRequested().containsKey(trxMsg.getMessageId())) {
-          throw new TraitorPeerException("We don't send fetch request to" + peer);
-        } else {
-          peer.getAdvObjWeRequested().remove(trxMsg.getMessageId());
+//        if (!peer.getAdvObjWeRequested().containsKey(trxMsg.getMessageId())) {
+//          throw new TraitorPeerException("We don't send fetch request to" + peer);
+//        } else {
+//          peer.getAdvObjWeRequested().remove(trxMsg.getMessageId());
           del.handleTransaction(trxMsg.getTransactionCapsule());
-          broadcast(trxMsg);
-        }
-      } catch (TraitorPeerException e) {
-        logger.error(e.getMessage());
-        banTraitorPeer(peer, ReasonCode.BAD_PROTOCOL);
+//          broadcast(trxMsg);
+          StatsOnhandle.of().accept(peer);
+//        }
+//      } catch (TraitorPeerException e) {
+//        logger.error(e.getMessage());
+//        banTraitorPeer(peer, ReasonCode.BAD_PROTOCOL);
       } catch (BadTransactionException e) {
         badAdvObj.put(trxMsg.getMessageId(), System.currentTimeMillis());
         banTraitorPeer(peer, ReasonCode.BAD_TX);
@@ -1261,5 +1266,9 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
     peer.disconnect(reason);
   }
 
+  public void peerConsume(Consumer<PeerConnection> consumer) {
+    assert getActivePeer().size() == 1;
+    getActivePeer().forEach(consumer);
+  }
 }
 

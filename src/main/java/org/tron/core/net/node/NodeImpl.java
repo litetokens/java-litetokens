@@ -812,9 +812,9 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
 //          throw new TraitorPeerException("We don't send fetch request to" + peer);
 //        } else {
 //          peer.getAdvObjWeRequested().remove(trxMsg.getMessageId());
-          del.handleTransaction(trxMsg.getTransactionCapsule());
+        StatsOnhandle.of().accept(peer);
+        del.handleTransaction(trxMsg.getTransactionCapsule());
 //          broadcast(trxMsg);
-          StatsOnhandle.of().accept(peer);
 //        }
 //      } catch (TraitorPeerException e) {
 //        logger.error(e.getMessage());

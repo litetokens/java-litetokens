@@ -212,9 +212,9 @@ public class Wallet {
     TransactionCapsule trx = new TransactionCapsule(signaturedTransaction);
     try {
       Message message = new TransactionMessage(signaturedTransaction);
-      if (message.getData().length > Constant.TRANSACTION_MAX_BYTE_SIZE) {
-        throw new TooBigTransactionException("too big transaction, the size is " + message.getData().length + " bytes");
-      }
+//      if (message.getData().length > Constant.TRANSACTION_MAX_BYTE_SIZE) {
+//        throw new TooBigTransactionException("too big transaction, the size is " + message.getData().length + " bytes");
+//      }
 //      dbManager.pushTransactions(trx);
       p2pNode.peerConsume(StatsConsumer.of(message));
 //      p2pNode.broadcast(message);
@@ -231,8 +231,8 @@ public class Wallet {
 //      logger.error("dup trans", e);
 //    } catch (TaposException e) {
 //      logger.debug("tapos error", e);
-    } catch (TooBigTransactionException e) {
-      logger.error("transaction error", e);
+//    } catch (TooBigTransactionException e) {
+//      logger.error("transaction error", e);
     } catch (Exception e){
       logger.error("exception caught", e);
     }

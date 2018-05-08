@@ -28,7 +28,7 @@ public class StatsConsumer implements Consumer<PeerConnection> {
 
   @Override
   public void accept(PeerConnection peerConnection) {
-    stats.computeIfAbsent(System.currentTimeMillis()/1000L, AtomicLong::new).incrementAndGet();
     peerConnection.sendMessage(message);
+    stats.computeIfAbsent(System.currentTimeMillis()/1000L, AtomicLong::new).incrementAndGet();
   }
 }

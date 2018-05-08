@@ -10,6 +10,10 @@ import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.args.Args;
 import org.tron.core.services.RpcApiService;
 import org.tron.core.services.WitnessService;
+import org.tron.program.cat.StatsConsumer;
+import org.tron.program.cat.StatsOnhandle;
+
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class FullNode {
@@ -30,6 +34,7 @@ public class FullNode {
     ApplicationContext context = new AnnotationConfigApplicationContext(DefaultConfig.class);
     Application appT = ApplicationFactory.create(context);
     shutdown(appT);
+    print();
     //appT.init(cfgArgs);
     RpcApiService rpcApiService = context.getBean(RpcApiService.class);
     appT.addService(rpcApiService);
@@ -45,5 +50,14 @@ public class FullNode {
   public static void shutdown(final Application app) {
     logger.info("********register application shutdown hook********");
     Runtime.getRuntime().addShutdownHook(new Thread(app::shutdown));
+  }
+
+  public static void print() {
+    logger.info("***********************begin");
+    StatsConsumer.service.scheduleAtFixedRate(() -> logger.info("*****net send tps:" + StatsConsumer.stats),
+        10, 5, TimeUnit.SECONDS);
+    StatsOnhandle.service.scheduleAtFixedRate(() -> logger.info("*****net recive tps:" + StatsOnhandle.stats),
+        10, 5, TimeUnit.SECONDS);
+
   }
 }

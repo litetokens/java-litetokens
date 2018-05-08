@@ -16,14 +16,9 @@ import java.util.function.Consumer;
 @Value(staticConstructor = "of")
 public class StatsOnhandle implements Consumer<PeerConnection> {
   public static final long ONE_MINUTE = 60 * 1000L;
-  private static final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-  private static final ConcurrentHashMap<Long, AtomicLong> stats = new ConcurrentHashMap<>();
+  public static final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+  public static final ConcurrentHashMap<Long, AtomicLong> stats = new ConcurrentHashMap<>();
 //  private Message message;
-
-  static {
-      service.scheduleAtFixedRate(() -> logger.info("*****net recive tps:" + stats),
-          10, 5, TimeUnit.SECONDS);
-  }
 
   @Override
   public void accept(PeerConnection peerConnection) {

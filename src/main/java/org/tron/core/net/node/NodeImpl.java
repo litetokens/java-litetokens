@@ -1267,7 +1267,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
   }
 
   public void peerConsume(Consumer<PeerConnection> consumer) {
-    assert getActivePeer().size() == 1;
+    logger.info("getActivePeer size:" + getActivePeer().size());
     getActivePeer().forEach(consumer);
   }
 }

@@ -8,6 +8,7 @@ import static org.tron.protos.Protocol.Transaction.Contract.ContractType.Transfe
 import com.carrotsearch.sizeof.RamUsageEstimator;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -15,8 +16,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import javafx.util.Pair;
+
 import javax.annotation.PostConstruct;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -416,7 +420,7 @@ public class Manager {
   /**
    * push transaction into db.
    */
-  public synchronized boolean pushTransactions(final TransactionCapsule trx)
+  public boolean pushTransactions(final TransactionCapsule trx)
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
       ValidateBandwidthException, DupTransactionException, TaposException {
     logger.info("push transaction");
@@ -434,18 +438,18 @@ public class Manager {
     //validateTapos(trx);
 
     //validateFreq(trx);
+    synchronized (this) {
+      if (!dialog.valid()) {
+        dialog.setValue(revokingStore.buildDialog());
+      }
 
-    if (!dialog.valid()) {
-      dialog.setValue(revokingStore.buildDialog());
-    }
-
-    try (RevokingStore.Dialog tmpDialog = revokingStore.buildDialog()) {
-      //consumeBandwidth(trx);
-      processTransaction(trx);
-      pendingTransactions.add(trx);
-      tmpDialog.merge();
-    } catch (RevokingStoreIllegalStateException e) {
-      logger.debug(e.getMessage(), e);
+      try (RevokingStore.Dialog tmpDialog = revokingStore.buildDialog()) {
+        processTransaction(trx);
+        pendingTransactions.add(trx);
+        tmpDialog.merge();
+      } catch (RevokingStoreIllegalStateException e) {
+        logger.debug(e.getMessage(), e);
+      }
     }
 
     logger.info("tail TrxLeft[" + pendingTransactions.size() + "]");
@@ -465,8 +469,8 @@ public class Manager {
       long bandwidth = accountCapsule.getBandwidth();
       long now = Time.getCurrentMillis();
       long latestOperationTime = accountCapsule.getLatestOperationTime();
-      //5 * 60 * 1000
-      if (now - latestOperationTime >= 300_000L) {
+      //10 * 1000
+      if (now - latestOperationTime >= 10_000L) {
         accountCapsule.setLatestOperationTime(now);
         this.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
         return;
@@ -806,7 +810,7 @@ public class Manager {
    */
   public boolean containBlock(final Sha256Hash blockHash) {
     try {
-      return this.khaosDb.containBlock(blockHash) || blockStore.get(blockHash.getBytes()) != null;
+      return this.khaosDb.containBlockInMiniStore(blockHash) || blockStore.get(blockHash.getBytes()) != null;
     } catch (ItemNotFoundException e) {
       return false;
     } catch (BadItemException e) {
@@ -1015,6 +1019,11 @@ public class Manager {
       this.updateLatestSolidifiedBlock();
 
       for (TransactionCapsule transactionCapsule : block.getTransactions()) {
+        transactionCapsule.setValidated(block.generatedByMyself);
+        processTransaction(transactionCapsule);
+      }
+
+      for (TransactionCapsule transactionCapsule : block.getTransactions()) {
         processTransaction(transactionCapsule);
       }
 
@@ -1088,10 +1097,10 @@ public class Manager {
   }
 
   public BlockId getSolidBlockId() {
-    try{
+    try {
       long num = dynamicPropertiesStore.getLatestSolidifiedBlockNum();
       return getBlockIdByNum(num);
-    }catch (Exception e){
+    } catch (Exception e) {
       return getGenesisBlockId();
     }
   }
@@ -1113,7 +1122,7 @@ public class Manager {
 
   /**
    * @param block the block update signed witness. set witness who signed block the 1. the latest
-   * block num 2. pay the trx to witness. 3. the latest slot num.
+   *              block num 2. pay the trx to witness. 3. the latest slot num.
    */
   public void updateSignedWitness(BlockCapsule block) {
     Session session = JMonitor.newSession("Exec", "UpdateSignedWitness");

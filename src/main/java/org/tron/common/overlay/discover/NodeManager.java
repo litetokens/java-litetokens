@@ -20,6 +20,7 @@ package org.tron.common.overlay.discover;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -213,7 +214,7 @@ public class NodeManager {
     if (nodeHandlerMap.size() > NODES_TRIM_THRESHOLD) {
       List<NodeHandler> sorted = new ArrayList<>(nodeHandlerMap.values());
       // reverse sort by reputation
-      sorted.sort((o1, o2) -> o1.getNodeStatistics().getReputation() - o2.getNodeStatistics().getReputation());
+      sorted.sort(Comparator.comparingInt(o -> o.getNodeStatistics().getReputation()));
       for (NodeHandler handler : sorted) {
         nodeHandlerMap.remove(getKey(handler.getNode()));
         if (nodeHandlerMap.size() <= MAX_NODES) {
@@ -295,8 +296,7 @@ public class NodeManager {
         filtered.size());
 
     //TODO: here can use head num sort.
-    filtered.sort((o1, o2) -> o2.getNodeStatistics().getReputation() - o1.getNodeStatistics()
-        .getReputation());
+    filtered.sort(Comparator.comparingInt((NodeHandler o) -> o.getNodeStatistics().getReputation()).reversed());
 
     return CollectionUtils.truncate(filtered, limit);
   }
@@ -330,8 +330,7 @@ public class NodeManager {
 
   public synchronized String dumpAllStatistics() {
     List<NodeHandler> l = new ArrayList<>(nodeHandlerMap.values());
-    l.sort((o1, o2) -> -(o1.getNodeStatistics().getReputation() - o2.getNodeStatistics()
-        .getReputation()));
+    l.sort(Comparator.comparingInt((NodeHandler o) -> o.getNodeStatistics().getReputation()).reversed());
 
     StringBuilder sb = new StringBuilder();
     int zeroReputCount = 0;

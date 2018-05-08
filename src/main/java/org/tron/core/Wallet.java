@@ -232,7 +232,7 @@ public class Wallet {
 //    } catch (TaposException e) {
 //      logger.debug("tapos error", e);
     } catch (TooBigTransactionException e) {
-      logger.debug("transaction error", e);
+      logger.error("transaction error", e);
     } catch (Exception e){
       logger.error("exception caught", e);
     }

@@ -109,7 +109,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
           ids.forEach((key, value) -> {
             if (key.equals(InventoryType.BLOCK)){
               value.sort(Comparator.comparingDouble(value1 -> value1.getBlockNum()));
-              value.forEach(value1 -> logger.info("sendInv block, " + value1.getBlockNum()));
+              value.forEach(value1 -> logger.info("sendInv block, " + value1.getBlockNum() + ", " + value1.toString()));
             }
             peer.sendMessage(new InventoryMessage(value, key));
           }));
@@ -120,7 +120,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
           ids.forEach((key, value) -> {
             if (key.equals(InventoryType.BLOCK)){
               value.sort(Comparator.comparingDouble(value1 -> value1.getBlockNum()));
-              value.forEach(value1 -> logger.info("sendFetch block, " + value1.getBlockNum()));
+              value.forEach(value1 -> logger.info("sendFetch block, " + value1.getBlockNum() + ", " + value1.toString()));
             }
             peer.sendMessage(new FetchInvDataMessage(value, key));
           }));
@@ -585,6 +585,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
       if (isDisconnected[0]) {
         logger.info("peer.getSyncBlockRequested() size = " + peer.getSyncBlockRequested().size());
         peer.getSyncBlockRequested().keySet().forEach(blockId -> logger.info(blockId.getString()));
+        peer.getAdvObjWeRequested().keySet().forEach(sha256Hash -> logger.info("sha256Hash:"+ sha256Hash.getBlockNum()+"," + sha256Hash.toString()));
         //TODO use new reason
         disconnectPeer(peer, ReasonCode.TIME_OUT);
       }

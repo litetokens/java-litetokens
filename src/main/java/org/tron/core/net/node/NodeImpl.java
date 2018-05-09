@@ -590,8 +590,9 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
         peer.getSyncBlockRequested().keySet().forEach(blockId -> logger.info(blockId.getString()));
         peer.getAdvObjWeRequested().keySet().forEach(sha256Hash -> logger.info("sha256Hash:"+ sha256Hash.getBlockNum()+"," + sha256Hash.toString()));
         //TODO use new reason
-        ++rcvmsgcnt;
-        logger.info("rcvmsgcnt: timeout: " + rcvmsgcnt + ", sha256:" + peer.getAdvObjWeRequested().keySet().iterator().next().toString());
+        ++peer.rcvmsgcnt;
+        logger.info("rcvmsgcnt: timeout: " + peer.rcvmsgcnt + "lastblocknum: " + peer.lastblocknum +
+            ", sha256:" + peer.getAdvObjWeRequested().keySet().iterator().next().toString());
         disconnectPeer(peer, ReasonCode.TIME_OUT);
       }
     });
@@ -654,8 +655,9 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
 
   private void onHandleBlockMessage(PeerConnection peer, BlockMessage blkMsg) {
 
-    ++rcvmsgcnt;
-    logger.info("rcvmsgcnt: block: " + rcvmsgcnt);
+    ++peer.rcvmsgcnt;
+    peer.lastblocknum = peer.rcvmsgcnt;
+    logger.info("rcvmsgcnt: block: " + peer.rcvmsgcnt);
     Session session = JMonitor.newSession("Net", "OnHandleBlockMessage");
     session.setStatus(Session.SUCCESS);
 
@@ -816,8 +818,8 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
   ExecutorService service = Executors.newFixedThreadPool(10);
   private void onHandleTransactionMessage(PeerConnection peer, TransactionMessage trxMsg) {
 
-    ++rcvmsgcnt;
-    logger.info("rcvmsgcnt: " + rcvmsgcnt);
+    ++peer.rcvmsgcnt;
+    logger.info("rcvmsgcnt: " + peer.rcvmsgcnt);
 
     Session session = JMonitor.newSession("Net", "OnHandleTransactionMessage");
     session.setStatus(Session.SUCCESS);

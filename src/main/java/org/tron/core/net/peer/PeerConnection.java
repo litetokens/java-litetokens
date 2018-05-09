@@ -30,6 +30,11 @@ import org.tron.core.net.message.TransactionMessage;
 @Scope("prototype")
 public class PeerConnection extends Channel {
 
+  public volatile int rcvmsgcnt = 0;
+
+  public volatile int lastblocknum = 0;
+
+
   private boolean syncFlag = true;
 
   private HelloMessage helloMessage;

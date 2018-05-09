@@ -33,6 +33,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+
+import com.google.common.collect.ImmutableList;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -91,7 +93,7 @@ public class NodeManager {
 
     homeNode = new Node(Args.getInstance().getMyKey().getNodeId(), args.getNodeExternalIp(),
         args.getNodeListenPort());
-
+    args.getSeedNode().setIpList(ImmutableList.of("39.105.72.181:18890", "47.75.60.139:18890"));
     for (String boot : args.getSeedNode().getIpList()) {
       bootNodes.add(Node.instanceOf(boot));
     }

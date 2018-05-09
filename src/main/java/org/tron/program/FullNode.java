@@ -13,7 +13,10 @@ import org.tron.core.services.WitnessService;
 import org.tron.program.cat.StatsConsumer;
 import org.tron.program.cat.StatsOnhandle;
 
+import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 
 @Slf4j
 public class FullNode {
@@ -54,9 +57,21 @@ public class FullNode {
 
   public static void print() {
     logger.info("***********************begin");
-    StatsConsumer.service.scheduleAtFixedRate(() -> logger.info("*****net send tps:" + StatsConsumer.stats),
+    StatsConsumer.service.scheduleAtFixedRate(() ->
+            logger.info("*****net send tps:" + StatsConsumer.stats.keySet().stream()
+                .max(Comparator.comparingLong((Long l) -> l))
+                .map(StatsConsumer.stats::get)
+                .orElse(new AtomicLong(0))
+                .get()
+            ),
         10, 5, TimeUnit.SECONDS);
-    StatsOnhandle.service.scheduleAtFixedRate(() -> logger.info("*****net recive tps:" + StatsOnhandle.stats),
+    StatsOnhandle.service.scheduleAtFixedRate(() ->
+            logger.info("*****net recive tps:" + StatsOnhandle.stats.keySet().stream()
+                .max(Comparator.comparingLong((Long l) -> l))
+                .map(StatsOnhandle.stats::get)
+                .orElse(new AtomicLong(0))
+                .get()
+            ),
         10, 5, TimeUnit.SECONDS);
 
   }

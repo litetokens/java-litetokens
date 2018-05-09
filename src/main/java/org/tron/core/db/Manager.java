@@ -608,6 +608,10 @@ public class Manager {
       UnLinkedBlockException, ValidateScheduleException, ValidateBandwidthException {
     Session session = JMonitor.newSession("Exec", "PushBlock");
     session.setStatus(Session.SUCCESS);
+    logger.info(block.toString());
+
+    logger.info("push block  1:" + Time.getTimeString(System.currentTimeMillis()));
+
 
     try (PendingManager pm = new PendingManager(this)) {
 
@@ -620,6 +624,7 @@ public class Manager {
           // TODO: throw exception here.
           return;
         }
+        logger.info("push block  2:" + Time.getTimeString(System.currentTimeMillis()));
 
         if (!block.calcMerkleRoot().equals(block.getMerkleRoot())) {
           logger.info(
@@ -634,6 +639,8 @@ public class Manager {
         }
       }
 
+      logger.info("push block  3:" + Time.getTimeString(System.currentTimeMillis()));
+
       // checkWitness
       if (!witnessController.validateWitnessSchedule(block)) {
         session.setStatus(CatTransactionStatus.VALIDATE_WITNESS_SCHEDULE);
@@ -641,7 +648,13 @@ public class Manager {
         throw new ValidateScheduleException("validateWitnessSchedule error");
       }
 
+      logger.info("push block  4:" + Time.getTimeString(System.currentTimeMillis()));
+
+
       BlockCapsule newBlock = this.khaosDb.push(block);
+
+      logger.info("push block  5:" + Time.getTimeString(System.currentTimeMillis()));
+
 
       // DB don't need lower block
       if (getDynamicPropertiesStore().getLatestBlockHeaderHash() == null) {
@@ -710,12 +723,22 @@ public class Manager {
           return;
         }
         try (Dialog tmpDialog = revokingStore.buildDialog()) {
+          logger.info("push block  6:" + Time.getTimeString(System.currentTimeMillis()));
+
           applyBlock(newBlock);
+          logger.info("push block  7:" + Time.getTimeString(System.currentTimeMillis()));
+
           tmpDialog.commit();
+          logger.info("push block  8:" + Time.getTimeString(System.currentTimeMillis()));
+
           blockStore.put(block.getBlockId().getBytes(), block);
+          logger.info("push block  9:" + Time.getTimeString(System.currentTimeMillis()));
+
           this.blockIndexStore
               .put(ByteArray.fromLong(block.getNum()),
                   new BytesCapsule(block.getBlockId().getBytes()));
+          logger.info("push block  10:" + Time.getTimeString(System.currentTimeMillis()));
+
           JMonitor.logEvent("Info", Event.SUCCESS);
           JMonitor.logMetricForCount("PushBlockSuccessCount");
         } catch (RevokingStoreIllegalStateException e) {

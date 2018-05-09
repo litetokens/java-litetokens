@@ -61,7 +61,7 @@ public class PeerServer {
     public void start(int port) {
 
         bossGroup = new NioEventLoopGroup(1);
-        workerGroup = new NioEventLoopGroup(args.getTcpNettyWorkThreadNum());
+        workerGroup = new NioEventLoopGroup(10);
         tronChannelInitializer = ctx.getBean(TronChannelInitializer.class, "");
 
         tronChannelInitializer.setNodeImpl(p2pNode);

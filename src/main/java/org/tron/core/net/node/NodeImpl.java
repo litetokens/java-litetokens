@@ -800,19 +800,20 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
     }
     disconnectPeer(peer, reasonCode);
   }
-
+  ExecutorService service = Executors.newFixedThreadPool(10);
   private void onHandleTransactionMessage(PeerConnection peer, TransactionMessage trxMsg) {
     Session session = JMonitor.newSession("Net", "OnHandleTransactionMessage");
     session.setStatus(Session.SUCCESS);
     long start = System.nanoTime();
+    StatsOnhandle.of().accept(peer);
     try {
       //logger.info("on handle transaction message");
+    service.execute(() -> {
       try {
 //        if (!peer.getAdvObjWeRequested().containsKey(trxMsg.getMessageId())) {
 //          throw new TraitorPeerException("We don't send fetch request to" + peer);
 //        } else {
 //          peer.getAdvObjWeRequested().remove(trxMsg.getMessageId());
-        StatsOnhandle.of().accept(peer);
         del.handleTransaction(trxMsg.getTransactionCapsule());
 //          broadcast(trxMsg);
 //        }
@@ -823,6 +824,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
         badAdvObj.put(trxMsg.getMessageId(), System.currentTimeMillis());
         banTraitorPeer(peer, ReasonCode.BAD_TX);
       }
+    });
     } finally {
       session.complete();
       logger.info("trx cost:" + (System.nanoTime() - start));

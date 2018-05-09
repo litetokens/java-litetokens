@@ -589,6 +589,8 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
         peer.getSyncBlockRequested().keySet().forEach(blockId -> logger.info(blockId.getString()));
         peer.getAdvObjWeRequested().keySet().forEach(sha256Hash -> logger.info("sha256Hash:"+ sha256Hash.getBlockNum()+"," + sha256Hash.toString()));
         //TODO use new reason
+        ++rcvmsgcnt;
+        logger.info("rcvmsgcnt: timeout: " + rcvmsgcnt + ", sha256:" + peer.getAdvObjWeRequested().keySet().iterator().next().toString());
         disconnectPeer(peer, ReasonCode.TIME_OUT);
       }
     });

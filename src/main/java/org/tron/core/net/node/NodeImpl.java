@@ -583,7 +583,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
 //      }
 
       if (isDisconnected[0]) {
-        logger.info("peer.getSyncBlockRequested() size = " + peer.getSyncBlockRequested().size());
+        logger.info("peer:" + peer.getNode().getHost() + ",size1 = " + peer.getSyncBlockRequested().size() + "size2=" +peer.getAdvObjWeRequested().size());
         peer.getSyncBlockRequested().keySet().forEach(blockId -> logger.info(blockId.getString()));
         peer.getAdvObjWeRequested().keySet().forEach(sha256Hash -> logger.info("sha256Hash:"+ sha256Hash.getBlockNum()+"," + sha256Hash.toString()));
         //TODO use new reason

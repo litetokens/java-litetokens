@@ -716,6 +716,8 @@ private long tt = System.currentTimeMillis();
     Session session = JMonitor.newSession("Net", "ProcessAdvBlock");
     session.setStatus(Session.SUCCESS);
 
+    logger.info("process adv block start:" + Time.getTimeString(System.currentTimeMillis()));
+
     try {
       //TODO: lack the complete flow.
       if (!freshBlockId.contains(block.getBlockId())) {
@@ -730,7 +732,11 @@ private long tt = System.currentTimeMillis();
               .forEach(p -> updateBlockWeBothHave(peer, block));
 
           //rebroadcast
+          logger.info("rebroadcast start:" + Time.getTimeString(System.currentTimeMillis()));
+
           broadcast(new BlockMessage(block));
+          logger.info("rebroadcast end:" + Time.getTimeString(System.currentTimeMillis()));
+
           JMonitor.logMetricForCount("ProcessAdvBlockSuccessCount");
         } catch (BadBlockException e) {
           session.setStatus(CatTransactionStatus.BAD_BLOCK_EXCEPTION);
@@ -749,6 +755,8 @@ private long tt = System.currentTimeMillis();
     } finally {
       session.complete();
       JMonitor.countAndDuration("ProcessAdvBlockTotalCount", session.getDurationInMillis());
+      logger.info("process adv block end:" + Time.getTimeString(System.currentTimeMillis()));
+
     }
   }
 

@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.tron.common.overlay.message.Message;
 import org.tron.common.utils.Sha256Hash;
+import org.tron.common.utils.Time;
 import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.capsule.BlockCapsule.BlockId;
 import org.tron.core.capsule.TransactionCapsule;
@@ -51,7 +52,11 @@ public class NodeDelegateImpl implements NodeDelegate {
       throw new BadBlockException("block time error");
     }
     try {
+      logger.info("random print start:" + Time.getTimeString(System.currentTimeMillis()));
+
       dbManager.pushBlock(block);
+      logger.info("random print end:" + Time.getTimeString(System.currentTimeMillis()));
+
       if (!syncMode) {
         List<TransactionCapsule> trx = null;
         trx = block.getTransactions();

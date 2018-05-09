@@ -438,7 +438,7 @@ public class Manager {
     //validateTapos(trx);
 
     //validateFreq(trx);
-//    synchronized (this) {
+    synchronized (this) {
       if (!dialog.valid()) {
         dialog.setValue(revokingStore.buildDialog());
       }
@@ -450,7 +450,7 @@ public class Manager {
       } catch (RevokingStoreIllegalStateException e) {
         logger.debug(e.getMessage(), e);
       }
-//    }
+    }
 
     logger.info("tail TrxLeft[" + pendingTransactions.size() + "]");
     return true;

@@ -804,7 +804,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
   private void onHandleTransactionMessage(PeerConnection peer, TransactionMessage trxMsg) {
     Session session = JMonitor.newSession("Net", "OnHandleTransactionMessage");
     session.setStatus(Session.SUCCESS);
-
+    long start = System.nanoTime();
     try {
       //logger.info("on handle transaction message");
       try {
@@ -825,7 +825,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
       }
     } finally {
       session.complete();
-      logger.info("trx cost:" + session.getDurationInMicros());
+      logger.info("trx cost:" + (System.nanoTime() - start));
       JMonitor.countAndDuration("OnHandleTransactionMessageTotalCount",
           session.getDurationInMillis());
     }

@@ -17,12 +17,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.tron.common.overlay.message.*;
+import org.tron.core.net.message.BlockMessage;
+import org.tron.core.net.message.TransactionsMessage;
+import org.tron.protos.Protocol;
 
 import static org.tron.common.overlay.message.StaticMessages.PING_MESSAGE;
 
 @Component
 @Scope("prototype")
 public class MessageQueue {
+
+  private volatile long sendmsgcnt = 0;
 
   private static final Logger logger = LoggerFactory.getLogger("MessageQueue");
 
@@ -67,8 +72,18 @@ public class MessageQueue {
            Thread.sleep(10);
            continue;
          }
+         long time = System.nanoTime();
          Message msg = msgQueue.take();
          ctx.writeAndFlush(msg.getSendData()).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+         if (msg instanceof TransactionsMessage){
+           ++sendmsgcnt;
+           logger.info("sendmsgcnt: " + sendmsgcnt);
+         }else if(msg instanceof BlockMessage){
+           ++sendmsgcnt;
+           logger.info("sendmsgcnt: block: " + sendmsgcnt);
+         }
+
+         logger.info("sendMsgTime = " + (System.nanoTime() - time));
        }catch (Exception e) {
          logger.error("send message failed, {}, error info: {}", ctx.channel().remoteAddress(), e.getMessage());
        }

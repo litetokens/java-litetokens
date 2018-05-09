@@ -71,6 +71,8 @@ import org.tron.protos.Protocol.Inventory.InventoryType;
 @Component
 public class NodeImpl extends PeerConnectionDelegate implements Node {
 
+  private volatile int rcvmsgcnt = 0;
+
   @Autowired
   private SyncPool pool;
 
@@ -648,6 +650,9 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
 
 
   private void onHandleBlockMessage(PeerConnection peer, BlockMessage blkMsg) {
+
+    ++rcvmsgcnt;
+    logger.info("rcvmsgcnt: block: " + rcvmsgcnt);
     Session session = JMonitor.newSession("Net", "OnHandleBlockMessage");
     session.setStatus(Session.SUCCESS);
 
@@ -807,6 +812,10 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
   }
   ExecutorService service = Executors.newFixedThreadPool(10);
   private void onHandleTransactionMessage(PeerConnection peer, TransactionMessage trxMsg) {
+
+    ++rcvmsgcnt;
+    logger.info("rcvmsgcnt: " + rcvmsgcnt);
+
     Session session = JMonitor.newSession("Net", "OnHandleTransactionMessage");
     session.setStatus(Session.SUCCESS);
     long start = System.nanoTime();

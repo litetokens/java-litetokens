@@ -825,6 +825,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
       }
     } finally {
       session.complete();
+      logger.info("trx cost:" + session.getDurationInMillis());
       JMonitor.countAndDuration("OnHandleTransactionMessageTotalCount",
           session.getDurationInMillis());
     }

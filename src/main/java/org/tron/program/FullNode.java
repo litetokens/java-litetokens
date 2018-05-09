@@ -60,17 +60,15 @@ public class FullNode {
     StatsConsumer.service.scheduleAtFixedRate(() ->
             logger.info("*****net send tps:" + StatsConsumer.stats.keySet().stream()
                 .max(Comparator.comparingLong((Long l) -> l))
-                .map(StatsConsumer.stats::get)
-                .orElse(new AtomicLong(0))
-                .get()
+                .map(key -> key + ":" + StatsConsumer.stats.get(key).get())
+                .orElse("0")
             ),
         10, 5, TimeUnit.SECONDS);
     StatsOnhandle.service.scheduleAtFixedRate(() ->
             logger.info("*****net recive tps:" + StatsOnhandle.stats.keySet().stream()
                 .max(Comparator.comparingLong((Long l) -> l))
-                .map(StatsOnhandle.stats::get)
-                .orElse(new AtomicLong(0))
-                .get()
+                .map(key -> key + ":" + StatsOnhandle.stats.get(key).get())
+                .orElse("0")
             ),
         10, 5, TimeUnit.SECONDS);
 

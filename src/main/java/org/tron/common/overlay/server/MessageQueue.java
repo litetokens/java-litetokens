@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.tron.common.overlay.message.*;
 import org.tron.core.net.message.BlockMessage;
+import org.tron.core.net.message.TransactionMessage;
 import org.tron.core.net.message.TransactionsMessage;
 import org.tron.protos.Protocol;
 
@@ -75,7 +76,7 @@ public class MessageQueue {
          long time = System.nanoTime();
          Message msg = msgQueue.take();
          ctx.writeAndFlush(msg.getSendData()).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
-         if (msg instanceof TransactionsMessage){
+         if (msg instanceof TransactionMessage){
            ++sendmsgcnt;
            logger.info("sendmsgcnt: " + sendmsgcnt);
          }else if(msg instanceof BlockMessage){

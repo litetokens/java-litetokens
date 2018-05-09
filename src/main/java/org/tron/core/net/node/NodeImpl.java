@@ -214,7 +214,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
   private boolean isSuspendFetch = false;
 
   private boolean isFetchSyncActive = false;
-
+private long tt = System.currentTimeMillis();
   ExecutorService service2 = Executors.newFixedThreadPool(1);
   @Override
   public void onMessage(PeerConnection peer, TronMessage msg) {
@@ -225,6 +225,12 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
       logger.info("Handle Message: " + msg + " from \nPeer: " + peer);
       switch (msg.getType()) {
         case BLOCK:
+
+          BlockId blockId = ((BlockMessage)msg).getBlockId();
+          peer.getAdvObjWeRequested().remove(blockId);
+
+          logger.info("rcvmsgcnt:block: rcv block:" + blockId.getString() + ", time=" + (System.currentTimeMillis() - tt));
+
           service2.execute(() -> onHandleBlockMessage(peer, (BlockMessage) msg));
           break;
         case TRX:
@@ -670,12 +676,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
       BlockId blockId = blkMsg.getBlockId();
       logger.info("handle Block number is " + blkMsg.getBlockId().getNum());
 
-      if (advObjWeRequested.containsKey(blockId)) {
-        //broadcast mode
-        advObjWeRequested.remove(blockId);
-        processAdvBlock(peer, blkMsg.getBlockCapsule());
-        startFetchItem();
-      } else if (syncBlockRequested.containsKey(blockId)) {
+      if (syncBlockRequested.containsKey(blockId)) {
         if (!peer.getSyncFlag()){
           logger.info("rcv a block {} from no need sync peer {}", blockId.getNum(), peer.getNode());
           return;
@@ -697,6 +698,13 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
             isFetchSyncActive = true;
           }
         }
+      }else {
+        logger.info("rcvmsgcnt:block: handle block:" + blockId.getString() + ", time=" + (System.currentTimeMillis() - tt));
+          //broadcast mode
+          advObjWeRequested.remove(blockId);
+          processAdvBlock(peer, blkMsg.getBlockCapsule());
+          startFetchItem();
+          logger.info("rcvmsgcnt:block: finish handle block:" + blockId.getString() + ", time=" + (System.currentTimeMillis() - tt));
       }
     } finally {
       session.complete();

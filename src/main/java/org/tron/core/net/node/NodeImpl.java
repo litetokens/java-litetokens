@@ -215,6 +215,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
 
   private boolean isFetchSyncActive = false;
 
+  ExecutorService service = Executors.newFixedThreadPool(1);
   @Override
   public void onMessage(PeerConnection peer, TronMessage msg) {
     Session session = JMonitor.newSession("Net", "OnMessage");
@@ -224,7 +225,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
       logger.info("Handle Message: " + msg + " from \nPeer: " + peer);
       switch (msg.getType()) {
         case BLOCK:
-          onHandleBlockMessage(peer, (BlockMessage) msg);
+          service.execute(() -> onHandleBlockMessage(peer, (BlockMessage) msg));
           break;
         case TRX:
           onHandleTransactionMessage(peer, (TransactionMessage) msg);

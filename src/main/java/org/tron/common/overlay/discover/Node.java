@@ -22,11 +22,14 @@ import static org.tron.common.crypto.Hash.sha3;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
+
+import lombok.extern.slf4j.Slf4j;
 import org.spongycastle.util.encoders.Hex;
 import org.tron.common.crypto.ECKey;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Utils;
 
+@Slf4j
 public class Node implements Serializable {
 
   private static final long serialVersionUID = -4267600517925770636L;
@@ -52,6 +55,7 @@ public class Node implements Serializable {
   public static Node instanceOf(String addressOrEnode) {
     try {
       URI uri = new URI(addressOrEnode);
+      logger.info("******** addressOrEnode: " + addressOrEnode + ", scheme:" + uri.getScheme());
       if (uri.getScheme().equals("enode")) {
         return new Node(addressOrEnode);
       }

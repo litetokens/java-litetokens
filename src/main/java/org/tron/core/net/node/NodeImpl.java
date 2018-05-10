@@ -843,23 +843,23 @@ private long tt = System.currentTimeMillis();
     StatsOnhandle.of().accept(peer);
     try {
       //logger.info("on handle transaction message");
-//    service.execute(() -> {
-//      try {
-////        if (!peer.getAdvObjWeRequested().containsKey(trxMsg.getMessageId())) {
-////          throw new TraitorPeerException("We don't send fetch request to" + peer);
-////        } else {
-////          peer.getAdvObjWeRequested().remove(trxMsg.getMessageId());
-//        del.handleTransaction(trxMsg.getTransactionCapsule());
-////          broadcast(trxMsg);
-////        }
-////      } catch (TraitorPeerException e) {
-////        logger.error(e.getMessage());
-////        banTraitorPeer(peer, ReasonCode.BAD_PROTOCOL);
-//      } catch (BadTransactionException e) {
-//        badAdvObj.put(trxMsg.getMessageId(), System.currentTimeMillis());
-//        banTraitorPeer(peer, ReasonCode.BAD_TX);
-//      }
-//    });
+    service.execute(() -> {
+      try {
+//        if (!peer.getAdvObjWeRequested().containsKey(trxMsg.getMessageId())) {
+//          throw new TraitorPeerException("We don't send fetch request to" + peer);
+//        } else {
+//          peer.getAdvObjWeRequested().remove(trxMsg.getMessageId());
+        del.handleTransaction(trxMsg.getTransactionCapsule());
+//          broadcast(trxMsg);
+//        }
+//      } catch (TraitorPeerException e) {
+//        logger.error(e.getMessage());
+//        banTraitorPeer(peer, ReasonCode.BAD_PROTOCOL);
+      } catch (BadTransactionException e) {
+        badAdvObj.put(trxMsg.getMessageId(), System.currentTimeMillis());
+        banTraitorPeer(peer, ReasonCode.BAD_TX);
+      }
+    });
     } finally {
 //      session.complete();
 //      logger.info("trx cost:" + (System.nanoTime() - start));

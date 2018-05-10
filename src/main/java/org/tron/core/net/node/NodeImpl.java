@@ -834,12 +834,12 @@ private long tt = System.currentTimeMillis();
   ExecutorService service = Executors.newFixedThreadPool(10);
   private void onHandleTransactionMessage(PeerConnection peer, TransactionMessage trxMsg) {
 
-    ++peer.rcvmsgcnt;
-    logger.info("rcvmsgcnt: " + peer.rcvmsgcnt);
+//    ++peer.rcvmsgcnt;
+//    logger.info("rcvmsgcnt: " + peer.rcvmsgcnt);
 
-    Session session = JMonitor.newSession("Net", "OnHandleTransactionMessage");
-    session.setStatus(Session.SUCCESS);
-    long start = System.nanoTime();
+//    Session session = JMonitor.newSession("Net", "OnHandleTransactionMessage");
+//    session.setStatus(Session.SUCCESS);
+//    long start = System.nanoTime();
     StatsOnhandle.of().accept(peer);
     try {
       //logger.info("on handle transaction message");
@@ -861,10 +861,10 @@ private long tt = System.currentTimeMillis();
 //      }
 //    });
     } finally {
-      session.complete();
-      logger.info("trx cost:" + (System.nanoTime() - start));
-      JMonitor.countAndDuration("OnHandleTransactionMessageTotalCount",
-          session.getDurationInMillis());
+//      session.complete();
+//      logger.info("trx cost:" + (System.nanoTime() - start));
+//      JMonitor.countAndDuration("OnHandleTransactionMessageTotalCount",
+//          session.getDurationInMillis());
     }
   }
 

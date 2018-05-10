@@ -34,7 +34,7 @@ public class FullNode {
       logger.info("Here is the help message.");
       return;
     }
-    
+
     ApplicationContext context = new AnnotationConfigApplicationContext(DefaultConfig.class);
     Application appT = ApplicationFactory.create(context);
     shutdown(appT);
@@ -58,21 +58,25 @@ public class FullNode {
 
   public static void print() {
     logger.info("***********************begin");
-    StatsConsumer.service.scheduleAtFixedRate(() ->
-            logger.info("*****net send tps:" + StatsConsumer.stats.keySet().stream()
-                .sorted(Comparator.comparingLong((Long l) -> l).reversed())
-                .limit(2)
-                .map(key -> key + ":" + StatsConsumer.stats.get(key).get())
-                .collect(Collectors.joining(";"))
-            ),
+    StatsConsumer.service.scheduleAtFixedRate(() -> {
+          logger.info("*****net send tps:" + StatsConsumer.stats.keySet().stream()
+              .sorted(Comparator.comparingLong((Long l) -> l).reversed())
+              .limit(2)
+              .map(key -> key + ":" + StatsConsumer.stats.get(key).get())
+              .collect(Collectors.joining(";"))
+          );
+          logger.info("*****send count tps:" + StatsConsumer.LONG_ADDER.longValue());
+        },
         10, 5, TimeUnit.SECONDS);
-    StatsOnhandle.service.scheduleAtFixedRate(() ->
-            logger.info("*****net recive tps:" + StatsOnhandle.stats.keySet().stream()
-                .sorted(Comparator.comparingLong((Long l) -> l).reversed())
-                .limit(2)
-                .map(key -> key + ":" + StatsOnhandle.stats.get(key).get())
-                .collect(Collectors.joining(";"))
-            ),
+    StatsOnhandle.service.scheduleAtFixedRate(() -> {
+          logger.info("*****net recive tps:" + StatsOnhandle.stats.keySet().stream()
+              .sorted(Comparator.comparingLong((Long l) -> l).reversed())
+              .limit(2)
+              .map(key -> key + ":" + StatsOnhandle.stats.get(key).get())
+              .collect(Collectors.joining(";"))
+          );
+          logger.info("*****revive count tps:" + StatsOnhandle.LONG_ADDER.longValue());
+        },
         10, 5, TimeUnit.SECONDS);
 
   }

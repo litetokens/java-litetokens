@@ -17,6 +17,7 @@ import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class FullNode {
@@ -59,16 +60,18 @@ public class FullNode {
     logger.info("***********************begin");
     StatsConsumer.service.scheduleAtFixedRate(() ->
             logger.info("*****net send tps:" + StatsConsumer.stats.keySet().stream()
-                .max(Comparator.comparingLong((Long l) -> l))
+                .sorted(Comparator.comparingLong((Long l) -> l).reversed())
+                .limit(2)
                 .map(key -> key + ":" + StatsConsumer.stats.get(key).get())
-                .orElse("0")
+                .collect(Collectors.joining(";"))
             ),
         10, 5, TimeUnit.SECONDS);
     StatsOnhandle.service.scheduleAtFixedRate(() ->
             logger.info("*****net recive tps:" + StatsOnhandle.stats.keySet().stream()
-                .max(Comparator.comparingLong((Long l) -> l))
-                .map(key -> key + ":" + StatsOnhandle.stats.get(key).get())
-                .orElse("0")
+                .sorted(Comparator.comparingLong((Long l) -> l).reversed())
+                .limit(2)
+                .map(key -> key + ":" + StatsConsumer.stats.get(key).get())
+                .collect(Collectors.joining(";"))
             ),
         10, 5, TimeUnit.SECONDS);
 

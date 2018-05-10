@@ -70,7 +70,7 @@ public class FullNode {
             logger.info("*****net recive tps:" + StatsOnhandle.stats.keySet().stream()
                 .sorted(Comparator.comparingLong((Long l) -> l).reversed())
                 .limit(2)
-                .map(key -> key + ":" + StatsConsumer.stats.get(key).get())
+                .map(key -> key + ":" + StatsOnhandle.stats.get(key).get())
                 .collect(Collectors.joining(";"))
             ),
         10, 5, TimeUnit.SECONDS);

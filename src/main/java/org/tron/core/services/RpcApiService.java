@@ -92,7 +92,7 @@ public class RpcApiService implements Service {
   public void start() {
     try {
       ServerBuilder serverBuilder = ServerBuilder.forPort(port)
-          .executor(Executors.newFixedThreadPool(10))
+          .executor(Executors.newFixedThreadPool(3))
           .addService(new DatabaseApi());
       if (Args.getInstance().isSolidityNode()) {
         serverBuilder = serverBuilder.addService(new WalletSolidityApi());

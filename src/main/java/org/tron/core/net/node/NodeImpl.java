@@ -487,7 +487,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
     //AtomicLong batchFecthResponseSize = new AtomicLong(0);
 
     advObjToFetch.values().stream()
-//        .sorted(PriorItem::compareTo)
+        .sorted(PriorItem::compareTo)
         .forEach(idToFetch ->
       filterActivePeer.stream()
           .filter(peer -> peer.getAdvObjSpreadToUs().containsKey(idToFetch.getHash())

@@ -898,7 +898,7 @@ public class Manager {
     if (!trxCap.validateSignature()) {
       throw new ValidateSignatureException("trans sig validate failed");
     }
-    validateTapos(trxCap);
+//    validateTapos(trxCap);
     validateCommon(trxCap);
 
     final List<Actuator> actuatorList = ActuatorFactory.createActuator(trxCap, this);

@@ -130,8 +130,10 @@ public class Hash {
    */
   public static byte[] sha3omit12(byte[] input) {
     byte[] hash = sha3(input);
-    byte[] address = copyOfRange(hash, 11, hash.length);
-    address[0] = Wallet.getAddressPreFixByte();
+    byte[] address = copyOfRange(hash, 10 + Wallet.getAddressPreFixNum(), hash.length);
+    if (Wallet.getAddressPreFixNum() == 1) {
+      address[0] = Wallet.getAddressPreFixByte();  //TestNet prefix 1 byte,  main net do not prefix.
+    }
     return address;
   }
 }

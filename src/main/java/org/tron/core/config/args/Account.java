@@ -20,6 +20,7 @@ import java.io.Serializable;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.tron.common.utils.ByteArray;
+import org.tron.core.Constant;
 import org.tron.core.Wallet;
 import org.tron.protos.Protocol.AccountType;
 
@@ -47,9 +48,10 @@ public class Account implements Serializable {
    * Account address is a 21-bits hex string.
    */
   public void setAddress(final byte[] address) {
-    if (!Wallet.addressValid(address)){
+    if (!Wallet.addressValid(address)) {
       throw new IllegalArgumentException(
-          "The address(" + address + ") must be a 21 bytes.");
+          "The address(" + ByteArray.toHexString(address) + ") must be a " + (Constant.ADDRESS_SIZE
+              + Wallet.getAddressPreFixNum()) + " bytes.");
     }
     this.address = address;
   }

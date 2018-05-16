@@ -77,6 +77,7 @@ public class Wallet {
   private NodeImpl p2pNode;
   @Autowired
   private Manager dbManager;
+  private static int addressPreFixNum = 0x01;
   private static String addressPreFixString = Constant.ADD_PRE_FIX_STRING_TESTNET;  //default testnet
   private static byte addressPreFixByte = Constant.ADD_PRE_FIX_BYTE_TESTNET;
 
@@ -97,6 +98,14 @@ public class Wallet {
 
   public byte[] getAddress() {
     return ecKey.getAddress();
+  }
+
+  public static int getAddressPreFixNum() {
+    return addressPreFixNum;
+  }
+
+  public static void setAddressPreFixNum(int addressPreFixNum) {
+    Wallet.addressPreFixNum = addressPreFixNum;
   }
 
   public static String getAddressPreFixString() {
@@ -120,16 +129,19 @@ public class Wallet {
       logger.warn("Warning: Address is empty !!");
       return false;
     }
-    if (address.length != Constant.ADDRESS_SIZE / 2) {
+    if (address.length != Constant.ADDRESS_SIZE + addressPreFixNum) {
       logger.warn(
-          "Warning: Address length need " + Constant.ADDRESS_SIZE + " but " + address.length
+          "Warning: Address length need " + (Constant.ADDRESS_SIZE + addressPreFixNum) + " but "
+              + address.length
               + " !!");
       return false;
     }
-    if (address[0] != addressPreFixByte) {
-      logger.warn("Warning: Address need prefix with " + addressPreFixByte + " but "
-          + address[0] + " !!");
-      return false;
+    if (addressPreFixNum == 1) {
+      if (address[0] != addressPreFixByte) {
+        logger.warn("Warning: Address need prefix with " + addressPreFixByte + " but "
+            + address[0] + " !!");
+        return false;
+      }
     }
     //Other rule;
     return true;
@@ -167,13 +179,7 @@ public class Wallet {
       logger.warn("Warning: Address is empty !!");
       return null;
     }
-    if (addressBase58.length() != Constant.BASE58CHECK_ADDRESS_SIZE) {
-      logger.warn(
-          "Warning: Base58 address length need " + Constant.BASE58CHECK_ADDRESS_SIZE + " but "
-              + addressBase58.length()
-              + " !!");
-      return null;
-    }
+
     byte[] address = decode58Check(addressBase58);
     if (!addressValid(address)) {
       return null;
@@ -277,9 +283,9 @@ public class Wallet {
 
   public Block getNowBlock() {
     List<BlockCapsule> blockList = dbManager.getBlockStore().getBlockByLatestNum(1);
-    if(CollectionUtils.isEmpty(blockList)){
+    if (CollectionUtils.isEmpty(blockList)) {
       return null;
-    }else{
+    } else {
       return blockList.get(0).getInstance();
     }
   }

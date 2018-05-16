@@ -261,9 +261,11 @@ public class Args {
         .orElse(config.getStringList("seed.node.ip.list")));
 
     if (config.hasPath("net.type") && "mainnet".equalsIgnoreCase(config.getString("net.type"))) {
-      Wallet.setAddressPreFixByte(Constant.ADD_PRE_FIX_BYTE_MAINNET);
-      Wallet.setAddressPreFixString(Constant.ADD_PRE_FIX_STRING_MAINNET);
+      Wallet.setAddressPreFixNum(0);
+      Wallet.setAddressPreFixByte((byte) 0x00);
+      Wallet.setAddressPreFixString("");
     } else {
+      Wallet.setAddressPreFixNum(1);
       Wallet.setAddressPreFixByte(Constant.ADD_PRE_FIX_BYTE_TESTNET);
       Wallet.setAddressPreFixString(Constant.ADD_PRE_FIX_STRING_TESTNET);
     }
@@ -308,7 +310,8 @@ public class Args {
         config.hasPath("node.maxActiveNodes") ? config.getInt("node.maxActiveNodes") : 0;
 
     INSTANCE.minParticipationRate =
-        config.hasPath("node.minParticipationRate") ? config.getInt("node.minParticipationRate") : 0;
+        config.hasPath("node.minParticipationRate") ? config.getInt("node.minParticipationRate")
+            : 0;
 
     INSTANCE.nodeListenPort =
         config.hasPath("node.listen.port") ? config.getInt("node.listen.port") : 0;
@@ -347,7 +350,8 @@ public class Args {
         .getInt("node.udpNettyWorkThreadNum") : 1;
 
     if (StringUtils.isEmpty(INSTANCE.trustNodeAddr)) {
-      INSTANCE.trustNodeAddr = config.hasPath("node.trustNode") ? config.getString("node.trustNode") : null;
+      INSTANCE.trustNodeAddr =
+          config.hasPath("node.trustNode") ? config.getString("node.trustNode") : null;
     }
 
     INSTANCE.validateSignThreadNum = config.hasPath("node.validateSignThreadNum") ? config
@@ -364,7 +368,8 @@ public class Args {
 
   private static Witness createWitness(final ConfigObject witnessAccount) {
     final Witness witness = new Witness();
-    witness.setAddress(Wallet.decodeFromBase58Check(witnessAccount.get("address").unwrapped().toString()));
+    witness.setAddress(
+        Wallet.decodeFromBase58Check(witnessAccount.get("address").unwrapped().toString()));
     witness.setUrl(witnessAccount.get("url").unwrapped().toString());
     witness.setVoteCount(witnessAccount.toConfig().getLong("voteCount"));
     return witness;

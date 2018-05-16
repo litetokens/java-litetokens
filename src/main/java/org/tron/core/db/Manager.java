@@ -899,7 +899,7 @@ public class Manager {
       throw new ValidateSignatureException("trans sig validate failed");
     }
 //    validateTapos(trxCap);
-    validateCommon(trxCap);
+//    validateCommon(trxCap);
 
     final List<Actuator> actuatorList = ActuatorFactory.createActuator(trxCap, this);
     TransactionResultCapsule ret = new TransactionResultCapsule();

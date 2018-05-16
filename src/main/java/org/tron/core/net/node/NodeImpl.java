@@ -94,7 +94,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
 
 
   @Getter
-  class PriorItem /*implements java.lang.Comparable<PriorItem>*/ {
+  class PriorItem implements java.lang.Comparable<PriorItem> {
 
     private long count;
 
@@ -120,13 +120,13 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
       this.time = Time.getCurrentMillis();
     }
 
-//    @Override
-//    public int compareTo(final PriorItem o) {
-//      if (!this.item.getType().equals(o.getItem().getType())) {
-//        return this.item.getType().equals(InventoryType.BLOCK) ? -1 : 1;
-//      }
-//      return Long.compare(this.count, o.getCount());
-//    }
+    @Override
+    public int compareTo(final PriorItem o) {
+      if (!this.item.getType().equals(o.getItem().getType())) {
+        return this.item.getType().equals(InventoryType.BLOCK) ? -1 : 1;
+      }
+      return Long.compare(this.count, o.getCount());
+    }
   }
 
   class InvToSend {
@@ -487,7 +487,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
     //AtomicLong batchFecthResponseSize = new AtomicLong(0);
 
     advObjToFetch.values().stream()
-//        .sorted(PriorItem::compareTo)
+        .sorted(PriorItem::compareTo)
         .forEach(idToFetch ->
       filterActivePeer.stream()
           .filter(peer -> peer.getAdvObjSpreadToUs().containsKey(idToFetch.getHash())

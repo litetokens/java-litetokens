@@ -867,17 +867,17 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
   private void onHandleTransactionMessage(PeerConnection peer, TransactionMessage trxMsg) {
     //logger.info("on handle transaction message");
     try {
-      Item item = new Item(trxMsg.getMessageId(), InventoryType.TRX);
-      if (!peer.getAdvObjWeRequested().containsKey(item)) {
-        throw new TraitorPeerException("We don't send fetch request to" + peer);
-      } else {
-        peer.getAdvObjWeRequested().remove(item);
+//      Item item = new Item(trxMsg.getMessageId(), InventoryType.TRX);
+//      if (!peer.getAdvObjWeRequested().containsKey(item)) {
+//        throw new TraitorPeerException("We don't send fetch request to" + peer);
+//      } else {
+//        peer.getAdvObjWeRequested().remove(item);
         del.handleTransaction(trxMsg.getTransactionCapsule());
-        broadcast(trxMsg);
-      }
-    } catch (TraitorPeerException e) {
-      logger.error(e.getMessage());
-      banTraitorPeer(peer, ReasonCode.BAD_PROTOCOL);
+//        broadcast(trxMsg);
+//      }
+//    } catch (TraitorPeerException e) {
+//      logger.error(e.getMessage());
+//      banTraitorPeer(peer, ReasonCode.BAD_PROTOCOL);
     } catch (BadTransactionException e) {
       badAdvObj.put(trxMsg.getMessageId(), System.currentTimeMillis());
       banTraitorPeer(peer, ReasonCode.BAD_TX);

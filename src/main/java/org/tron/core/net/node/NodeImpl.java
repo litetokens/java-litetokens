@@ -32,6 +32,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javafx.util.Pair;
 import lombok.Getter;
@@ -282,14 +283,22 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
 
   private volatile boolean isFetchSyncActive = false;
 
+  ExecutorService trxService = Executors.newFixedThreadPool(10);
+  ExecutorService blockService = Executors.newFixedThreadPool(1);
   @Override
   public void onMessage(PeerConnection peer, TronMessage msg) {
     switch (msg.getType()) {
       case BLOCK:
-        onHandleBlockMessage(peer, (BlockMessage) msg);
+        blockService.execute(() -> {
+          logger.error("*********************onHandleBlockMessage*****************");
+          onHandleBlockMessage(peer, (BlockMessage) msg);
+        });
         break;
       case TRX:
-        onHandleTransactionMessage(peer, (TransactionMessage) msg);
+        trxService.execute(() -> {
+          logger.error("----------------------onHandleTransactionMessage---------------------");
+          onHandleTransactionMessage(peer, (TransactionMessage) msg);
+        });
         break;
       case TRXS:
         onHandleTransactionsMessage(peer, (TransactionsMessage) msg);
@@ -1273,6 +1282,11 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
     // if we had requested any sync or regular items from this peer that we haven't
     // received yet, reschedule them to be fetched from another peer
     peer.disconnect(reason);
+  }
+
+  public void peerConsume(Consumer<PeerConnection> consumer) {
+    logger.error("*************getActivePeer size:" + getActivePeer().size());
+    getActivePeer().stream().forEach(consumer);
   }
 
 }

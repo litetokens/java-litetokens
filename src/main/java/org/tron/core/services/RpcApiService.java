@@ -397,7 +397,8 @@ public class RpcApiService implements Service {
     @Override
     public void broadcastTransaction(Transaction req,
         StreamObserver<GrpcAPI.Return> responseObserver) {
-      GrpcAPI.Return retur = wallet.broadcastTransaction(req);
+//      GrpcAPI.Return retur = wallet.broadcastTransaction(req);
+      GrpcAPI.Return retur = wallet.broadcastTransactionForNetWorkTest(req);
       responseObserver.onNext(retur);
       responseObserver.onCompleted();
     }

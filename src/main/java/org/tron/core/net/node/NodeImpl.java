@@ -291,6 +291,8 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
       case BLOCK:
         blockService.execute(() -> {
           logger.error("*********************onHandleBlockMessage*****************");
+          BlockId blockId = ((BlockMessage)msg).getBlockId();
+          peer.getAdvObjWeRequested().remove(new Item(blockId, InventoryType.BLOCK));
           onHandleBlockMessage(peer, (BlockMessage) msg);
         });
         break;

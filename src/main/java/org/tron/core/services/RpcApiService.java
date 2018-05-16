@@ -101,7 +101,7 @@ public class RpcApiService implements Service {
           .addService(new DatabaseApi());
       Args args = Args.getInstance();
       if (args.getRpcThreadNum() > 0) {
-        serverBuilder = serverBuilder.executor(Executors.newFixedThreadPool(args.getRpcThreadNum()));
+        serverBuilder = serverBuilder.executor(Executors.newFixedThreadPool(2));
       }
       if (args.isSolidityNode()) {
         serverBuilder = serverBuilder.addService(new WalletSolidityApi());

@@ -934,6 +934,8 @@ public class Manager {
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
       UnLinkedBlockException, ValidateScheduleException, ValidateBandwidthException {
 
+    long startTime = System.currentTimeMillis();
+    logger.info("start time: " + startTime);
     final long timestamp = this.dynamicPropertiesStore.getLatestBlockHeaderTimestamp();
     final long number = this.dynamicPropertiesStore.getLatestBlockHeaderNumber();
     final Sha256Hash preHash = this.dynamicPropertiesStore.getLatestBlockHeaderHash();
@@ -962,10 +964,12 @@ public class Manager {
         continue;
       }
 
-      if (DateTime.now().getMillis() - when > ChainConstant.BLOCK_PRODUCED_INTERVAL * 0.4) {
-        logger.debug("Processing transaction time exceeds the 50% producing time。");
+      if (DateTime.now().getMillis() - when > ChainConstant.BLOCK_PRODUCED_INTERVAL * 0.3) {
+        logger.info("Processing transaction time exceeds the 30% producing time。");
         break;
       }
+
+      logger.info("current trx size:" + currentTrxSize);
 
       // apply transaction
       try (Dialog tmpDialog = revokingStore.buildDialog()) {
@@ -998,6 +1002,8 @@ public class Manager {
       }
     }
 
+    logger.info("loop end: " + (System.currentTimeMillis() - startTime));
+
     dialog.reset();
 
     if (postponedTrxCount > 0) {
@@ -1011,6 +1017,7 @@ public class Manager {
     blockCapsule.sign(privateKey);
     blockCapsule.generatedByMyself = true;
     this.pushBlock(blockCapsule);
+    logger.info("pushblock end: " + (System.currentTimeMillis() - startTime));
     return blockCapsule;
   }
 

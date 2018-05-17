@@ -275,6 +275,11 @@ public class Wallet {
     }
   }
 
+  public GrpcAPI.Return broadCastTransactionForTest(Transaction transaction) {
+    p2pNode.consume(peer -> peer.sendMessage(new TransactionMessage(transaction)));
+    return GrpcAPI.Return.newBuilder().setResult(true).setCode(response_code.SUCCESS).build();
+  }
+
   public Block getNowBlock() {
     List<BlockCapsule> blockList = dbManager.getBlockStore().getBlockByLatestNum(1);
     if(CollectionUtils.isEmpty(blockList)){

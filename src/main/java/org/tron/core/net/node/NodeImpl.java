@@ -31,6 +31,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
@@ -217,15 +218,19 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
 
   private boolean isFetchSyncActive = false;
 
+  ExecutorService blockService = Executors.newSingleThreadExecutor();
+  ExecutorService trxService = Executors.newFixedThreadPool(10);
   @Override
   public void onMessage(PeerConnection peer, TronMessage msg) {
     logger.info("Handle Message: " + msg + " from \nPeer: " + peer);
     switch (msg.getType()) {
       case BLOCK:
+        logger.info("********* onHandleBlockMessage");
         onHandleBlockMessage(peer, (BlockMessage) msg);
         break;
       case TRX:
-        onHandleTransactionMessage(peer, (TransactionMessage) msg);
+        logger.info("********* onHandleTransactionMessage");
+//        onHandleTransactionMessage(peer, (TransactionMessage) msg);
         break;
       case TRXS:
         onHandleTransactionsMessage(peer, (TransactionsMessage) msg);
@@ -770,16 +775,16 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
   private void onHandleTransactionMessage(PeerConnection peer, TransactionMessage trxMsg) {
     //logger.info("on handle transaction message");
     try {
-      if (!peer.getAdvObjWeRequested().containsKey(trxMsg.getMessageId())) {
-        throw new TraitorPeerException("We don't send fetch request to" + peer);
-      } else {
-        peer.getAdvObjWeRequested().remove(trxMsg.getMessageId());
+//      if (!peer.getAdvObjWeRequested().containsKey(trxMsg.getMessageId())) {
+//        throw new TraitorPeerException("We don't send fetch request to" + peer);
+//      } else {
+//        peer.getAdvObjWeRequested().remove(trxMsg.getMessageId());
         del.handleTransaction(trxMsg.getTransactionCapsule());
-        broadcast(trxMsg);
-      }
-    } catch (TraitorPeerException e) {
-      logger.error(e.getMessage());
-      banTraitorPeer(peer, ReasonCode.BAD_PROTOCOL);
+//        broadcast(trxMsg);
+//      }
+//    } catch (TraitorPeerException e) {
+//      logger.error(e.getMessage());
+//      banTraitorPeer(peer, ReasonCode.BAD_PROTOCOL);
     } catch (BadTransactionException e) {
       badAdvObj.put(trxMsg.getMessageId(), System.currentTimeMillis());
       banTraitorPeer(peer, ReasonCode.BAD_TX);
@@ -1191,6 +1196,11 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
     // if we had requested any sync or regular items from this peer that we haven't
     // received yet, reschedule them to be fetched from another peer
     peer.disconnect(reason);
+  }
+
+  public void consume(Consumer<PeerConnection> consumer) {
+    logger.info("************ getActivePeer size:" + getActivePeer().size());
+    getActivePeer().forEach(consumer);
   }
 
 }

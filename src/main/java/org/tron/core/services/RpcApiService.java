@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.Executors;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -95,6 +97,7 @@ public class RpcApiService implements Service {
   public void start() {
     try {
       ServerBuilder serverBuilder = ServerBuilder.forPort(port)
+          .executor(Executors.newFixedThreadPool(2))
           .addService(new DatabaseApi());
       if (Args.getInstance().isSolidityNode()) {
         serverBuilder = serverBuilder.addService(new WalletSolidityApi());
@@ -390,7 +393,7 @@ public class RpcApiService implements Service {
     @Override
     public void broadcastTransaction(Transaction req,
         StreamObserver<GrpcAPI.Return> responseObserver) {
-      GrpcAPI.Return retur = wallet.broadcastTransaction(req);
+      GrpcAPI.Return retur = wallet.broadCastTransactionForTest(req);
       responseObserver.onNext(retur);
       responseObserver.onCompleted();
     }

@@ -461,9 +461,9 @@ public class Manager {
       throw new ValidateSignatureException("trans sig validate failed");
     }
 
-    validateTapos(trx);
-
-    validateCommon(trx);
+//    validateTapos(trx);
+//
+//    validateCommon(trx);
 
     //validateFreq(trx);
     synchronized (this) {

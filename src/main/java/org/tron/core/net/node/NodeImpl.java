@@ -230,7 +230,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
         break;
       case TRX:
         logger.info("********* onHandleTransactionMessage");
-//        onHandleTransactionMessage(peer, (TransactionMessage) msg);
+        trxService.execute(() -> onHandleTransactionMessage(peer, (TransactionMessage) msg));
         break;
       case TRXS:
         onHandleTransactionsMessage(peer, (TransactionsMessage) msg);

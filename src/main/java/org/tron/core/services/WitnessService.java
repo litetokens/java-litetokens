@@ -17,6 +17,10 @@ import org.tron.core.config.Parameter.ChainConstant;
 import org.tron.core.config.args.Args;
 import org.tron.core.exception.ContractExeException;
 import org.tron.core.exception.ContractValidateException;
+import org.tron.core.exception.DupTransactionException;
+import org.tron.core.exception.TaposException;
+import org.tron.core.exception.TooBigTransactionException;
+import org.tron.core.exception.TransactionExpirationException;
 import org.tron.core.exception.TronException;
 import org.tron.core.exception.UnLinkedBlockException;
 import org.tron.core.exception.ValidateBandwidthException;
@@ -35,7 +39,7 @@ public class WitnessService implements Service {
   @Getter
   protected Map<ByteString, WitnessCapsule> localWitnessStateMap = Maps
       .newHashMap(); //  <address,WitnessCapsule>
-  private Thread generateThread;
+  private Thread generateThread, suspensiveTransactionsThread;
   private volatile boolean isRunning = false;
   private Map<ByteString, byte[]> privateKeyMap = Maps.newHashMap();
   private boolean needSyncCheck = Args.getInstance().isNeedSyncCheck();
@@ -48,6 +52,7 @@ public class WitnessService implements Service {
   public WitnessService(Application tronApp) {
     this.tronApp = tronApp;
     generateThread = new Thread(scheduleProductionLoop);
+    suspensiveTransactionsThread = new Thread(suspensiveTransactionsLoop);
     controller = tronApp.getDbManager().getWitnessController();
   }
 
@@ -87,6 +92,35 @@ public class WitnessService implements Service {
             logger.error("unknown throwable happened in witness loop", throwable);
           }
         }
+      };
+
+  private Runnable suspensiveTransactionsLoop =
+      () -> {
+        tronApp.getDbManager().getSuspensiveTransactions().stream()
+            .filter(
+                trx -> tronApp.getDbManager().getTransactionStore()
+                    .get(trx.getTransactionId().getBytes()) == null)
+            .forEach(trx -> {
+              try {
+                tronApp.getDbManager().pushTransactions(trx);
+              } catch (ValidateSignatureException e) {
+                logger.error(e.getMessage(), e);
+              } catch (ContractValidateException e) {
+                logger.error(e.getMessage(), e);
+              } catch (ContractExeException e) {
+                logger.error(e.getMessage(), e);
+              } catch (ValidateBandwidthException e) {
+                logger.error(e.getMessage(), e);
+              } catch (DupTransactionException e) {
+                logger.error("pending manager: dup trans", e);
+              } catch (TaposException e) {
+                logger.error("pending manager: tapos exception", e);
+              } catch (TooBigTransactionException e) {
+                logger.error("too big transaction");
+              } catch (TransactionExpirationException e) {
+                logger.error("expiration transaction");
+              }
+            });
       };
 
   /**
@@ -290,6 +324,7 @@ public class WitnessService implements Service {
   public void start() {
     isRunning = true;
     generateThread.start();
+    suspensiveTransactionsThread.start();
   }
 
   @Override

@@ -167,15 +167,15 @@ public class Manager {
     return this.pendingTransactions;
   }
 
-  public List<TransactionCapsule> getPoppedTransactions() {
-    return this.popedTransactions;
+  public List<TransactionCapsule> getSuspensiveTransactions() {
+    return this.suspensiveTransactions;
   }
 
   // transactions cache
   private List<TransactionCapsule> pendingTransactions;
 
   // transactions popped
-  private List<TransactionCapsule> popedTransactions =
+  private List<TransactionCapsule> suspensiveTransactions =
       Collections.synchronizedList(Lists.newArrayList());
 
   // for test only
@@ -593,7 +593,7 @@ public class Manager {
     }
     logger.info("erase block:" + oldHeadBlock);
     khaosDb.pop();
-    popedTransactions.addAll(oldHeadBlock.getTransactions());
+    suspensiveTransactions.addAll(oldHeadBlock.getTransactions());
   }
 
   private void applyBlock(BlockCapsule block)
@@ -1248,7 +1248,7 @@ public class Manager {
   }
 
   public boolean isTooManyPending() {
-    if (getPendingTransactions().size() + PendingManager.getTmpTransactions().size()
+    if (getPendingTransactions().size() + getSuspensiveTransactions().size()
         > MAX_TRANSACTION_PENDING) {
       return true;
     }

@@ -299,7 +299,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
       case TRX:
         trxService.execute(() -> {
           logger.error("----------------------onHandleTransactionMessage---------------------");
-//          onHandleTransactionMessage(peer, (TransactionMessage) msg);
+          onHandleTransactionMessage(peer, (TransactionMessage) msg);
         });
         break;
       case TRXS:

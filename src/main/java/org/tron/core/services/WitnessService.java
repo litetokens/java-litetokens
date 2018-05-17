@@ -96,31 +96,38 @@ public class WitnessService implements Service {
 
   private Runnable suspensiveTransactionsLoop =
       () -> {
-        tronApp.getDbManager().getSuspensiveTransactions().stream()
-            .filter(
-                trx -> tronApp.getDbManager().getTransactionStore()
-                    .get(trx.getTransactionId().getBytes()) == null)
-            .forEach(trx -> {
-              try {
-                tronApp.getDbManager().pushTransactions(trx);
-              } catch (ValidateSignatureException e) {
-                logger.error(e.getMessage(), e);
-              } catch (ContractValidateException e) {
-                logger.error(e.getMessage(), e);
-              } catch (ContractExeException e) {
-                logger.error(e.getMessage(), e);
-              } catch (ValidateBandwidthException e) {
-                logger.error(e.getMessage(), e);
-              } catch (DupTransactionException e) {
-                logger.error("pending manager: dup trans", e);
-              } catch (TaposException e) {
-                logger.error("pending manager: tapos exception", e);
-              } catch (TooBigTransactionException e) {
-                logger.error("too big transaction");
-              } catch (TransactionExpirationException e) {
-                logger.error("expiration transaction");
-              }
-            });
+        if (localWitnessStateMap == null || localWitnessStateMap.keySet().size() == 0) {
+          logger.error("LocalWitnesses is null");
+          return;
+        }
+
+        while (isRunning) {
+          tronApp.getDbManager().getSuspensiveTransactions().stream()
+              .filter(
+                  trx -> tronApp.getDbManager().getTransactionStore()
+                      .get(trx.getTransactionId().getBytes()) == null)
+              .forEach(trx -> {
+                try {
+                  tronApp.getDbManager().pushTransactions(trx);
+                } catch (ValidateSignatureException e) {
+                  logger.error(e.getMessage(), e);
+                } catch (ContractValidateException e) {
+                  logger.error(e.getMessage(), e);
+                } catch (ContractExeException e) {
+                  logger.error(e.getMessage(), e);
+                } catch (ValidateBandwidthException e) {
+                  logger.error(e.getMessage(), e);
+                } catch (DupTransactionException e) {
+                  logger.error("pending manager: dup trans", e);
+                } catch (TaposException e) {
+                  logger.error("pending manager: tapos exception", e);
+                } catch (TooBigTransactionException e) {
+                  logger.error("too big transaction");
+                } catch (TransactionExpirationException e) {
+                  logger.error("expiration transaction");
+                }
+              });
+        }
       };
 
   /**

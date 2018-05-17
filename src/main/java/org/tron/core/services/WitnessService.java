@@ -146,6 +146,7 @@ public class WitnessService implements Service {
     long now = DateTime.now().getMillis() + 50L;
     if (this.needSyncCheck) {
       long nexSlotTime = controller.getSlotTime(1);
+      logger.info("*****now:" + now + ", nexSlotTime:" + nexSlotTime + "diff:" + (nexSlotTime - now));
       if (nexSlotTime > now) { // check sync during first loop
         needSyncCheck = false;
         Thread.sleep(nexSlotTime - now); //Processing Time Drift later

@@ -964,7 +964,7 @@ public class Manager {
         continue;
       }
 
-      if (DateTime.now().getMillis() - when > ChainConstant.BLOCK_PRODUCED_INTERVAL * 0.3) {
+      if (DateTime.now().getMillis() - when > ChainConstant.BLOCK_PRODUCED_INTERVAL * 0.4) {
         logger.info("Processing transaction time exceeds the 30% producing time。");
         break;
       }

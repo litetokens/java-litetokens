@@ -145,7 +145,8 @@ public class NodeDelegateImpl implements NodeDelegate {
     //todo: limit the count of block to send peer by one time.
     long unForkedBlockIdNum = unForkedBlockId.getNum();
     long len = Longs
-        .min(dbManager.getHeadBlockNum(), unForkedBlockIdNum + NodeConstant.SYNC_FETCH_BATCH_NUM);
+        .min(dbManager.getHeadBlockNum(),
+            unForkedBlockIdNum + NodeConstant.SYNC_FETCH_BATCH_NUM);
 
     LinkedList<BlockId> blockIds = new LinkedList<>();
     for (long i = unForkedBlockIdNum; i <= len; i++) {
@@ -185,7 +186,8 @@ public class NodeDelegateImpl implements NodeDelegate {
         if (forkList.isEmpty()) {
           throw new UnLinkedBlockException(
               "We want to find forkList of this block: " + beginBlockId.getString()
-                  + " ,but in KhasoDB we can not find it, It maybe a very old beginBlockId, we are sync once,"
+                  + " ,but in KhasoDB we can not find it, "
+                  + "It maybe a very old beginBlockId, we are sync once,"
                   + " we switch and pop it after that time. ");
         }
         highNoForkBlkNum = forkList.peekLast().getNum();

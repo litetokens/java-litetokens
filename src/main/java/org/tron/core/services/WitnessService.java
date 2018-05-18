@@ -268,8 +268,10 @@ public class WitnessService implements Service {
       }
 
       logger.info(
-          "Produce block successfully, blockNumber:{}, abSlot[{}], blockId:{}, transactionSize:{}, blockTime:{}, parentBlockId:{}",
-          block.getNum(), controller.getAbSlotAtTime(now), block.getBlockId(), block.getTransactions().size(),
+          "Produce block successfully, blockNumber:{}, abSlot[{}], blockId:{}, "
+              + "transactionSize:{}, blockTime:{}, parentBlockId:{}",
+          block.getNum(), controller.getAbSlotAtTime(now), block.getBlockId(),
+          block.getTransactions().size(),
           new DateTime(block.getTimeStamp()),
           this.tronApp.getDbManager().getDynamicPropertiesStore().getLatestBlockHeaderHash());
       broadcastBlock(block);
@@ -293,7 +295,9 @@ public class WitnessService implements Service {
   }
 
   private BlockCapsule generateBlock(long when, ByteString witnessAddress)
-      throws ValidateSignatureException, ContractValidateException, ContractExeException, UnLinkedBlockException, ValidateScheduleException, ValidateBandwidthException {
+      throws ValidateSignatureException, ContractValidateException,
+      ContractExeException, UnLinkedBlockException, ValidateScheduleException,
+      ValidateBandwidthException {
     return tronApp.getDbManager().generateBlock(this.localWitnessStateMap.get(witnessAddress), when,
         this.privateKeyMap.get(witnessAddress));
   }

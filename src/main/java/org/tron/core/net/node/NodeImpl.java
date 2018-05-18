@@ -885,8 +885,10 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
     }
 
     if (blockIds.isEmpty()) {
-      if (CollectionUtils.isNotEmpty(summaryChainIds) && !del.canChainRevoke(summaryChainIds.get(0).getNum())) {
-        logger.info("Node sync block fail, disconnect peer {}, no block {}", peer, summaryChainIds.get(0).getString());
+      if (CollectionUtils.isNotEmpty(summaryChainIds)
+          && !del.canChainRevoke(summaryChainIds.get(0).getNum())) {
+        logger.info("Node sync block fail, disconnect peer {}, no block {}",
+            peer, summaryChainIds.get(0).getString());
         peer.disconnect(ReasonCode.SYNC_FAIL);
         return;
       } else {

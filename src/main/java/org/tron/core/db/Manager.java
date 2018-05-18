@@ -369,7 +369,8 @@ public class Manager {
 
               if (!this.accountStore.has(keyAddress)) {
                 final AccountCapsule accountCapsule =
-                    new AccountCapsule(ByteString.EMPTY, address, AccountType.AssetIssue, 0L);
+                    new AccountCapsule(ByteString.EMPTY,
+                        address, AccountType.AssetIssue, 0L);
                 this.accountStore.put(keyAddress, accountCapsule);
               }
 
@@ -428,7 +429,8 @@ public class Manager {
         return;
       } else {
         logger.error(
-            "Tapos failed, different block hash, {}, {} , recent block {}, solid block {} head block {}",
+            "Tapos failed, different block hash, {}, {} , "
+                + "recent block {}, solid block {} head block {}",
             ByteArray.toLong(refBlockNumBytes), Hex.toHexString(refBlockHash),
             Hex.toHexString(blockHash),
             getSolidBlockId().getString(), getHeadBlockId().getString());
@@ -471,7 +473,8 @@ public class Manager {
    */
   public boolean pushTransactions(final TransactionCapsule trx)
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
-      ValidateBandwidthException, DupTransactionException, TaposException, TooBigTransactionException, TransactionExpirationException {
+      ValidateBandwidthException, DupTransactionException, TaposException,
+      TooBigTransactionException, TransactionExpirationException {
     logger.info("push transaction");
 
     if (!trx.validateSignature()) {
@@ -597,7 +600,9 @@ public class Manager {
   }
 
   private void applyBlock(BlockCapsule block)
-      throws ContractValidateException, ContractExeException, ValidateSignatureException, ValidateBandwidthException, TransactionExpirationException, TooBigTransactionException, DupTransactionException, TaposException {
+      throws ContractValidateException, ContractExeException, ValidateSignatureException,
+      ValidateBandwidthException, TransactionExpirationException, TooBigTransactionException,
+      DupTransactionException, TaposException {
     processBlock(block);
     this.blockStore.put(block.getBlockId().getBytes(), block);
     this.blockIndexStore.put(block.getBlockId());
@@ -1055,7 +1060,9 @@ public class Manager {
    * process block.
    */
   public void processBlock(BlockCapsule block)
-      throws ValidateSignatureException, ContractValidateException, ContractExeException, ValidateBandwidthException, TaposException, TooBigTransactionException, DupTransactionException, TransactionExpirationException {
+      throws ValidateSignatureException, ContractValidateException, ContractExeException,
+      ValidateBandwidthException, TaposException, TooBigTransactionException,
+      DupTransactionException, TransactionExpirationException {
     // todo set revoking db max size.
 
     for (TransactionCapsule transactionCapsule : block.getTransactions()) {

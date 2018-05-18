@@ -934,7 +934,8 @@ public class Manager {
       UnLinkedBlockException, ValidateScheduleException, ValidateBandwidthException {
 
     long startTime = System.currentTimeMillis();
-    logger.info("start time: " + startTime);
+    long pendingSize = pendingTransactions.size();
+    logger.info("start time: " + startTime + "pending size: " + pendingSize);
     final long timestamp = this.dynamicPropertiesStore.getLatestBlockHeaderTimestamp();
     final long number = this.dynamicPropertiesStore.getLatestBlockHeaderNumber();
     final Sha256Hash preHash = this.dynamicPropertiesStore.getLatestBlockHeaderHash();
@@ -973,6 +974,7 @@ public class Manager {
       // apply transaction
       try (Dialog tmpDialog = revokingStore.buildDialog()) {
         processTransaction(trx);
+        pendingSize--;
         tmpDialog.merge();
         // push into block
         blockCapsule.addTransaction(trx);
@@ -1001,7 +1003,8 @@ public class Manager {
       }
     }
 
-    logger.info("loop end: " + (System.currentTimeMillis() - startTime));
+    logger.info("loop end: " + (System.currentTimeMillis() - startTime)
+        + "not in block size: " + pendingSize);
 
     dialog.reset();
 
@@ -1017,6 +1020,7 @@ public class Manager {
     blockCapsule.generatedByMyself = true;
     try {
       this.pushBlock(blockCapsule);
+      logger.info("push end: " + (System.currentTimeMillis() - startTime));
       return blockCapsule;
     } catch (TaposException e) {
       logger.info("contract not processed during TaposException");

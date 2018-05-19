@@ -58,7 +58,7 @@ public abstract class AbstractIndex<E extends ProtoCapsule<T>, T> implements Ifa
 
   protected void fill() {
     int size = Iterables.size(database);
-    if (size != 0 && (!indexPath.exists() || index.size() < size)) {
+    if (size != 0 && !indexPath.exists()) {
       database.forEach(e -> add(e.getKey()));
     }
   }

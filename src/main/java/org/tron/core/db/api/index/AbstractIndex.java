@@ -56,7 +56,8 @@ public abstract class AbstractIndex<E extends ProtoCapsule<T>, T> implements Ifa
     return getObject(byteArray.getBytes());
   }
 
-  protected void fill() {
+  @Override
+  public void fill() {
     int size = Iterables.size(database);
     if (size != 0 && !indexPath.exists()) {
       database.forEach(e -> add(e.getKey()));

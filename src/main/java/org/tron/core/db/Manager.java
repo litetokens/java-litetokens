@@ -907,9 +907,9 @@ public class Manager {
    * Process transaction.
    */
   public boolean processTransaction(final TransactionCapsule trxCap)
-      throws ValidateSignatureException, ContractValidateException,
-      ContractExeException, ValidateBandwidthException, TransactionExpirationException,
-      TooBigTransactionException, DupTransactionException, TaposException {
+      throws ValidateSignatureException, ContractValidateException, ContractExeException,
+      ValidateBandwidthException, TransactionExpirationException, TooBigTransactionException,
+      DupTransactionException, TaposException {
     if (trxCap == null) {
       return false;
     }

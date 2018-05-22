@@ -368,9 +368,9 @@ public class Manager {
               ByteString address = ByteString.copyFrom(keyAddress);
 
               if (!this.accountStore.has(keyAddress)) {
-                final AccountCapsule accountCapsule =
-                    new AccountCapsule(ByteString.EMPTY,
-                        address, AccountType.AssetIssue, 0L);
+                final AccountCapsule accountCapsule = new AccountCapsule(ByteString.EMPTY,
+                    address, AccountType.AssetIssue, 0L);
+                accountCapsule.setIsWitness(true);
                 this.accountStore.put(keyAddress, accountCapsule);
               }
 

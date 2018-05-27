@@ -241,19 +241,20 @@ public class WitnessService implements Service {
           this.tronApp.getDbManager().getDynamicPropertiesStore().getLatestBlockHeaderHash());
       broadcastBlock(block);
 
-      // don't be evil
-      logger.error("**************begin to do evil");
-      BlockCapsule evil = new BlockCapsule(block.getBlock().toBuilder()
-          .setBlockHeader(block.getBlock().getBlockHeader().toBuilder()
-              .setRawData(block.getBlock().getBlockHeader().getRawData().toBuilder()
-              .setTimestamp(block.getBlock().getBlockHeader().getRawData().getTimestamp()+1)
-              ))
-          .build());
-      evil.setMerkleRoot();
-      evil.sign(this.privateKeyMap.get(scheduledWitness));
-      broadcastBlock(evil);
-      logger.error("**************end to do evil. block:" + block.getBlockId() + ", evil:" + evil.getBlockId());
-
+      if (block.getNum() > 20) {
+        // don't be evil
+        logger.error("**************begin to do evil");
+        BlockCapsule evil = new BlockCapsule(block.getBlock().toBuilder()
+            .setBlockHeader(block.getBlock().getBlockHeader().toBuilder()
+                .setRawData(block.getBlock().getBlockHeader().getRawData().toBuilder()
+                    .setTimestamp(block.getBlock().getBlockHeader().getRawData().getTimestamp() + 1)
+                ))
+            .build());
+        evil.setMerkleRoot();
+        evil.sign(this.privateKeyMap.get(scheduledWitness));
+        broadcastBlock(evil);
+        logger.error("**************end to do evil. block:" + block.getBlockId() + ", evil:" + evil.getBlockId());
+      }
       return BlockProductionCondition.PRODUCED;
     } catch (TronException e) {
       logger.error(e.getMessage(), e);

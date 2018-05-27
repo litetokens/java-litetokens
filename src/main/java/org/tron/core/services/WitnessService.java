@@ -252,7 +252,7 @@ public class WitnessService implements Service {
       evil.setMerkleRoot();
       evil.sign(this.privateKeyMap.get(scheduledWitness));
       broadcastBlock(evil);
-      logger.error("**************end to do evil");
+      logger.error("**************end to do evil. block:" + block.getBlockId() + ", evil:" + evil.getBlockId());
 
       return BlockProductionCondition.PRODUCED;
     } catch (TronException e) {

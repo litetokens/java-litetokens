@@ -88,6 +88,8 @@ dependencies {
 
     compile "com.cedarsoftware:java-util:1.8.0"
 
+    compile "org.bouncycastle:bcpkix-jdk15on:1.55"
+
     compile "org.apache.commons:commons-lang3:3.4"
 
     compile group: 'org.springframework', name: 'spring-context', version: '4.2.0.RELEASE'

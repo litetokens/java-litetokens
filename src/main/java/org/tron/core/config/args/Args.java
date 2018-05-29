@@ -269,7 +269,7 @@ public class Args {
     } else if (config.hasPath("localwitnesskeystore")) {
       List<String> localwitness = config.getStringList("localwitnesskeystore");
       if (localwitness.size() > 0) {
-        String fileName = localwitness.get(0);
+        String fileName = System.getProperty("user.dir") + "/" + localwitness.get(0);
         if (StringUtils.isNoneBlank(INSTANCE.password)) {
           try {
             Credentials credentials = WalletUtils

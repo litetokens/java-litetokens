@@ -3,12 +3,12 @@ package org.tron.program;
 import com.beust.jcommander.JCommander;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Scanner;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tron.common.crypto.ECKey;
+import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Utils;
 import org.tron.keystore.CipherException;
 import org.tron.keystore.Credentials;
@@ -21,13 +21,26 @@ public class KeystoreFactory {
 
   private static final Logger logger = LoggerFactory.getLogger("KeystoreFactory");
   private static final String FilePath = "Wallet";
-  public boolean passwordValid(String password) {
+  private boolean passwordValid(String password) {
     if (StringUtils.isEmpty(password)) {
       logger.warn("Warning: Password is empty !!");
       return false;
     }
     if (password.length() < 6) {
       logger.warn("Warning: Password is too short !!");
+      return false;
+    }
+    //Other rule;
+    return true;
+  }
+
+  private boolean priKeyValid(String priKey) {
+    if (StringUtils.isEmpty(priKey)) {
+      logger.warn("Warning: PrivateKey is empty !!");
+      return false;
+    }
+    if (priKey.length() != 64) {
+      logger.warn("Warning: PrivateKey length need 64 but " + priKey.length() + " !!");
       return false;
     }
     //Other rule;
@@ -75,9 +88,51 @@ public class KeystoreFactory {
     System.out.println("Your address is " + credentials.getAddress());;
   }
 
+  private void importPrivatekey() throws CipherException, IOException {
+    Scanner in = new Scanner(System.in);
+    String privateKey;
+    System.out.println("Please input private key.");
+    while (true) {
+      String input = in.nextLine().trim();
+      privateKey = input.split("\\s+")[0];
+      if (priKeyValid(privateKey)){
+        break;
+      }
+      System.out.println("Invalid private key, please input again.");
+    }
+
+    String password0;
+    while (true) {
+      System.out.println("Please input password.");
+      password0 = inputPassword();
+      System.out.println("Please input password again.");
+      String password1 = inputPassword();
+      if (password0.equals(password1)){
+        break;
+      }
+      System.out.println("The passwords do not match, please input again.");
+    }
+
+    ECKey eCkey = ECKey.fromPrivate(ByteArray.fromHexString(privateKey));
+    File file = new File(FilePath);
+    if (!file.exists()) {
+      file.mkdir();
+    } else {
+      if (!file.isDirectory()) {
+        file.delete();
+        file.mkdir();
+      }
+    }
+    String fileName = WalletUtils.generateWalletFile(password0, eCkey, file, true);
+    System.out.println("Gen a keystore its name " + fileName);
+    Credentials credentials = WalletUtils.loadCredentials(password0, new File(file, fileName));
+    System.out.println("Your address is " + credentials.getAddress());;
+  }
+
   private void help() {
     System.out.println("You can enter the following command: ");
     System.out.println("GenKeystore");
+    System.out.println("ImportPrivatekey");
     System.out.println("Exit or Quit");
     System.out.println("Input any one of then, you will get more tips.");
   }
@@ -94,7 +149,6 @@ public class KeystoreFactory {
         if ("".equals(cmd)) {
           continue;
         }
-        String[] parameters = Arrays.copyOfRange(cmdArray, 1, cmdArray.length);
         String cmdLowerCase = cmd.toLowerCase();
 
         switch (cmdLowerCase) {
@@ -106,9 +160,14 @@ public class KeystoreFactory {
             genKeystore();
             break;
           }
+          case "importprivatekey": {
+            importPrivatekey();
+            break;
+          }
           case "exit":
           case "quit": {
             System.out.println("Exit !!!");
+            in.close();
             return;
           }
           default: {
@@ -120,7 +179,6 @@ public class KeystoreFactory {
         logger.error(e.getMessage());
       }
     }
-
   }
 
   public static void main(String[] args) {

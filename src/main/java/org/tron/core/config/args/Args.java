@@ -32,6 +32,7 @@ import org.springframework.stereotype.Component;
 import org.tron.common.crypto.ECKey;
 import org.tron.common.overlay.discover.Node;
 import org.tron.common.utils.ByteArray;
+import org.tron.core.Constant;
 import org.tron.core.Wallet;
 import org.tron.core.config.Configuration;
 import org.tron.core.config.Parameter.ChainConstant;
@@ -258,6 +259,7 @@ public class Args {
       INSTANCE.setLocalWitnesses(new LocalWitnesses(INSTANCE.privateKey));
       logger.debug("Got privateKey from cmd");
     } else if (config.hasPath("localwitness")) {
+
       INSTANCE.localWitnesses = new LocalWitnesses();
       List<String> localwitness = config.getStringList("localwitness");
       if (localwitness.size() > 1) {
@@ -309,6 +311,14 @@ public class Args {
     INSTANCE.seedNode.setIpList(Optional.ofNullable(INSTANCE.seedNodes)
         .filter(seedNode -> 0 != seedNode.size())
         .orElse(config.getStringList("seed.node.ip.list")));
+
+    if (config.hasPath("net.type") && "mainnet".equalsIgnoreCase(config.getString("net.type"))) {
+      Wallet.setAddressPreFixByte(Constant.ADD_PRE_FIX_BYTE_MAINNET);
+      Wallet.setAddressPreFixString(Constant.ADD_PRE_FIX_STRING_MAINNET);
+    } else {
+      Wallet.setAddressPreFixByte(Constant.ADD_PRE_FIX_BYTE_TESTNET);
+      Wallet.setAddressPreFixString(Constant.ADD_PRE_FIX_STRING_TESTNET);
+    }
 
     if (config.hasPath("genesis.block")) {
       INSTANCE.genesisBlock = new GenesisBlock();

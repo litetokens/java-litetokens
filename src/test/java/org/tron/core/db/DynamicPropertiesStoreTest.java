@@ -15,6 +15,7 @@
 
 package org.tron.core.db;
 
+import org.apache.commons.lang3.RandomUtils;
 import org.fusesource.leveldbjni.JniDBFactory;
 import org.iq80.leveldb.CompressionType;
 import org.iq80.leveldb.DB;
@@ -65,7 +66,7 @@ public class DynamicPropertiesStoreTest {
     System.out.println(database.getProperty("leveldb.approximate-memory-usage"));
   }
 
-//  @AfterClass
+  //  @AfterClass
   public static void destroy() {
     Args.clearParam();
     FileUtil.deleteDir(new File(dbPath));
@@ -73,50 +74,78 @@ public class DynamicPropertiesStoreTest {
   }
 
   @Test
+  public void doNothing() {
+    System.out.println(dynamicPropertiesStore.getFreeNetLimit());
+  }
+
+  @Test
   public void testWrite() {
     long sum = 0;
     for (int i = 0; i < 1; i++) {
       long start = System.currentTimeMillis();
-      for (int j = 0; j < 10000000; j++) {
+      for (int j = 0; j < 1000000; j++) {
         database.put(String.valueOf(j).getBytes(), String.valueOf(j).getBytes());
       }
       sum += System.currentTimeMillis() - start;
     }
     System.out.println(sum / 10);
+
+    System.out.println(database.getProperty("leveldb.sstables"));
+
+    testRead();
   }
 
-  @Test
+//  @Test
   public void testRead() {
+
+    int[] randomKeys = new int[1000000];
+    for (int i = 0; i < 1000000; i++) {
+      randomKeys[i] = RandomUtils.nextInt(0, 1000000);
+    }
+
     long sum = 0;
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0; i < 10; i++) {
       long start = System.currentTimeMillis();
       for (int j = 0; j < 1000000; j++) {
-        database.get(String.valueOf(j).getBytes());
+        database.get(String.valueOf(randomKeys[j]).getBytes());
       }
-      sum += System.currentTimeMillis() - start;
+      long interval = System.currentTimeMillis() - start;
+      System.out.println(interval);
+
+      sum += interval;
     }
     System.out.println(sum / 10);
+
   }
 
   @Test
   public void testWriteAndRead() throws IOException {
     Options options = new Options();
-    options.cacheSize(10 * 1024 * 1024);
+    options.writeBufferSize(10485760);
+    options.cacheSize(10485760);
+    options.blockSize(1);
     options.compressionType(CompressionType.SNAPPY);
 
     DB localDatabase = JniDBFactory.factory.open(new File("local_database"), options);
+    System.out.println(localDatabase.getProperty("leveldb.sstables"));
 
     long start = System.currentTimeMillis();
+//    for (int i = 0; i < 1000000; i++) {
+//      localDatabase.put(String.valueOf(i).getBytes(), String.valueOf(i).getBytes());
+//    }
+//    System.out.println("Write: " + (System.currentTimeMillis() - start));
+//
+//    start = System.currentTimeMillis();
     for (int i = 0; i < 1000000; i++) {
-      localDatabase.put(String.valueOf(i).getBytes(), String.valueOf(i).getBytes());
+      localDatabase.get(String.valueOf(i).getBytes());
     }
-    System.out.println("Write: " + (System.currentTimeMillis() - start));
+    System.out.println("Read 1: " + (System.currentTimeMillis() - start));
 
     start = System.currentTimeMillis();
     for (int i = 0; i < 1000000; i++) {
       localDatabase.get(String.valueOf(i).getBytes());
     }
-    System.out.println("Read: " + (System.currentTimeMillis() - start));
+    System.out.println("Read 2: " + (System.currentTimeMillis() - start));
 
     localDatabase.close();
   }

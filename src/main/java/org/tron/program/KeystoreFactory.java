@@ -14,6 +14,9 @@ import org.tron.keystore.CipherException;
 import org.tron.keystore.Credentials;
 import org.tron.keystore.WalletUtils;
 
+
+
+
 public class KeystoreFactory {
 
   private static final Logger logger = LoggerFactory.getLogger("KeystoreFactory");
@@ -81,6 +84,7 @@ public class KeystoreFactory {
 
   private void run() {
     Scanner in = new Scanner(System.in);
+    help();
     while (true) {
       try {
         String cmdLine = in.nextLine().trim();

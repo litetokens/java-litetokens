@@ -38,6 +38,7 @@ public class ArgsTest {
 
     Args args = Args.getInstance();
     Assert.assertEquals("database", args.getStorage().getDbDirectory());
+    Assert.assertEquals("index", args.getStorage().getIndexDirectory());
 
     Assert.assertEquals(11, args.getSeedNode().getIpList().size());
 

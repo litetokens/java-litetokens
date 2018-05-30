@@ -31,6 +31,8 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.iq80.leveldb.CompressionType;
@@ -51,6 +53,10 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
     Iterable<Map.Entry<byte[], byte[]>> {
 
   String dataBaseName;
+  /**
+   * FIXME: Getter only for unit test
+   */
+  @Getter
   DB database;
   boolean alive;
   private String parentName;

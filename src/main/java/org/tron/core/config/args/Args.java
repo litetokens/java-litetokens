@@ -267,7 +267,9 @@ public class Args {
       INSTANCE.localWitnesses.setPrivateKeys(localwitness);
       logger.debug("Got privateKey from config.conf");
     } else if (config.hasPath("localwitnesskeystore")) {
+      INSTANCE.localWitnesses = new LocalWitnesses();
       List<String> localwitness = config.getStringList("localwitnesskeystore");
+      List<String> privateKeys = new ArrayList<String>();
       if (localwitness.size() > 0) {
         String fileName = System.getProperty("user.dir") + "/" + localwitness.get(0);
         if (StringUtils.isNoneBlank(INSTANCE.password)) {
@@ -276,9 +278,7 @@ public class Args {
                 .loadCredentials(INSTANCE.password, new File(fileName));
             ECKey ecKeyPair = credentials.getEcKeyPair();
             String prikey = ByteArray.toHexString(ecKeyPair.getPrivKeyBytes());
-            List<String> privateKeys = new ArrayList<String>();
             privateKeys.add(prikey);
-            INSTANCE.localWitnesses.setPrivateKeys(privateKeys);
           } catch (IOException e) {
             logger.warn(e.getMessage());
           } catch (CipherException e) {
@@ -286,6 +286,8 @@ public class Args {
           }
         }
       }
+      INSTANCE.localWitnesses.setPrivateKeys(privateKeys);
+      logger.debug("Got privateKey from keystore");
     }
 
     if (INSTANCE.isWitness() && CollectionUtils.isEmpty(INSTANCE.localWitnesses.getPrivateKeys())) {

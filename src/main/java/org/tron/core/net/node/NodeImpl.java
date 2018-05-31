@@ -345,7 +345,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
   /**
    * broadcast msg.
    *
-   * @param msg msg to bradcast
+   * @param msg msg to broadcast
    */
   public void broadcast(Message msg) {
     InventoryType type;
@@ -1100,7 +1100,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
             }
           }
 
-          if (peer.getSyncBlockToFetch().isEmpty()) {
+          if (peer.getSyncBlockToFetch().isEmpty() && del.containBlock(blockIdWeGet.peek())) {
             updateBlockWeBothHave(peer, blockIdWeGet.peek());
 
           }

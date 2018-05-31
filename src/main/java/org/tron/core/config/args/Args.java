@@ -259,7 +259,6 @@ public class Args {
       INSTANCE.setLocalWitnesses(new LocalWitnesses(INSTANCE.privateKey));
       logger.debug("Got privateKey from cmd");
     } else if (config.hasPath("localwitness")) {
-
       INSTANCE.localWitnesses = new LocalWitnesses();
       List<String> localwitness = config.getStringList("localwitness");
       if (localwitness.size() > 1) {
@@ -270,11 +269,13 @@ public class Args {
       logger.debug("Got privateKey from config.conf");
     } else if (config.hasPath("localwitnesskeystore")) {
       INSTANCE.localWitnesses = new LocalWitnesses();
-      List<String> localwitness = config.getStringList("localwitnesskeystore");
       List<String> privateKeys = new ArrayList<String>();
-      if (localwitness.size() > 0) {
-        String fileName = System.getProperty("user.dir") + "/" + localwitness.get(0);
-        if (StringUtils.isNoneBlank(INSTANCE.password)) {
+      if (INSTANCE.isWitness()) {
+        List<String> localwitness = config.getStringList("localwitnesskeystore");
+        if (localwitness.size() > 0) {
+          String fileName = System.getProperty("user.dir") + "/" + localwitness.get(0);
+          System.out.println("Please input your password.");
+          INSTANCE.password = WalletUtils.inputPassword();
           try {
             Credentials credentials = WalletUtils
                 .loadCredentials(INSTANCE.password, new File(fileName));

@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.tron.common.crypto.ECKey;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Utils;
+import org.tron.core.Constant;
+import org.tron.core.config.args.Args;
 import org.tron.keystore.CipherException;
 import org.tron.keystore.Credentials;
 import org.tron.keystore.WalletUtils;
@@ -21,18 +23,6 @@ public class KeystoreFactory {
 
   private static final Logger logger = LoggerFactory.getLogger("KeystoreFactory");
   private static final String FilePath = "Wallet";
-  private boolean passwordValid(String password) {
-    if (StringUtils.isEmpty(password)) {
-      logger.warn("Warning: Password is empty !!");
-      return false;
-    }
-    if (password.length() < 6) {
-      logger.warn("Warning: Password is too short !!");
-      return false;
-    }
-    //Other rule;
-    return true;
-  }
 
   private boolean priKeyValid(String priKey) {
     if (StringUtils.isEmpty(priKey)) {
@@ -47,30 +37,8 @@ public class KeystoreFactory {
     return true;
   }
 
-  private String inputPassword(){
-    Scanner in = new Scanner(System.in);
-    while (true) {
-      String input = in.nextLine().trim();
-      String password = input.split("\\s+")[0];
-      if (passwordValid(password)){
-        return password;
-      }
-      System.out.println("Invalid password, please input again.");
-    }
-  }
-
   private void genKeystore() throws CipherException, IOException {
-    String password0;
-    while (true) {
-      System.out.println("Please input password.");
-      password0 = inputPassword();
-      System.out.println("Please input password again.");
-      String password1 = inputPassword();
-      if (password0.equals(password1)){
-        break;
-      }
-      System.out.println("The passwords do not match, please input again.");
-    }
+    String password = WalletUtils.inputPassword2Twice();
 
     ECKey eCkey = new ECKey(Utils.random);
     File file = new File(FilePath);
@@ -82,9 +50,9 @@ public class KeystoreFactory {
         file.mkdir();
       }
     }
-    String fileName = WalletUtils.generateWalletFile(password0, eCkey, file, true);
+    String fileName = WalletUtils.generateWalletFile(password, eCkey, file, true);
     System.out.println("Gen a keystore its name " + fileName);
-    Credentials credentials = WalletUtils.loadCredentials(password0, new File(file, fileName));
+    Credentials credentials = WalletUtils.loadCredentials(password, new File(file, fileName));
     System.out.println("Your address is " + credentials.getAddress());;
   }
 
@@ -101,17 +69,7 @@ public class KeystoreFactory {
       System.out.println("Invalid private key, please input again.");
     }
 
-    String password0;
-    while (true) {
-      System.out.println("Please input password.");
-      password0 = inputPassword();
-      System.out.println("Please input password again.");
-      String password1 = inputPassword();
-      if (password0.equals(password1)){
-        break;
-      }
-      System.out.println("The passwords do not match, please input again.");
-    }
+    String password = WalletUtils.inputPassword2Twice();
 
     ECKey eCkey = ECKey.fromPrivate(ByteArray.fromHexString(privateKey));
     File file = new File(FilePath);
@@ -123,9 +81,9 @@ public class KeystoreFactory {
         file.mkdir();
       }
     }
-    String fileName = WalletUtils.generateWalletFile(password0, eCkey, file, true);
+    String fileName = WalletUtils.generateWalletFile(password, eCkey, file, true);
     System.out.println("Gen a keystore its name " + fileName);
-    Credentials credentials = WalletUtils.loadCredentials(password0, new File(file, fileName));
+    Credentials credentials = WalletUtils.loadCredentials(password, new File(file, fileName));
     System.out.println("Your address is " + credentials.getAddress());;
   }
 
@@ -140,7 +98,7 @@ public class KeystoreFactory {
   private void run() {
     Scanner in = new Scanner(System.in);
     help();
-    while (true) {
+    while (in.hasNextLine()) {
       try {
         String cmdLine = in.nextLine().trim();
         String[] cmdArray = cmdLine.split("\\s+");
@@ -182,6 +140,7 @@ public class KeystoreFactory {
   }
 
   public static void main(String[] args) {
+    Args.setParam(args, Constant.TESTNET_CONF);
     KeystoreFactory cli = new KeystoreFactory();
 
     JCommander.newBuilder()

@@ -209,14 +209,9 @@ protobuf {
 }
 
 run {
-    args = []
     if (project.hasProperty('witness')) {
         standardInput = System.in
-        args += ['--witness']
-    }
-    if (project.hasProperty('password')) {
-        standardInput = System.in
-        args += ['--password', password]
+        args = ['--witness']
     }
 }
 

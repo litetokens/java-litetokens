@@ -225,7 +225,7 @@ public class Wallet {
       if (dbManager.isTooManyPending()) {
         logger.debug(
             "Manager is busy, pending transaction count:{}, discard the new coming transaction",
-            (dbManager.getPendingTransactions().size() + PendingManager.getTmpTransactions()
+            (dbManager.getPendingTransactions().size() + dbManager.getSuspensiveTransactions()
                 .size()));
         return builder.setResult(false).setCode(response_code.SERVER_BUSY).build();
       }
@@ -439,7 +439,8 @@ public class Wallet {
     try {
       transactionCapsule = dbManager.getTransactionStore()
           .get(transactionId.toByteArray());
-    } catch (BadItemException e) {}
+    } catch (BadItemException e) {
+    }
     if (transactionCapsule != null) {
       return transactionCapsule.getInstance();
     }

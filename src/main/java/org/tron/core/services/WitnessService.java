@@ -16,6 +16,7 @@ import org.tron.core.capsule.WitnessCapsule;
 import org.tron.core.config.Parameter.ChainConstant;
 import org.tron.core.config.args.Args;
 import org.tron.core.exception.AccountResourceInsufficientException;
+import org.tron.core.exception.BadItemException;
 import org.tron.core.exception.ContractExeException;
 import org.tron.core.exception.ContractValidateException;
 import org.tron.core.exception.DupTransactionException;
@@ -105,9 +106,15 @@ public class WitnessService implements Service {
         while (isRunning) {
           tronApp.getDbManager().getSuspensiveTransactions().stream()
               .filter(
-                  trx -> tronApp.getDbManager().getTransactionStore()
-                      .get(trx.getTransactionId().getBytes()) == null)
-              .forEach(trx -> {
+                  trx -> {
+                    try {
+                      return tronApp.getDbManager().getTransactionStore()
+                          .get(trx.getTransactionId().getBytes()) == null;
+                    } catch (BadItemException e) {
+                      return false;
+                    }
+                  }
+              ).forEach(trx -> {
                 try {
                   tronApp.getDbManager().pushTransactions(trx);
                 } catch (ValidateSignatureException e) {
@@ -115,8 +122,6 @@ public class WitnessService implements Service {
                 } catch (ContractValidateException e) {
                   logger.error(e.getMessage(), e);
                 } catch (ContractExeException e) {
-                  logger.error(e.getMessage(), e);
-                } catch (ValidateBandwidthException e) {
                   logger.error(e.getMessage(), e);
                 } catch (DupTransactionException e) {
                   logger.error("pending manager: dup trans", e);
@@ -126,6 +131,8 @@ public class WitnessService implements Service {
                   logger.error("too big transaction");
                 } catch (TransactionExpirationException e) {
                   logger.error("expiration transaction");
+                } catch (AccountResourceInsufficientException e) {
+                  logger.error("account resource insufficient", e.getMessage());
                 }
               });
         }

@@ -959,7 +959,8 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
         peer.sendMessage(msg);
       } else {
         transactions.add(((TransactionMessage) msg).getTransactionCapsule().getInstance());
-        size += ((TransactionMessage) msg).getTransactionCapsule().getInstance().getSerializedSize();
+        size += ((TransactionMessage) msg).getTransactionCapsule().getInstance()
+            .getSerializedSize();
         if (transactions.size() % maxTrxsCnt == 0 || size > maxTrxsSize) {
           peer.sendMessage(new TransactionsMessage(transactions));
           transactions = Lists.newArrayList();

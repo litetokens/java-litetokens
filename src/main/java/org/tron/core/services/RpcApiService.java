@@ -49,7 +49,6 @@ import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.capsule.TransactionCapsule;
 import org.tron.core.capsule.WitnessCapsule;
-import org.tron.core.config.Parameter.NetConstants;
 import org.tron.core.config.args.Args;
 import org.tron.core.db.BandwidthProcessor;
 import org.tron.core.db.Manager;
@@ -226,14 +225,14 @@ public class RpcApiService implements Service {
 
     @Override
     public void listWitnesses(EmptyMessage request, StreamObserver<WitnessList> responseObserver) {
-      responseObserver.onNext(walletSolidity.getWitnessList());
+      responseObserver.onNext(wallet.getWitnessList());
       responseObserver.onCompleted();
     }
 
     @Override
     public void getAssetIssueList(EmptyMessage request,
         StreamObserver<AssetIssueList> responseObserver) {
-      responseObserver.onNext(walletSolidity.getAssetIssueList());
+      responseObserver.onNext(wallet.getAssetIssueList());
       responseObserver.onCompleted();
     }
 
@@ -732,7 +731,9 @@ public class RpcApiService implements Service {
 
   @Override
   public void stop() {
-
+    if (apiServer != null) {
+      apiServer.shutdown();
+    }
   }
 
   /**

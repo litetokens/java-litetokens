@@ -21,13 +21,13 @@ package org.tron.common.overlay.discover;
 import static java.lang.Math.min;
 
 import java.util.concurrent.atomic.AtomicLong;
-import org.tron.common.overlay.message.ReasonCode;
+import org.tron.protos.Protocol.ReasonCode;
 
 public class NodeStatistics {
 
   public final static int REPUTATION_PREDEFINED = 100000;
-  public final static long TOO_MANY_PEERS_PENALIZE_TIMEOUT = 60 * 1000;
-  private static final long CLEAR_CYCLE_TIME = 60 * 60 * 1000;
+  public final static long TOO_MANY_PEERS_PENALIZE_TIMEOUT = 60 * 1000L;
+  private static final long CLEAR_CYCLE_TIME = 60 * 60 * 1000L;
 
   public class StatHandler {
 
@@ -82,7 +82,7 @@ public class NodeStatistics {
 
 
   public NodeStatistics(Node node) {
-    discoverMessageLatency = new SimpleStatter(node.getId().toString());
+    discoverMessageLatency = new SimpleStatter(node.getIdString());
   }
 
   private int getSessionReputation() {
@@ -93,11 +93,12 @@ public class NodeStatistics {
     int discoverReput = 0;
 
     discoverReput +=
-        min(discoverInPong.get(), 1) * (discoverOutPing.get() == discoverInPong.get() ? 51 : 1);
-    discoverReput += min(discoverInNeighbours.get(), 10) * 10;
-    discoverReput += min(discoverInFind.get(), 50);
+        min(discoverInPong.get(), 1) * (discoverOutPing.get() == discoverInPong.get() ? 50 : 1);
 
-    //discoverReput += 20 / (min((int)discoverMessageLatency.getAvrg(), 1) / 100);
+    discoverReput +=
+        min(discoverInNeighbours.get(), 1) * (discoverOutFind.get() == discoverInNeighbours.get() ? 50 : 1);
+
+    discoverReput += (int)discoverMessageLatency.getAvrg() == 0 ? 0 : 1000 / discoverMessageLatency.getAvrg();
 
     int reput = 0;
     reput += p2pHandShake.get() > 0 ? 20 : 0;
@@ -174,7 +175,7 @@ public class NodeStatistics {
         tronLastRemoteDisconnectReason == ReasonCode.BAD_TX ||
         tronLastLocalDisconnectReason == ReasonCode.FORKED ||
         tronLastRemoteDisconnectReason == ReasonCode.FORKED ||
-        tronLastLocalDisconnectReason ==  ReasonCode.UNLINKABLE ||
+        tronLastLocalDisconnectReason == ReasonCode.UNLINKABLE ||
         tronLastRemoteDisconnectReason == ReasonCode.UNLINKABLE ||
         tronLastLocalDisconnectReason == ReasonCode.INCOMPATIBLE_VERSION ||
         tronLastRemoteDisconnectReason == ReasonCode.INCOMPATIBLE_VERSION ||
@@ -186,15 +187,6 @@ public class NodeStatistics {
       return true;
     }
     return false;
-  }
-
-  public boolean isPenalized() {
-    return tronLastLocalDisconnectReason == ReasonCode.NULL_IDENTITY ||
-        tronLastRemoteDisconnectReason == ReasonCode.NULL_IDENTITY ||
-        tronLastLocalDisconnectReason == ReasonCode.BAD_PROTOCOL ||
-        tronLastRemoteDisconnectReason == ReasonCode.BAD_PROTOCOL ||
-        tronLastLocalDisconnectReason == ReasonCode.SYNC_FAIL ||
-        tronLastRemoteDisconnectReason == ReasonCode.SYNC_FAIL;
   }
 
   public void nodeDisconnectedRemote(ReasonCode reason) {
@@ -273,7 +265,7 @@ public class NodeStatistics {
     }
 
     public double getAvrg() {
-      return getSum() / getCount();
+      return count == 0 ? 0 : sum / count;
     }
 
     public String getName() {

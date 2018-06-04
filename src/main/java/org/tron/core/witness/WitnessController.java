@@ -3,6 +3,7 @@ package org.tron.core.witness;
 import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -150,23 +151,22 @@ public class WitnessController {
     ByteString witnessAddress = block.getInstance().getBlockHeader().getRawData()
         .getWitnessAddress();
     //to deal with other condition later
-    if (manager.getDynamicPropertiesStore().getLatestBlockHeaderNumber() != 0 && manager
-        .getDynamicPropertiesStore().getLatestBlockHeaderHash()
-        .equals(block.getParentHash())) {
-      long slot = getSlotAtTime(block.getTimeStamp());
-      final ByteString scheduledWitness = getScheduledWitness(slot);
-      if (!scheduledWitness.equals(witnessAddress)) {
-        logger.warn(
-            "Witness is out of order, scheduledWitness[{}],blockWitnessAddress[{}],blockTimeStamp[{}],slot[{}]",
-            ByteArray.toHexString(scheduledWitness.toByteArray()),
-            ByteArray.toHexString(witnessAddress.toByteArray()), new DateTime(block.getTimeStamp()),
-            slot);
-        return false;
-      }
-      logger.debug("Validate witnessSchedule successfully,scheduledWitness:{}",
-          ByteArray.toHexString(witnessAddress.toByteArray()));
+    if (manager.getDynamicPropertiesStore().getLatestBlockHeaderNumber() == 0) {
+      return true;
+    }
+    long slot = getSlotAtTime(block.getTimeStamp());
+    final ByteString scheduledWitness = getScheduledWitness(slot);
+    if (!scheduledWitness.equals(witnessAddress)) {
+      logger.warn(
+          "Witness is out of order, scheduledWitness[{}],blockWitnessAddress[{}],blockTimeStamp[{}],slot[{}]",
+          ByteArray.toHexString(scheduledWitness.toByteArray()),
+          ByteArray.toHexString(witnessAddress.toByteArray()), new DateTime(block.getTimeStamp()),
+          slot);
+      return false;
     }
 
+    logger.debug("Validate witnessSchedule successfully,scheduledWitness:{}",
+        ByteArray.toHexString(witnessAddress.toByteArray()));
     return true;
   }
 
@@ -315,7 +315,7 @@ public class WitnessController {
             .get(StringUtil.createDbKey(address));
         if (null == witnessCapsule) {
           logger.warn("witnessCapsule is null.address is {}",
-                  StringUtil.createReadableString(address));
+              StringUtil.createReadableString(address));
           return;
         }
 
@@ -327,7 +327,6 @@ public class WitnessController {
         } else {
           witnessCapsule.setVoteCount(witnessCapsule.getVoteCount() + voteCount);
           witnessCapsule.setIsJobs(false);
-//          newWitnessAddressList.add(address);
           witnessStore.put(witnessCapsule.createDbKey(), witnessCapsule);
           logger.info("address is {}  ,countVote is {}", witnessCapsule.createReadableString(),
               witnessCapsule.getVoteCount());
@@ -340,6 +339,12 @@ public class WitnessController {
         setActiveWitnesses(newWitnessAddressList.subList(0, ChainConstant.MAX_ACTIVE_WITNESS_NUM));
       } else {
         setActiveWitnesses(newWitnessAddressList);
+      }
+
+      if (newWitnessAddressList.size() > ChainConstant.WITNESS_STANDBY_LENGTH) {
+        payStandbyWitness(newWitnessAddressList.subList(0, ChainConstant.WITNESS_STANDBY_LENGTH));
+      } else {
+        payStandbyWitness(newWitnessAddressList);
       }
 
       getActiveWitnesses().forEach(address -> {
@@ -359,10 +364,46 @@ public class WitnessController {
     return manager.getDynamicPropertiesStore().calculateFilledSlotsCount();
   }
 
+  public void dumpParticipationLog() {
+    StringBuilder builder = new StringBuilder();
+    int[] blockFilledSlots = manager.getDynamicPropertiesStore().getBlockFilledSlots();
+    builder.append("dump participation log \n ").append("blockFilledSlots:")
+        .append(Arrays.toString(blockFilledSlots)).append(",");
+    long headSlot = getHeadSlot();
+    builder.append("\n").append(" headSlot:").append(headSlot).append(",");
+
+    List<ByteString> activeWitnesses = getActiveWitnesses();
+    activeWitnesses.forEach(a -> {
+      WitnessCapsule witnessCapsule = manager.getWitnessStore().get(a.toByteArray());
+      builder.append("\n").append(" witness:").append(witnessCapsule.createReadableString())
+          .append(",").
+          append("latestBlockNum:").append(witnessCapsule.getLatestBlockNum()).append(",").
+          append("LatestSlotNum:").append(witnessCapsule.getLatestSlotNum()).append(".");
+    });
+    logger.debug(builder.toString());
+  }
+
+
   private void sortWitness(List<ByteString> list) {
     list.sort(Comparator.comparingLong((ByteString b) -> getWitnesseByAddress(b).getVoteCount())
         .reversed()
         .thenComparing(Comparator.comparingInt(ByteString::hashCode).reversed()));
+  }
+
+  private void payStandbyWitness(List<ByteString> list) {
+    long voteSum = 0;
+    long totalPay = ChainConstant.WITNESS_STANDBY_ALLOWANCE;
+    for (ByteString b : list) {
+      voteSum += getWitnesseByAddress(b).getVoteCount();
+    }
+    if (voteSum > 0) {
+      for (ByteString b : list) {
+        long pay = (long) (getWitnesseByAddress(b).getVoteCount() * ((double) totalPay / voteSum));
+        AccountCapsule accountCapsule = manager.getAccountStore().get(b.toByteArray());
+        accountCapsule.setAllowance(accountCapsule.getAllowance() + pay);
+        manager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
+      }
+    }
   }
 
 }

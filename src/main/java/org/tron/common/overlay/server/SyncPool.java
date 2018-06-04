@@ -19,6 +19,7 @@ package org.tron.common.overlay.server;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -30,6 +31,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
+
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,15 +51,14 @@ public class SyncPool {
 
   public static final Logger logger = LoggerFactory.getLogger("SyncPool");
 
-  private static final long WORKER_TIMEOUT = 16;
-  private static final double fator = 0.4;
+  private static final double factor = 0.4;
 
   private final List<PeerConnection> activePeers = Collections.synchronizedList(new ArrayList<PeerConnection>());
   private final AtomicInteger passivePeersCount = new AtomicInteger(0);
   private final AtomicInteger activePeersCount = new AtomicInteger(0);
 
   private Cache<NodeHandler, Long> nodeHandlerCache = CacheBuilder.newBuilder()
-          .maximumSize(1000).expireAfterWrite(120, TimeUnit.SECONDS).recordStats().build();
+      .maximumSize(1000).expireAfterWrite(120, TimeUnit.SECONDS).recordStats().build();
 
   @Autowired
   private NodeManager nodeManager;
@@ -94,20 +96,22 @@ public class SyncPool {
       } catch (Throwable t) {
         logger.error("Exception in sync worker", t);
       }
-    }, WORKER_TIMEOUT, WORKER_TIMEOUT, TimeUnit.SECONDS);
+    }, 30, 16, TimeUnit.SECONDS);
 
     logExecutor.scheduleWithFixedDelay(() -> {
       try {
         logActivePeers();
-      } catch (Throwable t) {}
-    }, 10, 10, TimeUnit.SECONDS);
+      } catch (Throwable t) {
+      }
+    }, 30, 10, TimeUnit.SECONDS);
   }
 
   private void fillUp() {
-    int lackSize = (int) (maxActiveNodes * fator) - activePeersCount.get();
+    int lackSize = (int) (maxActiveNodes * factor) - activePeers.size();
     if(lackSize <= 0) return;
 
-    final Set<String> nodesInUse = channelManager.nodesInUse();
+    final Set<String> nodesInUse = new HashSet<>();
+    channelManager.getActivePeers().forEach(channel -> nodesInUse.add(channel.getPeerId()));
     nodesInUse.add(nodeManager.getPublicHomeNode().getHexId());
 
     List<NodeHandler> newNodes = nodeManager.getNodes(new NodeSelector(nodesInUse), lackSize);
@@ -125,19 +129,10 @@ public class SyncPool {
 
   synchronized void logActivePeers() {
 
-    logger.info("-------- active node {}", nodeManager.dumpActiveNodes().size());
-      nodeManager.dumpActiveNodes().forEach(handler -> {
-      if (handler.getNode().getPort() == 18888) {
-        logger.info("address: {}:{}, ID:{} {}",
-        handler.getNode().getHost(), handler.getNode().getPort(),
-        handler.getNode().getHexIdShort(), handler.getNodeStatistics().toString());
-      }
-     });
-
     logger.info("-------- active connect channel {}", activePeersCount.get());
     logger.info("-------- passive connect channel {}", passivePeersCount.get());
     logger.info("-------- all connect channel {}", channelManager.getActivePeers().size());
-    for (Channel channel: channelManager.getActivePeers()){
+    for (Channel channel : channelManager.getActivePeers()) {
       logger.info(channel.toString());
     }
 
@@ -162,7 +157,13 @@ public class SyncPool {
   }
 
   public synchronized List<PeerConnection> getActivePeers() {
-    return new ArrayList<>(activePeers);
+    List<PeerConnection> peers = Lists.newArrayList();
+    activePeers.forEach(peer -> {
+      if (!peer.isDisconnect()) {
+        peers.add(peer);
+      }
+    });
+    return peers;
   }
 
   public synchronized void onConnect(Channel peer) {
@@ -186,12 +187,12 @@ public class SyncPool {
         activePeersCount.decrementAndGet();
       }
       activePeers.remove(peer);
-      peerDel.onDisconnectPeer((PeerConnection)peer);
+      peerDel.onDisconnectPeer((PeerConnection) peer);
     }
   }
 
   public boolean isCanConnect() {
-    if (passivePeersCount.get() >= maxActiveNodes * (1 - fator)) {
+    if (activePeers.size() >= maxActiveNodes) {
       return false;
     }
     return true;
@@ -217,24 +218,24 @@ public class SyncPool {
     @Override
     public boolean test(NodeHandler handler) {
 
-//      if (!nodeManager.isNodeAlive(handler)){
-//        return false;
-//      }
-
       if (handler.getNode().getHost().equals(nodeManager.getPublicHomeNode().getHost()) &&
-              handler.getNode().getPort() == nodeManager.getPublicHomeNode().getPort()) {
+          handler.getNode().getPort() == nodeManager.getPublicHomeNode().getPort()) {
         return false;
       }
 
-      if (channelManager.isRecentlyDisconnected(handler.getInetSocketAddress().getAddress())){
-          return false;
+      InetAddress inetAddress = handler.getInetSocketAddress().getAddress();
+      if (channelManager.getRecentlyDisconnected().getIfPresent(inetAddress) != null) {
+        return false;
+      }
+      if (channelManager.getBadPeers().getIfPresent(inetAddress) != null) {
+        return false;
       }
 
       if (nodesInUse != null && nodesInUse.contains(handler.getNode().getHexId())) {
         return false;
       }
 
-      if (nodeHandlerCache.getIfPresent(handler) != null){
+      if (nodeHandlerCache.getIfPresent(handler) != null) {
         return false;
       }
 
@@ -242,7 +243,7 @@ public class SyncPool {
         return false;
       }
 
-      return  true;
+      return true;
     }
   }
 

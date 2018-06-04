@@ -4,6 +4,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigObject;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -21,6 +22,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Collectors;
+
+import io.grpc.internal.GrpcUtil;
+import io.grpc.netty.NettyServerBuilder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -66,8 +70,11 @@ public class Args {
   @Parameter(names = {"-p", "--private-key"}, description = "private-key")
   private String privateKey = "";
 
-  @Parameter(names = {"--storage-directory"}, description = "Storage directory")
-  private String storageDirectory = "";
+  @Parameter(names = {"--storage-db-directory"}, description = "Storage db directory")
+  private String storageDbDirectory = "";
+
+  @Parameter(names = {"--storage-index-directory"}, description = "Storage index directory")
+  private String storageIndexDirectory = "";
 
   @Getter
   private Storage storage;
@@ -169,6 +176,30 @@ public class Args {
 
   @Getter
   @Setter
+  private int maxConcurrentCallsPerConnection;
+
+  @Getter
+  @Setter
+  private int flowControlWindow;
+
+  @Getter
+  @Setter
+  private long maxConnectionIdleInMillis;
+
+  @Getter
+  @Setter
+  private long maxConnectionAgeInMillis;
+
+  @Getter
+  @Setter
+  private int maxMessageSize;
+
+  @Getter
+  @Setter
+  private int maxHeaderListSize;
+
+  @Getter
+  @Setter
   @Parameter(names = {"--validate-sign-thread"}, description = "Num of validate thread")
   private int validateSignThreadNum;
 
@@ -189,14 +220,26 @@ public class Args {
   @Parameter(names = {"--trust-node"}, description = "Trust node addr")
   private String trustNodeAddr;
 
+  @Getter
+  @Setter
+  private boolean walletExtensionApi;
+
   public static void clearParam() {
     INSTANCE.outputDirectory = "output-directory";
     INSTANCE.help = false;
     INSTANCE.witness = false;
     INSTANCE.seedNodes = new ArrayList<>();
     INSTANCE.privateKey = "";
-    INSTANCE.storageDirectory = "";
-    INSTANCE.storage = null;
+    INSTANCE.storageDbDirectory = "";
+    INSTANCE.storageIndexDirectory = "";
+
+    // FIXME: INSTANCE.storage maybe null ?
+    if (INSTANCE.storage != null) {
+      // WARNING: WILL DELETE DB STORAGE PATHS
+      INSTANCE.storage.deleteAllStoragePaths();
+      INSTANCE.storage = null;
+    }
+
     INSTANCE.overlay = null;
     INSTANCE.seedNode = null;
     INSTANCE.genesisBlock = null;
@@ -224,6 +267,7 @@ public class Args {
     INSTANCE.p2pNodeId = "";
     INSTANCE.solidityNode = false;
     INSTANCE.trustNodeAddr = "";
+    INSTANCE.walletExtensionApi = false;
   }
 
   /**
@@ -252,9 +296,16 @@ public class Args {
     }
 
     INSTANCE.storage = new Storage();
-    INSTANCE.storage.setDirectory(Optional.ofNullable(INSTANCE.storageDirectory)
+    INSTANCE.storage.setDbDirectory(Optional.ofNullable(INSTANCE.storageDbDirectory)
         .filter(StringUtils::isNotEmpty)
-        .orElse(config.getString("storage.directory")));
+        .orElse(Storage.getDbDirectoryFromConfig(config)));
+
+    INSTANCE.storage.setIndexDirectory(Optional.ofNullable(INSTANCE.storageIndexDirectory)
+        .filter(StringUtils::isNotEmpty)
+        .orElse(Storage.getIndexDirectoryFromConfig(config)));
+
+    INSTANCE.storage.setPropertyMapFromConfig(config);
+
     INSTANCE.seedNode = new SeedNode();
     INSTANCE.seedNode.setIpList(Optional.ofNullable(INSTANCE.seedNodes)
         .filter(seedNode -> 0 != seedNode.size())
@@ -267,7 +318,7 @@ public class Args {
       Wallet.setAddressPreFixByte(Constant.ADD_PRE_FIX_BYTE_TESTNET);
       Wallet.setAddressPreFixString(Constant.ADD_PRE_FIX_STRING_TESTNET);
     }
-
+    
     if (config.hasPath("genesis.block")) {
       INSTANCE.genesisBlock = new GenesisBlock();
 
@@ -308,7 +359,8 @@ public class Args {
         config.hasPath("node.maxActiveNodes") ? config.getInt("node.maxActiveNodes") : 0;
 
     INSTANCE.minParticipationRate =
-        config.hasPath("node.minParticipationRate") ? config.getInt("node.minParticipationRate") : 0;
+        config.hasPath("node.minParticipationRate") ? config.getInt("node.minParticipationRate")
+            : 0;
 
     INSTANCE.nodeListenPort =
         config.hasPath("node.listen.port") ? config.getInt("node.listen.port") : 0;
@@ -336,6 +388,24 @@ public class Args {
         config.hasPath("node.rpc.thread") ? config.getInt("node.rpc.thread")
             : Runtime.getRuntime().availableProcessors() / 2;
 
+    INSTANCE.maxConcurrentCallsPerConnection = config.hasPath("node.rpc.maxConcurrentCallsPerConnection") ?
+        config.getInt("node.rpc.maxConcurrentCallsPerConnection") : Integer.MAX_VALUE;
+
+    INSTANCE.flowControlWindow = config.hasPath("node.rpc.flowControlWindow") ?
+        config.getInt("node.rpc.flowControlWindow") : NettyServerBuilder.DEFAULT_FLOW_CONTROL_WINDOW;
+
+    INSTANCE.maxConnectionIdleInMillis = config.hasPath("node.rpc.maxConnectionIdleInMillis") ?
+        config.getLong("node.rpc.maxConnectionIdleInMillis") : Long.MAX_VALUE;
+
+    INSTANCE.maxConnectionAgeInMillis = config.hasPath("node.rpc.maxConnectionAgeInMillis") ?
+        config.getLong("node.rpc.maxConnectionAgeInMillis") : Long.MAX_VALUE;
+
+    INSTANCE.maxMessageSize = config.hasPath("node.rpc.maxMessageSize") ?
+        config.getInt("node.rpc.maxMessageSize") : GrpcUtil.DEFAULT_MAX_MESSAGE_SIZE;
+
+    INSTANCE.maxHeaderListSize = config.hasPath("node.rpc.maxHeaderListSize") ?
+        config.getInt("node.rpc.maxHeaderListSize") : GrpcUtil.DEFAULT_MAX_HEADER_LIST_SIZE;
+
     INSTANCE.maintenanceTimeInterval =
         config.hasPath("block.maintenanceTimeInterval") ? config
             .getInt("block.maintenanceTimeInterval") : 21600000L;
@@ -347,12 +417,15 @@ public class Args {
         .getInt("node.udpNettyWorkThreadNum") : 1;
 
     if (StringUtils.isEmpty(INSTANCE.trustNodeAddr)) {
-      INSTANCE.trustNodeAddr = config.hasPath("node.trustNode") ? config.getString("node.trustNode") : null;
+      INSTANCE.trustNodeAddr =
+          config.hasPath("node.trustNode") ? config.getString("node.trustNode") : null;
     }
 
     INSTANCE.validateSignThreadNum = config.hasPath("node.validateSignThreadNum") ? config
         .getInt("node.validateSignThreadNum") : Runtime.getRuntime().availableProcessors() / 2;
 
+    INSTANCE.walletExtensionApi =
+        config.hasPath("node.walletExtensionApi") && config.getBoolean("node.walletExtensionApi");
   }
 
 
@@ -364,7 +437,8 @@ public class Args {
 
   private static Witness createWitness(final ConfigObject witnessAccount) {
     final Witness witness = new Witness();
-    witness.setAddress(Wallet.decodeFromBase58Check(witnessAccount.get("address").unwrapped().toString()));
+    witness.setAddress(
+        Wallet.decodeFromBase58Check(witnessAccount.get("address").unwrapped().toString()));
     witness.setUrl(witnessAccount.get("url").unwrapped().toString());
     witness.setVoteCount(witnessAccount.toConfig().getLong("voteCount"));
     return witness;
@@ -387,6 +461,20 @@ public class Args {
 
   public static Args getInstance() {
     return INSTANCE;
+  }
+
+  /**
+   * Get storage path by name of database
+   *
+   * @param dbName name of database
+   * @return path of that database
+   */
+  public String getOutputDirectoryByDbName(String dbName) {
+    String path = storage.getPathByDbName(dbName);
+    if (!StringUtils.isBlank(path)) {
+      return path;
+    }
+    return getOutputDirectory();
   }
 
   /**
@@ -428,7 +516,7 @@ public class Args {
     String nodeId;
     try {
       File file = new File(
-          INSTANCE.outputDirectory + File.separator + INSTANCE.storage.getDirectory(),
+          INSTANCE.outputDirectory + File.separator + INSTANCE.storage.getDbDirectory(),
           "nodeId.properties");
       Properties props = new Properties();
       if (file.canRead()) {
@@ -459,8 +547,7 @@ public class Args {
         .trim().isEmpty()) {
       if (INSTANCE.nodeDiscoveryBindIp == null) {
         logger.info("Bind address wasn't set, Punching to identify it...");
-        try {
-          Socket s = new Socket("www.baidu.com", 80);
+        try (Socket s = new Socket("www.baidu.com", 80)) {
           INSTANCE.nodeDiscoveryBindIp = s.getLocalAddress().getHostAddress();
           logger.info("UDP local bound to: {}", INSTANCE.nodeDiscoveryBindIp);
         } catch (IOException e) {
@@ -478,8 +565,9 @@ public class Args {
         .getString("node.discovery.external.ip").trim().isEmpty()) {
       if (INSTANCE.nodeExternalIp == null) {
         logger.info("External IP wasn't set, using checkip.amazonaws.com to identify it...");
+        BufferedReader in = null;
         try {
-          BufferedReader in = new BufferedReader(new InputStreamReader(
+          in = new BufferedReader(new InputStreamReader(
               new URL("http://checkip.amazonaws.com").openStream()));
           INSTANCE.nodeExternalIp = in.readLine();
           if (INSTANCE.nodeExternalIp == null || INSTANCE.nodeExternalIp.trim().isEmpty()) {
@@ -496,6 +584,15 @@ public class Args {
           logger.warn(
               "Can't get external IP. Fall back to peer.bind.ip: " + INSTANCE.nodeExternalIp + " :"
                   + e);
+        }finally{
+          if (in != null){
+            try {
+              in.close();
+            } catch (IOException e) {
+              //ignore
+            }
+          }
+
         }
       }
     } else {

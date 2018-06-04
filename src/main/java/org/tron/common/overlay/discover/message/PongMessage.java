@@ -14,13 +14,9 @@ public class PongMessage extends Message {
 
   private Discover.PongMessage pongMessage;
 
-  public PongMessage(byte[] data) {
+  public PongMessage(byte[] data) throws Exception{
     super(Message.PONG, data);
-    try {
-      this.pongMessage = Discover.PongMessage.parseFrom(data);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
-    }
+    this.pongMessage = Discover.PongMessage.parseFrom(data);
   }
 
   public PongMessage(Node from) {
@@ -38,14 +34,14 @@ public class PongMessage extends Message {
     this.data = this.pongMessage.toByteArray();
   }
 
-  public Node getFrom(){
+  public Node getFrom() {
     Endpoint from = this.pongMessage.getFrom();
     Node node = new Node(from.getNodeId().toByteArray(),
         ByteArray.toStr(from.getAddress().toByteArray()), from.getPort());
     return node;
   }
 
-  public int getVersion(){
+  public int getVersion() {
     return this.pongMessage.getEcho();
   }
 

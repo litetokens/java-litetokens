@@ -38,10 +38,10 @@ public class IndexHelper {
   @PostConstruct
   public void init() {
     transactionIndex.fill();
-    blockIndex.fill();
-    witnessIndex.fill();
-    accountIndex.fill();
-    assetIssueIndex.fill();
+    //blockIndex.fill();
+    //witnessIndex.fill();
+    //accountIndex.fill();
+    //assetIssueIndex.fill();
   }
 
   private <T> void add(Index.Iface<T> index, byte[] bytes) {
@@ -53,19 +53,19 @@ public class IndexHelper {
   }
 
   public void add(Block b) {
-    add(blockIndex, getKey(b));
+    //add(blockIndex, getKey(b));
   }
 
   public void add(Witness w) {
-    add(witnessIndex, getKey(w));
+    //add(witnessIndex, getKey(w));
   }
 
   public void add(Account a) {
-    add(accountIndex, getKey(a));
+    //add(accountIndex, getKey(a));
   }
 
   public void add(AssetIssueContract a) {
-    add(assetIssueIndex, getKey(a));
+    //add(assetIssueIndex, getKey(a));
   }
 
   private <T> void update(Index.Iface<T> index, byte[] bytes) {
@@ -77,19 +77,19 @@ public class IndexHelper {
   }
 
   public void update(Block b) {
-    update(blockIndex, getKey(b));
+    // update(blockIndex, getKey(b));
   }
 
   public void update(Witness w) {
-    update(witnessIndex, getKey(w));
+    //update(witnessIndex, getKey(w));
   }
 
   public void update(Account a) {
-    update(accountIndex, getKey(a));
+    //update(accountIndex, getKey(a));
   }
 
   public void update(AssetIssueContract a) {
-    update(assetIssueIndex, getKey(a));
+    //update(assetIssueIndex, getKey(a));
   }
 
   private <T> void remove(Index.Iface<T> index, byte[] bytes) {
@@ -101,19 +101,19 @@ public class IndexHelper {
   }
 
   public void remove(Block b) {
-    remove(blockIndex, getKey(b));
+    //remove(blockIndex, getKey(b));
   }
 
   public void remove(Witness w) {
-    remove(witnessIndex, getKey(w));
+    //remove(witnessIndex, getKey(w));
   }
 
   public void remove(Account a) {
-    remove(accountIndex, getKey(a));
+    //remove(accountIndex, getKey(a));
   }
 
   public void remove(AssetIssueContract a) {
-    remove(assetIssueIndex, getKey(a));
+    //remove(assetIssueIndex, getKey(a));
   }
 
   private byte[] getKey(Transaction t) {

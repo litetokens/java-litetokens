@@ -17,13 +17,9 @@ public class NeighborsMessage extends Message {
 
   private Discover.Neighbours neighbours;
 
-  public NeighborsMessage(byte[] data) {
+  public NeighborsMessage(byte[] data) throws Exception{
     super(Message.GET_PEERS, data);
-    try {
-      this.neighbours = Discover.Neighbours.parseFrom(data);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
-    }
+    this.neighbours = Discover.Neighbours.parseFrom(data);
   }
 
   public NeighborsMessage(Node from, List<Node> neighbours) {
@@ -54,12 +50,12 @@ public class NeighborsMessage extends Message {
     this.data = this.neighbours.toByteArray();
   }
 
-  public List<Node> getNodes(){
+  public List<Node> getNodes() {
     List<Node> nodes = new ArrayList<>();
     neighbours.getNeighboursList().forEach(neighbour -> nodes.add(
-            new Node(neighbour.getNodeId().toByteArray(),
-                ByteArray.toStr(neighbour.getAddress().toByteArray()),
-                neighbour.getPort())));
+        new Node(neighbour.getNodeId().toByteArray(),
+            ByteArray.toStr(neighbour.getAddress().toByteArray()),
+            neighbour.getPort())));
     return nodes;
   }
 

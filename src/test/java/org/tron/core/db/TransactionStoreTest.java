@@ -16,6 +16,7 @@ import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.TransactionCapsule;
 import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.args.Args;
+import org.tron.core.exception.BadItemException;
 import org.tron.protos.Contract.AccountCreateContract;
 import org.tron.protos.Contract.TransferContract;
 import org.tron.protos.Contract.VoteWitnessContract;
@@ -26,6 +27,8 @@ import org.tron.protos.Protocol.AccountType;
 public class TransactionStoreTest {
 
   private static String dbPath = "output_TransactionStore_test";
+  private static String dbDirectory = "db_TransactionStore_test";
+  private static String indexDirectory = "index_TransactionStore_test";
   private static TransactionStore transactionStore;
   private static AnnotationConfigApplicationContext context;
   private static final byte[] key1 = TransactionStoreTest.randomBytes(21);
@@ -45,7 +48,15 @@ public class TransactionStoreTest {
       Wallet.getAddressPreFixString() + "548794500882809695a8a687866e76d4271a1abc";
 
   static {
-    Args.setParam(new String[]{"-d", dbPath, "-w"}, Constant.TEST_CONF);
+    Args.setParam(
+        new String[]{
+            "--output-directory", dbPath,
+            "--storage-db-directory", dbDirectory,
+            "--storage-index-directory", indexDirectory,
+            "-w"
+        },
+        Constant.TEST_CONF
+    );
     context = new AnnotationConfigApplicationContext(DefaultConfig.class);
   }
 
@@ -64,7 +75,6 @@ public class TransactionStoreTest {
    */
   private AccountCreateContract getContract(String name, String address) {
     return AccountCreateContract.newBuilder()
-        .setAccountName(ByteString.copyFromUtf8(name))
         .setOwnerAddress(ByteString.copyFrom(ByteArray.fromHexString(address)))
         .build();
   }
@@ -94,7 +104,7 @@ public class TransactionStoreTest {
    * get VoteWitnessContract.
    */
   private VoteWitnessContract getVoteWitnessContract(String address, String voteaddress,
-      Long value) {
+                                                     Long value) {
     return
         VoteWitnessContract.newBuilder()
             .setOwnerAddress(ByteString.copyFrom(ByteArray.fromHexString(address)))
@@ -109,7 +119,7 @@ public class TransactionStoreTest {
    * put and get CreateAccountTransaction.
    */
   @Test
-  public void CreateAccountTransactionStoreTest() {
+  public void CreateAccountTransactionStoreTest() throws BadItemException {
     AccountCreateContract accountCreateContract = getContract(ACCOUNT_NAME,
         OWNER_ADDRESS);
     TransactionCapsule ret = new TransactionCapsule(accountCreateContract,
@@ -125,7 +135,7 @@ public class TransactionStoreTest {
    * put and get CreateWitnessTransaction.
    */
   @Test
-  public void CreateWitnessTransactionStoreTest() {
+  public void CreateWitnessTransactionStoreTest() throws BadItemException {
     WitnessCreateContract witnessContract = getWitnessContract(OWNER_ADDRESS, URL);
     TransactionCapsule transactionCapsule = new TransactionCapsule(witnessContract);
     transactionStore.put(key1, transactionCapsule);
@@ -138,7 +148,7 @@ public class TransactionStoreTest {
    * put and get TransferTransaction.
    */
   @Test
-  public void TransferTransactionStorenTest() {
+  public void TransferTransactionStorenTest() throws BadItemException {
     AccountCapsule ownerCapsule =
         new AccountCapsule(
             ByteString.copyFromUtf8(ACCOUNT_NAME),
@@ -161,7 +171,7 @@ public class TransactionStoreTest {
    */
 
   @Test
-  public void voteWitnessTransactionTest() {
+  public void voteWitnessTransactionTest() throws BadItemException {
 
     AccountCapsule ownerAccountFirstCapsule =
         new AccountCapsule(
@@ -186,7 +196,7 @@ public class TransactionStoreTest {
    * put value is null and get it.
    */
   @Test
-  public void TransactionValueNullTest() {
+  public void TransactionValueNullTest() throws BadItemException {
     TransactionCapsule transactionCapsule = null;
     transactionStore.put(key2, transactionCapsule);
     Assert.assertNull("put value is null", transactionStore.get(key2));
@@ -197,7 +207,7 @@ public class TransactionStoreTest {
    * put key is null and get it.
    */
   @Test
-  public void TransactionKeyNullTest() {
+  public void TransactionKeyNullTest() throws BadItemException {
     AccountCreateContract accountCreateContract = getContract(ACCOUNT_NAME,
         OWNER_ADDRESS);
     TransactionCapsule ret = new TransactionCapsule(accountCreateContract,
@@ -210,6 +220,7 @@ public class TransactionStoreTest {
       Assert.assertEquals("The key argument cannot be null", e.getMessage());
     }
   }
+
   @AfterClass
   public static void destroy() {
     Args.clearParam();
@@ -222,7 +233,7 @@ public class TransactionStoreTest {
     // generate the random number
     byte[] result = new byte[length];
     new Random().nextBytes(result);
-    result[0] = Constant.ADD_PRE_FIX_BYTE_TESTNET;
+    result[0] = Wallet.getAddressPreFixByte();
     return result;
   }
 }

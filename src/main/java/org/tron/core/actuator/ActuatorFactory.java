@@ -53,6 +53,8 @@ public class ActuatorFactory {
         return new VoteWitnessActuator(contract.getParameter(), manager);
       case WitnessCreateContract:
         return new WitnessCreateActuator(contract.getParameter(), manager);
+      case AccountCreateContract:
+        return new CreateAccountActuator(contract.getParameter(), manager);
       case AssetIssueContract:
         return new AssetIssueActuator(contract.getParameter(), manager);
       case UnfreezeAssetContract:
@@ -69,6 +71,8 @@ public class ActuatorFactory {
         return new UnfreezeBalanceActuator(contract.getParameter(), manager);
       case WithdrawBalanceContract:
         return new WithdrawBalanceActuator(contract.getParameter(), manager);
+      case UpdateAssetContract:
+        return new UpdateAssetActuator(contract.getParameter(), manager);
       default:
 
     }

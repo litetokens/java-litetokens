@@ -14,13 +14,9 @@ public class PingMessage extends Message {
 
   private Discover.PingMessage pingMessage;
 
-  public PingMessage(byte[] data) {
+  public PingMessage(byte[] data) throws Exception{
     super(Message.PING, data);
-    try {
-      this.pingMessage = Discover.PingMessage.parseFrom(data);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
-    }
+    this.pingMessage = Discover.PingMessage.parseFrom(data);
   }
 
   public PingMessage(Node from, Node to) {
@@ -35,7 +31,8 @@ public class PingMessage extends Message {
         .setPort(to.getPort())
         .setAddress(ByteString.copyFrom(ByteArray.fromString(to.getHost())))
         .build();
-    this.pingMessage = Discover.PingMessage.newBuilder().setVersion(Args.getInstance().getNodeP2pVersion())
+    this.pingMessage = Discover.PingMessage.newBuilder()
+        .setVersion(Args.getInstance().getNodeP2pVersion())
         .setFrom(fromEndpoint)
         .setTo(toEndpoint)
         .setTimestamp(System.currentTimeMillis())
@@ -43,14 +40,18 @@ public class PingMessage extends Message {
     this.data = this.pingMessage.toByteArray();
   }
 
-  public Node getFrom (){
+  public int getVersion(){
+    return this.pingMessage.getVersion();
+  }
+
+  public Node getFrom() {
     Endpoint from = this.pingMessage.getFrom();
     Node node = new Node(from.getNodeId().toByteArray(),
         ByteArray.toStr(from.getAddress().toByteArray()), from.getPort());
     return node;
   }
 
-  public Node getTo(){
+  public Node getTo() {
     Endpoint to = this.pingMessage.getTo();
     Node node = new Node(to.getNodeId().toByteArray(),
         ByteArray.toStr(to.getAddress().toByteArray()), to.getPort());

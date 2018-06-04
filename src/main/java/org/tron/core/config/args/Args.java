@@ -36,10 +36,14 @@ import org.springframework.stereotype.Component;
 import org.tron.common.crypto.ECKey;
 import org.tron.common.overlay.discover.Node;
 import org.tron.core.Constant;
+import org.tron.common.utils.ByteArray;
 import org.tron.core.Wallet;
 import org.tron.core.config.Configuration;
 import org.tron.core.config.Parameter.ChainConstant;
 import org.tron.core.db.AccountStore;
+import org.tron.keystore.CipherException;
+import org.tron.keystore.Credentials;
+import org.tron.keystore.WalletUtils;
 
 @Slf4j
 @NoArgsConstructor
@@ -69,6 +73,9 @@ public class Args {
 
   @Parameter(names = {"-p", "--private-key"}, description = "private-key")
   private String privateKey = "";
+
+  @Parameter(names = {"--password"}, description = "password")
+  private String password = "";
 
   @Parameter(names = {"--storage-db-directory"}, description = "Storage db directory")
   private String storageDbDirectory = "";
@@ -280,7 +287,6 @@ public class Args {
       INSTANCE.setLocalWitnesses(new LocalWitnesses(INSTANCE.privateKey));
       logger.debug("Got privateKey from cmd");
     } else if (config.hasPath("localwitness")) {
-
       INSTANCE.localWitnesses = new LocalWitnesses();
       List<String> localwitness = config.getStringList("localwitness");
       if (localwitness.size() > 1) {
@@ -289,6 +295,30 @@ public class Args {
       }
       INSTANCE.localWitnesses.setPrivateKeys(localwitness);
       logger.debug("Got privateKey from config.conf");
+    } else if (config.hasPath("localwitnesskeystore")) {
+      INSTANCE.localWitnesses = new LocalWitnesses();
+      List<String> privateKeys = new ArrayList<String>();
+      if (INSTANCE.isWitness()) {
+        List<String> localwitness = config.getStringList("localwitnesskeystore");
+        if (localwitness.size() > 0) {
+          String fileName = System.getProperty("user.dir") + "/" + localwitness.get(0);
+          System.out.println("Please input your password.");
+          INSTANCE.password = WalletUtils.inputPassword();
+          try {
+            Credentials credentials = WalletUtils
+                .loadCredentials(INSTANCE.password, new File(fileName));
+            ECKey ecKeyPair = credentials.getEcKeyPair();
+            String prikey = ByteArray.toHexString(ecKeyPair.getPrivKeyBytes());
+            privateKeys.add(prikey);
+          } catch (IOException e) {
+            logger.warn(e.getMessage());
+          } catch (CipherException e) {
+            logger.warn(e.getMessage());
+          }
+        }
+      }
+      INSTANCE.localWitnesses.setPrivateKeys(privateKeys);
+      logger.debug("Got privateKey from keystore");
     }
 
     if (INSTANCE.isWitness() && CollectionUtils.isEmpty(INSTANCE.localWitnesses.getPrivateKeys())) {

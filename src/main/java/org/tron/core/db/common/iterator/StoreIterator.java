@@ -1,19 +1,20 @@
 package org.tron.core.db.common.iterator;
 
 import lombok.extern.slf4j.Slf4j;
-import org.iq80.leveldb.DBIterator;
+import org.rocksdb.RocksIterator;
 
 import java.io.IOException;
+import java.util.AbstractMap;
 import java.util.Map.Entry;
 import java.util.function.Consumer;
 
 @Slf4j
 public final class StoreIterator implements org.tron.core.db.common.iterator.DBIterator {
 
-  private DBIterator dbIterator;
+  private RocksIterator dbIterator;
   private boolean first = true;
 
-  public StoreIterator(DBIterator dbIterator) {
+  public StoreIterator(RocksIterator dbIterator) {
     this.dbIterator = dbIterator;
   }
 
@@ -32,16 +33,12 @@ public final class StoreIterator implements org.tron.core.db.common.iterator.DBI
         first = false;
       }
 
-      if (!(hasNext = dbIterator.hasNext())) { // false is last item
+      if (!(hasNext = dbIterator.isValid())) { // false is last item
         dbIterator.close();
       }
     } catch (Exception e) {
       logger.debug(e.getMessage(), e);
-      try {
-        dbIterator.close();
-      } catch (IOException e1) {
-        logger.debug(e1.getMessage(), e1);
-      }
+      dbIterator.close();
     }
 
     return hasNext;
@@ -49,7 +46,7 @@ public final class StoreIterator implements org.tron.core.db.common.iterator.DBI
 
   @Override
   public Entry<byte[], byte[]> next() {
-    return dbIterator.next();
+    return new AbstractMap.SimpleImmutableEntry<>(dbIterator.key(), dbIterator.value());
   }
 
   @Override
@@ -59,6 +56,6 @@ public final class StoreIterator implements org.tron.core.db.common.iterator.DBI
 
   @Override
   public void forEachRemaining(Consumer<? super Entry<byte[], byte[]>> action) {
-    dbIterator.forEachRemaining(action);
+    // dbIterator.forEachRemaining(action);
   }
 }

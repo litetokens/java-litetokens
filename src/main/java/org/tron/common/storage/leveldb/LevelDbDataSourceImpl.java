@@ -15,9 +15,18 @@
 
 package org.tron.common.storage.leveldb;
 
-import static org.fusesource.leveldbjni.JniDBFactory.factory;
-
 import com.google.common.collect.Sets;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import org.rocksdb.*;
+
+import org.rocksdb.RocksDBException;
+import org.tron.common.storage.DbSourceInter;
+import org.tron.common.utils.FileUtil;
+import org.tron.core.config.args.Args;
+import org.tron.core.db.common.iterator.StoreIterator;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,28 +40,20 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.iq80.leveldb.CompressionType;
-import org.iq80.leveldb.DB;
-import org.iq80.leveldb.DBException;
-import org.iq80.leveldb.DBIterator;
-import org.iq80.leveldb.Options;
-import org.iq80.leveldb.WriteBatch;
-import org.iq80.leveldb.WriteOptions;
-import org.tron.common.storage.DbSourceInter;
-import org.tron.common.utils.FileUtil;
-import org.tron.core.config.args.Args;
-import org.tron.core.db.common.iterator.StoreIterator;
 
 @Slf4j
 @NoArgsConstructor
 public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
-    Iterable<Map.Entry<byte[], byte[]>> {
+    Iterable<Entry<byte[], byte[]>> {
 
-  String dataBaseName;
-  DB database;
-  boolean alive;
+  static {
+    // a static method that loads the RocksDB C++ library.
+    RocksDB.loadLibrary();
+  }
+
+  private String dataBaseName;
+  private RocksDB database;
+  private boolean alive;
   private String parentName;
   private ReadWriteLock resetDbLock = new ReentrantReadWriteLock();
 
@@ -62,8 +63,8 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
   public LevelDbDataSourceImpl(String parentName, String name) {
     this.dataBaseName = name;
     this.parentName = Paths.get(
-            parentName,
-            Args.getInstance().getStorage().getDbDirectory()
+        parentName,
+        Args.getInstance().getStorage().getDbDirectory()
     ).toString();
   }
 
@@ -81,48 +82,31 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
         throw new NullPointerException("no name set to the dbStore");
       }
 
-      Options dbOptions = Args.getInstance().getStorage().getOptionsByDbName(dataBaseName);
+      // TODO: get from configs
+      Options dbOptions = new Options().setCreateIfMissing(true);
 
       try {
         openDatabase(dbOptions);
         alive = true;
-      } catch (IOException ioe) {
-        throw new RuntimeException("Can't initialize database", ioe);
+      } catch (IOException | RocksDBException e) {
+        throw new RuntimeException("Can't initialize database", e);
       }
     } finally {
       resetDbLock.writeLock().unlock();
     }
   }
 
-  private void openDatabase(Options dbOptions) throws IOException {
+  private void openDatabase(Options dbOptions) throws IOException, RocksDBException {
     final Path dbPath = getDbPath();
     if (!Files.isSymbolicLink(dbPath.getParent())) {
       Files.createDirectories(dbPath.getParent());
     }
     try {
-      database = factory.open(dbPath.toFile(), dbOptions);
-    } catch (IOException e) {
-      if (e.getMessage().contains("Corruption:")) {
-        factory.repair(dbPath.toFile(), dbOptions);
-        database = factory.open(dbPath.toFile(), dbOptions);
-      } else {
-        throw e;
-      }
+      database = RocksDB.open(dbOptions, dbPath.toString());
+    } catch (RocksDBException e) {
+      // TODO: what to do, repair ?
+      throw e;
     }
-  }
-
-  @Deprecated
-  private Options createDbOptions() {
-    Options dbOptions = new Options();
-    dbOptions.createIfMissing(true);
-    dbOptions.compressionType(CompressionType.NONE);
-    dbOptions.blockSize(10 * 1024 * 1024);
-    dbOptions.writeBufferSize(10 * 1024 * 1024);
-    dbOptions.cacheSize(0);
-    dbOptions.paranoidChecks(true);
-    dbOptions.verifyChecksums(true);
-    dbOptions.maxOpenFiles(32);
-    return dbOptions;
   }
 
   private Path getDbPath() {
@@ -152,8 +136,8 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
       logger.debug("Destroying existing database: " + fileLocation);
       Options options = new Options();
       try {
-        factory.destroy(fileLocation, options);
-      } catch (IOException e) {
+        RocksDB.destroyDB(fileLocation.toString(), options);
+      } catch (RocksDBException e) {
         logger.error(e.getMessage(), e);
       }
     } finally {
@@ -176,7 +160,7 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
     resetDbLock.readLock().lock();
     try {
       return database.get(key);
-    } catch (DBException e) {
+    } catch (RocksDBException e) {
       logger.debug(e.getMessage(), e);
     } finally {
       resetDbLock.readLock().unlock();
@@ -189,6 +173,8 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
     resetDbLock.readLock().lock();
     try {
       database.put(key, value);
+    } catch (RocksDBException e) {
+      logger.debug(e.getMessage(), e);
     } finally {
       resetDbLock.readLock().unlock();
     }
@@ -198,7 +184,9 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
   public void putData(byte[] key, byte[] value, WriteOptions options) {
     resetDbLock.readLock().lock();
     try {
-      database.put(key, value, options);
+      database.put(options, key, value);
+    } catch (RocksDBException e) {
+      logger.debug(e.getMessage(), e);
     } finally {
       resetDbLock.readLock().unlock();
     }
@@ -209,6 +197,8 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
     resetDbLock.readLock().lock();
     try {
       database.delete(key);
+    } catch (RocksDBException e) {
+      logger.debug(e.getMessage(), e);
     } finally {
       resetDbLock.readLock().unlock();
     }
@@ -218,7 +208,9 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
   public void deleteData(byte[] key, WriteOptions options) {
     resetDbLock.readLock().lock();
     try {
-      database.delete(key, options);
+      database.delete(options, key);
+    } catch (RocksDBException e) {
+      logger.debug(e.getMessage(), e);
     } finally {
       resetDbLock.readLock().unlock();
     }
@@ -228,14 +220,12 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
   @Override
   public Set<byte[]> allKeys() {
     resetDbLock.readLock().lock();
-    try (DBIterator iterator = database.iterator()) {
+    try (RocksIterator iterator = database.newIterator()) {
       Set<byte[]> result = Sets.newHashSet();
-      for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
-        result.add(iterator.peekNext().getKey());
+      for (iterator.seekToFirst(); iterator.isValid(); iterator.next()) {
+        result.add(iterator.key());
       }
       return result;
-    } catch (IOException e) {
-      throw new RuntimeException(e);
     } finally {
       resetDbLock.readLock().unlock();
     }
@@ -245,14 +235,12 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
   @Override
   public Set<byte[]> allValues() {
     resetDbLock.readLock().lock();
-    try (DBIterator iterator = database.iterator()) {
+    try (RocksIterator iterator = database.newIterator()) {
       Set<byte[]> result = Sets.newHashSet();
-      for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
-        result.add(iterator.peekNext().getValue());
+      for (iterator.seekToFirst(); iterator.isValid(); iterator.next()) {
+        result.add(iterator.value());
       }
       return result;
-    } catch (IOException e) {
-      throw new RuntimeException(e);
     } finally {
       resetDbLock.readLock().unlock();
     }
@@ -263,20 +251,18 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
       return Sets.newHashSet();
     }
     resetDbLock.readLock().lock();
-    try (DBIterator iterator = database.iterator()) {
+    try (RocksIterator iterator = database.newIterator()) {
       Set<byte[]> result = Sets.newHashSet();
       long i = 0;
       iterator.seekToLast();
-      if (iterator.hasNext()) {
-        result.add(iterator.peekNext().getValue());
+      if (iterator.isValid()) {
+        result.add(iterator.value());
         i++;
       }
-      for (; iterator.hasPrev() && i++ < limit; iterator.prev()) {
-        result.add(iterator.peekPrev().getValue());
+      for (; iterator.isValid() && i++ < limit; iterator.prev()) {
+        result.add(iterator.value());
       }
       return result;
-    } catch (IOException e) {
-      throw new RuntimeException(e);
     } finally {
       resetDbLock.readLock().unlock();
     }
@@ -287,15 +273,13 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
       return Sets.newHashSet();
     }
     resetDbLock.readLock().lock();
-    try (DBIterator iterator = database.iterator()) {
+    try (RocksIterator iterator = database.newIterator()) {
       Set<byte[]> result = Sets.newHashSet();
       long i = 0;
-      for (iterator.seek(key); iterator.hasNext() && i++ < limit; iterator.next()) {
-        result.add(iterator.peekNext().getValue());
+      for (iterator.seek(key); iterator.isValid() && i++ < limit; iterator.next()) {
+        result.add(iterator.value());
       }
       return result;
-    } catch (IOException e) {
-      throw new RuntimeException(e);
     } finally {
       resetDbLock.readLock().unlock();
     }
@@ -306,7 +290,7 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
       return Sets.newHashSet();
     }
     resetDbLock.readLock().lock();
-    try (DBIterator iterator = database.iterator()) {
+    try (RocksIterator iterator = database.newIterator()) {
       Set<byte[]> result = Sets.newHashSet();
       long i = 0;
       byte[] data = getData(key);
@@ -314,12 +298,10 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
         result.add(data);
         i++;
       }
-      for (iterator.seek(key); iterator.hasPrev() && i++ < limit; iterator.prev()) {
-        result.add(iterator.peekPrev().getValue());
+      for (iterator.seek(key); iterator.isValid() && i++ < limit; iterator.prev()) {
+        result.add(iterator.value());
       }
       return result;
-    } catch (IOException e) {
-      throw new RuntimeException(e);
     } finally {
       resetDbLock.readLock().unlock();
     }
@@ -328,29 +310,31 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
   @Override
   public long getTotal() throws RuntimeException {
     resetDbLock.readLock().lock();
-    try (DBIterator iterator = database.iterator()) {
+    try (RocksIterator iterator = database.newIterator()) {
       long total = 0;
-      for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
+      for (iterator.seekToFirst(); iterator.isValid(); iterator.next()) {
         total++;
       }
       return total;
-    } catch (IOException e) {
-      throw new RuntimeException(e);
     } finally {
       resetDbLock.readLock().unlock();
     }
   }
 
   private void updateByBatchInner(Map<byte[], byte[]> rows) throws Exception {
-    try (WriteBatch batch = database.createWriteBatch()) {
+    try (WriteBatch batch = new WriteBatch()) {
       rows.forEach((key, value) -> {
-        if (value == null) {
-          batch.delete(key);
-        } else {
-          batch.put(key, value);
+        try {
+          if (value == null) {
+            batch.delete(key);
+          } else {
+            batch.put(key, value);
+          }
+        } catch (RocksDBException e) {
+          e.printStackTrace();
         }
       });
-      database.write(batch);
+      database.write(new WriteOptions(), batch);
     }
   }
 
@@ -384,8 +368,6 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
       }
       database.close();
       alive = false;
-    } catch (IOException e) {
-      logger.error("Failed to find the dbStore file on the closeDB: {} ", dataBaseName);
     } finally {
       resetDbLock.writeLock().unlock();
     }
@@ -393,7 +375,7 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
 
   @Override
   public org.tron.core.db.common.iterator.DBIterator iterator() {
-    return new StoreIterator(database.iterator());
+    return new StoreIterator(database.newIterator());
   }
 
   public Stream<Entry<byte[], byte[]>> stream() {

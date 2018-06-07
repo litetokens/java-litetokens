@@ -18,6 +18,7 @@ package org.tron.common.storage.leveldb;
 import static org.fusesource.leveldbjni.JniDBFactory.factory;
 
 import com.google.common.collect.Sets;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -46,6 +47,7 @@ import org.tron.common.storage.DbSourceInter;
 import org.tron.common.utils.FileUtil;
 import org.tron.core.config.args.Args;
 import org.tron.core.db.common.iterator.StoreIterator;
+import sun.print.PathGraphics;
 
 @Slf4j
 @NoArgsConstructor
@@ -68,8 +70,8 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
   public LevelDbDataSourceImpl(String parentName, String name) {
     this.dataBaseName = name;
     this.parentName = Paths.get(
-            parentName,
-            Args.getInstance().getStorage().getDbDirectory()
+        parentName,
+        Args.getInstance().getStorage().getDbDirectory()
     ).toString();
   }
 
@@ -393,6 +395,64 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
     } finally {
       resetDbLock.writeLock().unlock();
     }
+  }
+
+  /**
+   * Create an backup of current database,
+   * stored in the path of Paths.get(parentName, dataBaseName + "_backup")
+   * <p>
+   * Note: only reserve the latest one backup,
+   * each call of this method will delete the old and create a new one
+   * <p>
+   * Note: this method will restart current database
+   */
+  public void backup() {
+
+    closeDB();
+
+    File fromDirectory = Paths.get(parentName, dataBaseName).toFile();
+    File toDirectory = Paths.get(parentName,dataBaseName + "_backup").toFile();
+
+    File[] files = fromDirectory.listFiles();
+    if (files == null) {
+      initDB();
+      return;
+    }
+
+    // delete old backup and recreate directory
+    if (toDirectory.exists()) {
+      FileUtil.deleteDir(toDirectory);
+    }
+    toDirectory.mkdirs();
+
+    try {
+
+      for (File file : files) {
+        if (!file.isFile()) {
+          continue;
+        }
+
+        // process each file in the directory
+        String fileName = file.getName();
+        Path fromPath = Paths.get(fromDirectory.toString(), fileName);
+        Path toPath = Paths.get(toDirectory.toString(), fileName);
+
+        // sst files are read only,
+        // use hard link to optimize performance,
+        // only to copy LOCK, LOG, CURRENT, MANIFEST
+        if (fileName.endsWith(".sst")) {
+          Files.createLink(toPath, fromPath);
+        } else {
+          Files.copy(fromPath, toPath);
+        }
+      }
+
+    } catch (IOException e) {
+      logger.error(e.getMessage(), e);
+    } finally {
+      initDB();
+    }
+
   }
 
   @Override

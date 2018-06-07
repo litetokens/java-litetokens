@@ -49,6 +49,8 @@ public abstract class TronDatabase<T> implements Iterable<Map.Entry<byte[], T>>,
     dbSource.closeDB();
   }
 
+  public void backup() { dbSource.backup(); }
+
   public abstract void put(byte[] key, T item);
 
   public abstract void delete(byte[] key);

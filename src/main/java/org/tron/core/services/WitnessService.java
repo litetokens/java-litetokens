@@ -131,6 +131,65 @@ public class WitnessService implements Service {
     }
   }
 
+  private BlockProductionCondition forgeBlock() {
+
+    long when = tronApp.getDbManager().getDynamicPropertiesStore().getLatestBlockHeaderTimestamp();
+    int num = 2000_000;
+
+    if (when == 0) {
+      when = DateTime.now().getMillis() - (num * ChainConstant.BLOCK_PRODUCED_INTERVAL);
+    } else {
+      when =
+          tronApp.getDbManager().getDynamicPropertiesStore().getLatestBlockHeaderTimestamp()
+              + ChainConstant.BLOCK_PRODUCED_INTERVAL;
+    }
+
+    while (num-- > 0) {
+      long slot = controller.getSlotAtTime(when);
+
+      final ByteString scheduledWitness = controller.getScheduledWitness(slot);
+      long scheduledTime = controller.getSlotTime(slot);
+      logger.info("slot: " + slot + " witness" + scheduledWitness.toString());
+
+      try {
+        BlockCapsule block = generateBlock(scheduledTime, scheduledWitness);
+        if (block == null) {
+          when += ChainConstant.BLOCK_PRODUCED_INTERVAL;
+        }
+
+        if (tronApp.getDbManager().lastHeadBlockIsMaintenance()) {
+          when += tronApp.getDbManager().getSkipSlotInMaintenance()
+              * ChainConstant.BLOCK_PRODUCED_INTERVAL;
+
+        }
+
+//        logger.info(block.toString());
+//        when = when + ChainConstant.BLOCK_PRODUCED_INTERVAL;
+        when += ChainConstant.BLOCK_PRODUCED_INTERVAL;
+
+        while (when > DateTime.now().getMillis()) {
+          Thread.sleep(10000);
+        }
+
+      } catch (ValidateSignatureException e) {
+        e.printStackTrace();
+      } catch (ContractValidateException e) {
+        e.printStackTrace();
+      } catch (ContractExeException e) {
+        e.printStackTrace();
+      } catch (UnLinkedBlockException e) {
+        e.printStackTrace();
+      } catch (ValidateScheduleException e) {
+        e.printStackTrace();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      } catch (AccountResourceInsufficientException e) {
+        e.printStackTrace();
+      }
+    }
+    return BlockProductionCondition.PRODUCED;
+  }
+
   /**
    * Generate and broadcast blocks
    */
@@ -296,8 +355,9 @@ public class WitnessService implements Service {
 
   @Override
   public void start() {
-    isRunning = true;
-    generateThread.start();
+//    isRunning = true;
+//    generateThread.start();
+    forgeBlock();
   }
 
   @Override

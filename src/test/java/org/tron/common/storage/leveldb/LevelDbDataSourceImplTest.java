@@ -237,9 +237,7 @@ public class LevelDbDataSourceImplTest {
     putSomeKeyValue(dataSource);
     Set<byte[]> seekKeyLimitNext = dataSource.getValuesNext("0000000300".getBytes(), 2);
     HashSet<String> hashSet = Sets.newHashSet(ByteArray.toStr(value3), ByteArray.toStr(value4));
-    seekKeyLimitNext.forEach(valeu -> {
-      Assert.assertTrue("getValuesNext", hashSet.contains(ByteArray.toStr(valeu)));
-    });
+    seekKeyLimitNext.forEach(value -> Assert.assertTrue("getValuesNext", hashSet.contains(ByteArray.toStr(value))));
     dataSource.resetDb();
   }
 

@@ -43,17 +43,22 @@ public class VotesStoreTest {
 
   @Test
   public void putAndGetVotes() {
-    List<Vote> oldVotes = new ArrayList<Vote>();
+    List<Vote> oldVotes = new ArrayList<>();
 
     VotesCapsule votesCapsule = new VotesCapsule(ByteString.copyFromUtf8("100000000x"), oldVotes);
     this.votesStore.put(votesCapsule.createDbKey(), votesCapsule);
 
-    Assert.assertTrue("votesStore is empyt", votesStore.getIterator().hasNext());
+    Assert.assertTrue("votesStore is empty", votesStore.getIterator().hasNext());
+
     Assert.assertTrue(votesStore.has(votesCapsule.createDbKey()));
+
     VotesCapsule votesSource = this.votesStore
         .get(ByteString.copyFromUtf8("100000000x").toByteArray());
+
     Assert.assertEquals(votesCapsule.getAddress(), votesSource.getAddress());
+
     Assert.assertEquals(ByteString.copyFromUtf8("100000000x"), votesSource.getAddress());
+
 
 //    votesCapsule = new VotesCapsule(ByteString.copyFromUtf8(""), oldVotes);
 //    this.votesStore.put(votesCapsule.createDbKey(), votesCapsule);

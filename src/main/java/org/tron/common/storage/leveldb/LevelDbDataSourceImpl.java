@@ -298,7 +298,11 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
         result.add(data);
         i++;
       }
-      for (iterator.seek(key); iterator.isValid() && i++ < limit; iterator.prev()) {
+      iterator.seek(key);
+      if (iterator.isValid()) {
+        iterator.prev();
+      }
+      for (; iterator.isValid() && i++ < limit; iterator.prev()) {
         result.add(iterator.value());
       }
       return result;

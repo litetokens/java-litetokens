@@ -22,6 +22,7 @@ import org.iq80.leveldb.DB;
 import org.iq80.leveldb.Options;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.rocksdb.*;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -44,6 +45,7 @@ import java.util.Arrays;
  * @version 1.0
  * @since 2018/5/29
  */
+@Ignore
 public class DynamicPropertiesStoreTest {
 
   private static String dbPath = "output_DynamicPropertiesStore_test";
@@ -62,12 +64,12 @@ public class DynamicPropertiesStoreTest {
   @BeforeClass
   public static void init() {
     dynamicPropertiesStore = context.getBean(DynamicPropertiesStore.class);
-    database = dynamicPropertiesStore.getDbSource().getDatabase();
-
-    System.out.println(database.getProperty("leveldb.num-files-at-level0"));
-    System.out.println(database.getProperty("leveldb.stats"));
-    System.out.println(database.getProperty("leveldb.sstables"));
-    System.out.println(database.getProperty("leveldb.approximate-memory-usage"));
+//    database = dynamicPropertiesStore.getDbSource().getDatabase();
+//
+//    System.out.println(database.getProperty("leveldb.num-files-at-level0"));
+//    System.out.println(database.getProperty("leveldb.stats"));
+//    System.out.println(database.getProperty("leveldb.sstables"));
+//    System.out.println(database.getProperty("leveldb.approximate-memory-usage"));
   }
 
   //  @AfterClass
@@ -198,24 +200,6 @@ public class DynamicPropertiesStoreTest {
     System.out.println(dbCopy.getProperty("leveldb.stats"));
     System.out.println(dbCopy.getProperty("leveldb.sstables"));
     System.out.println(dbCopy.getProperty("leveldb.approximate-memory-usage"));
-  }
-
-  @Test
-  public void testBackup() throws IOException {
-    for (int i = 0; i < 1; i++) {
-      for (int j = 0; j < 1000000; j++) {
-        database.put(String.valueOf(j).getBytes(), String.valueOf(j).getBytes());
-      }
-    }
-
-    long sum = 0;
-    for (int i = 0; i < 10; i++) {
-      long start = System.currentTimeMillis();
-      dynamicPropertiesStore.backup();
-      sum += System.currentTimeMillis() - start;
-    }
-    System.out.println(sum / 10);
-
   }
 
   @Test

@@ -342,7 +342,7 @@ public class RpcApiService implements Service {
           headBlock = blockList.get(0);
         }
         trx.setReference(headBlock.getNum(), headBlock.getBlockId().getBytes());
-        long expiration = headBlock.getTimeStamp() + Constant.TRANSACTION_DEFAULT_EXPIRATION_TIME;
+        long expiration = headBlock.getTimeStamp() + Constant.MAXIMUM_TIME_UNTIL_EXPIRATION;
         trx.setExpiration(expiration);
       } catch (HeaderNotFound headerNotFound) {
         headerNotFound.printStackTrace();

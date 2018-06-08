@@ -5,6 +5,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigObject;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,7 +18,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-import org.tron.api.GrpcAPI;
 import org.tron.api.GrpcAPI.AccountNetMessage;
 import org.tron.api.GrpcAPI.AssetIssueList;
 import org.tron.api.GrpcAPI.BlockList;
@@ -25,11 +25,13 @@ import org.tron.api.GrpcAPI.NodeList;
 import org.tron.api.GrpcAPI.TransactionList;
 import org.tron.api.GrpcAPI.WitnessList;
 import org.tron.common.crypto.ECKey;
-import org.tron.common.crypto.Hash;
 import org.tron.common.crypto.SymmEncoder;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.FileUtil;
+import org.tron.common.utils.Sha256Hash;
 import org.tron.common.utils.Utils;
+import org.tron.core.exception.CancelException;
+import org.tron.keystore.CipherException;
 import org.tron.protos.Contract;
 import org.tron.protos.Contract.AssetIssueContract;
 import org.tron.protos.Contract.FreezeBalanceContract;
@@ -314,10 +316,6 @@ public class WalletClient {
             return false;
         }
         transaction = signTransaction(transaction);
-        System.out.println("--------------------------------");
-        System.out.println(
-                "txid = " + ByteArray.toHexString(Hash.sha256(transaction.getRawData().toByteArray())));
-        System.out.println("--------------------------------");
         return rpcCli.broadcastTransaction(transaction);
     }
 
@@ -493,6 +491,32 @@ public class WalletClient {
         return builder.build();
     }
 
+    public boolean createAccount(byte[] address)
+        throws CipherException, IOException, CancelException {
+        byte[] owner = getAddress();
+        Transaction transaction = createAccountTransaction(owner, address);
+        if (transaction == null || transaction.getRawData().getContractCount() == 0) {
+            return false;
+        }
+
+        transaction = signTransaction(transaction);
+        return rpcCli.broadcastTransaction(transaction);
+    }
+
+    public static Transaction createAccountTransaction(byte[] owner, byte[] address) {
+        Contract.AccountCreateContract contract = createAccountCreateContract(owner, address);
+        return rpcCli.createAccount(contract);
+    }
+
+    public static Contract.AccountCreateContract createAccountCreateContract(byte[] owner,
+        byte[] address) {
+        Contract.AccountCreateContract.Builder builder = Contract.AccountCreateContract.newBuilder();
+        builder.setOwnerAddress(ByteString.copyFrom(owner));
+        builder.setAccountAddress(ByteString.copyFrom(address));
+
+        return builder.build();
+    }
+
     public static Contract.AccountUpdateContract createAccountUpdateContract(byte[] accountName,
                                                                              byte[] address) {
         Contract.AccountUpdateContract.Builder builder = Contract.AccountUpdateContract.newBuilder();
@@ -606,8 +630,8 @@ public class WalletClient {
             return null;
         }
         byte[] pwd;
-        pwd = Hash.sha256(password.getBytes());
-        pwd = Hash.sha256(pwd);
+        pwd = Sha256Hash.hash(password.getBytes());
+        pwd = Sha256Hash.hash(pwd);
         pwd = Arrays.copyOfRange(pwd, 0, 16);
         return pwd;
     }
@@ -617,7 +641,7 @@ public class WalletClient {
             return null;
         }
         byte[] encKey;
-        encKey = Hash.sha256(password.getBytes());
+        encKey = Sha256Hash.hash(password.getBytes());
         encKey = Arrays.copyOfRange(encKey, 0, 16);
         return encKey;
     }
@@ -667,8 +691,8 @@ public class WalletClient {
     }
 
     public static String encode58Check(byte[] input) {
-        byte[] hash0 = Hash.sha256(input);
-        byte[] hash1 = Hash.sha256(hash0);
+        byte[] hash0 = Sha256Hash.hash(input);
+        byte[] hash1 = Sha256Hash.hash(hash0);
         byte[] inputCheck = new byte[input.length + 4];
         System.arraycopy(input, 0, inputCheck, 0, input.length);
         System.arraycopy(hash1, 0, inputCheck, input.length, 4);
@@ -682,8 +706,8 @@ public class WalletClient {
         }
         byte[] decodeData = new byte[decodeCheck.length - 4];
         System.arraycopy(decodeCheck, 0, decodeData, 0, decodeData.length);
-        byte[] hash0 = Hash.sha256(decodeData);
-        byte[] hash1 = Hash.sha256(hash0);
+        byte[] hash0 = Sha256Hash.hash(decodeData);
+        byte[] hash1 = Sha256Hash.hash(hash0);
         if (hash1[0] == decodeCheck[decodeData.length] &&
                 hash1[1] == decodeCheck[decodeData.length + 1] &&
                 hash1[2] == decodeCheck[decodeData.length + 2] &&

@@ -3,6 +3,8 @@ package org.tron.core.db;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.StringTokenizer;
+
+import org.rocksdb.RocksDB;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -43,7 +45,13 @@ public class PeersStore extends TronDatabase<Set<Node>> {
   @Override
   public Set<Node> get(byte[] key) {
     Set<Node> nodes = new HashSet<>();
+
+    System.out.println("============ before ===========");
+    System.out.println(new String(key));
+    System.out.println(dbSource.getDBName());
     byte[] value = dbSource.getData(key);
+    System.out.println("============ after ===========");
+
     if (value != null) {
       StringTokenizer st = new StringTokenizer(new String(value), "||");
       while (st.hasMoreElements()) {

@@ -56,6 +56,7 @@ public final class StoreIterator implements org.tron.core.db.common.iterator.DBI
 
   @Override
   public void forEachRemaining(Consumer<? super Entry<byte[], byte[]>> action) {
+    // TODO: how to implement ?
     // dbIterator.forEachRemaining(action);
   }
 }

@@ -134,7 +134,7 @@ public class WitnessService implements Service {
   private BlockProductionCondition forgeBlock() {
 
     long when = tronApp.getDbManager().getDynamicPropertiesStore().getLatestBlockHeaderTimestamp();
-    int num = 2000_000;
+    int num = 3000_000;
 
     if (when == 0) {
       when = DateTime.now().getMillis() - (num * ChainConstant.BLOCK_PRODUCED_INTERVAL);

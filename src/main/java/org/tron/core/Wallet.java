@@ -550,10 +550,13 @@ public class Wallet {
     return nodeListBuilder.build();
   }
 
-  public Transaction deployContract(SmartContract smartContract) {
-    return new TransactionCapsule(smartContract, ContractType.SmartContract)
-        .getInstance();
+  public Transaction deployContract(SmartContract smartContract, TransactionCapsule trxCap) {
+
+    // do nothing, so can add some useful function later
+    return trxCap.getInstance();
+
   }
+
 
   public Transaction triggerContract(TriggerSmartContract triggerSmartContract,
       TransactionCapsule trxCap) {

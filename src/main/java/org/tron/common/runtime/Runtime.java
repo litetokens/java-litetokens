@@ -11,6 +11,9 @@ import static org.tron.common.runtime.vm.program.InternalTransaction.TrxType.TRX
 import static org.tron.common.runtime.vm.program.InternalTransaction.TrxType.TRX_UNKNOWN_TYPE;
 
 import java.util.List;
+
+import com.google.protobuf.Any;
+import com.google.protobuf.ByteString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tron.common.crypto.ECKey;
@@ -179,33 +182,20 @@ public class Runtime {
 //transfer
   }
 
-  public byte[] generateContractAddress(Transaction trx) {
-
-    SmartContract contract = ContractCapsule.getSmartContractFromTransaction(trx);
-    byte[] ownerAddress = contract.getOwnerAddress().toByteArray();
-    TransactionCapsule trxCap = new TransactionCapsule(trx);
-    byte[] txRawDataHash = trxCap.getTransactionId().getBytes();
-
-    byte[] combined = new byte[txRawDataHash.length + ownerAddress.length];
-    System.arraycopy(txRawDataHash, 0, combined, 0, txRawDataHash.length);
-    System.arraycopy(ownerAddress, 0, combined, txRawDataHash.length, ownerAddress.length);
-
-    return Hash.sha3omit12(combined);
-
-  }
-
   /*
    **/
   private void create() {
 
     SmartContract contract = ContractCapsule.getSmartContractFromTransaction(trx);
-
     byte[] code = contract.getBytecode().toByteArray();
-
-    // byte[] contractAddress = Wallet.decodeFromBase58Check("TXxr8dsgBgSiXC4mKV7JTAZJosyBzngptZ");
-    byte[] contractAddress = generateContractAddress(trx);
-
+    byte[] contractAddress = Wallet.generateContractAddress(trx);
+    contract = contract.toBuilder().setContractAddress(ByteString.copyFrom(contractAddress)).build();
     logger.info("new contract address is: " + Wallet.encode58Check(contractAddress));
+
+    // Transaction.Contract trxContract = trx.getRawData().getContract(0).toBuilder().setParameter(Any.pack(contract)).build();
+    // Transaction.raw.Builder transactionBuilder = trx.getRawData().toBuilder().clearContract().addContract(trxContract);
+    // trx = trx.toBuilder().setRawData(transactionBuilder.build()).build();
+
     // crate vm to constructor smart contract
     try {
       byte[] ops = contract.getBytecode().toByteArray();
@@ -220,7 +210,7 @@ public class Runtime {
       return;
     }
 
-    // result.setContractAddress(contractAddress);
+    program.getResult().setContractAddress(contractAddress);
     deposit.createAccount(contractAddress, Protocol.AccountType.Contract);
     deposit.createContract(contractAddress, new ContractCapsule(trx));
     deposit.saveCode(contractAddress, ProgramPrecompile.getCode(code));

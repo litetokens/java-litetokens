@@ -833,7 +833,6 @@ public class RpcApiService implements Service {
     public void deployContract(org.tron.protos.Contract.SmartContract request,
         io.grpc.stub.StreamObserver<org.tron.protos.Protocol.Transaction> responseObserver) {
 
-
       TransactionCapsule trxCap;
       try {
         trxCap = createTransactionCapsule(request, ContractType.SmartContract);

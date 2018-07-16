@@ -35,6 +35,7 @@ public class StringUtil {
   }
 
 
+
   public static byte[] createDbKey(ByteString string) {
     return string.toByteArray();
   }

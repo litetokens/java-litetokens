@@ -94,6 +94,8 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
   private SlidingWindowCounter fetchWaterLine =
       new SlidingWindowCounter(BLOCK_PRODUCED_INTERVAL * MSG_CACHE_DURATION_IN_BLOCKS / 100);
 
+  private AdvBlockDisorder advBlockDisorder = new AdvBlockDisorder();
+
   private int maxTrxsSize = 1_000_000;
 
   private int maxTrxsCnt = 100;
@@ -770,11 +772,44 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
         startFetchItem();
       }
     }
-
   }
 
+  /**
+  * @Description: process the advertise block.
+   * if the block been processed successfully, continue processed his child block if exsits.
+  * @Param:
+   * @param peer the peer who advertise the block;
+   * @param block the block we receive by advertise mode;
+  * @return: void
+  * @Author: shydesky@gmail.com
+  * @Date: 2018/7/13
+  */
   private void processAdvBlock(PeerConnection peer, BlockCapsule block) {
-    //TODO: lack the complete flow.
+    boolean isSuccess = true;
+    while (isSuccess && block!=null) {
+      isSuccess = realProcessAdvBlock(peer, block);
+      if(!isSuccess){
+        break;
+      }
+
+      //Find whether block's child block exists or not, if exists,handle this child block simultaneously;
+      peer = advBlockDisorder.getPeer(block.getBlockId());
+      block = advBlockDisorder.getBlockCapsule(block.getBlockId());
+    }
+  }
+
+  /**
+  * @Description: "real" ProcessAdvBlock
+   * If UnLinkedBlockException because of disorder, we store the block temporarily and
+   * then we can processed this block again when his parent block if processed successfully
+  * @Param:
+   * @param peer the peer who advertise the block;
+   * @param block the block we receive by advertise mode;
+  * @return: boolean
+  * @Author: shydesky@gmail.com
+  * @Date: 2018/7/13
+  */
+  private boolean realProcessAdvBlock(PeerConnection peer, BlockCapsule block){
     if (!freshBlockId.contains(block.getBlockId())) {
       try {
         LinkedList<Sha256Hash> trxIds = null;
@@ -788,7 +823,8 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
             .forEach(p -> updateBlockWeBothHave(p, block));
 
         broadcast(new BlockMessage(block));
-
+        advBlockDisorder.remove(block.getParentHash());
+        return true;
       } catch (BadBlockException e) {
         logger.error("We get a bad block {}, from {}, reason is {} ",
             block.getBlockId().getString(), peer.getNode().getHost(), e.getMessage());
@@ -797,7 +833,8 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
         logger.error("We get a unlinked block {}, from {}, head is {}",
             block.getBlockId().getString(), peer.getNode().getHost(),
             del.getHeadBlockId().getString());
-        startSyncWithPeer(peer);
+        advBlockDisorder.add(block.getParentHash(), peer, block);
+        //startSyncWithPeer(peer);
       } catch (NonCommonBlockException e) {
         logger.error("We get a block {} that do not have the most recent common ancestor with the main chain, from {}, reason is {} ",
             block.getBlockId().getString(), peer.getNode().getHost(), e.getMessage());
@@ -805,11 +842,9 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       }
-
-      // logger.error("Fail to process adv block {} from {}", block.getBlockId().getString(),
-      // peer.getNode().getHost(), e);
-
+      return false;
     }
+    return false;
   }
 
   private boolean processSyncBlock(BlockCapsule block) {
@@ -858,7 +893,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
         startSyncWithPeer(peer);
       } else if (peer.getBlockInProc().remove(block.getBlockId())) {
         updateBlockWeBothHave(peer, block);
-        if (peer.getSyncBlockToFetch().isEmpty()) { //send sync to let peer know we are sync.
+        if (peer.getSyncBlockToFetch().isEmpty()) {
           syncNextBatchChainIds(peer);
         }
       }
@@ -947,7 +982,6 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
   }
 
   private void onHandleFetchDataMessage(PeerConnection peer, FetchInvDataMessage fetchInvDataMsg) {
-
     MessageTypes type = fetchInvDataMsg.getInvMessageType();
 
     BlockCapsule block = null;

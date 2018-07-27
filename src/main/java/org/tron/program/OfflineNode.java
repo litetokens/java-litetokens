@@ -12,6 +12,7 @@ import org.tron.core.Constant;
 import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.args.Args;
 import org.tron.core.services.RpcOfflineService;
+import org.tron.core.services.http.Offline.OfflineNodeHttpApiService;
 
 @Slf4j
 public class OfflineNode {
@@ -37,8 +38,8 @@ public class OfflineNode {
     RpcOfflineService rpcOfflineService = context.getBean(RpcOfflineService.class);
     appT.addService(rpcOfflineService);
     //http
-//    SolidityNodeHttpApiService httpApiService = context.getBean(SolidityNodeHttpApiService.class);
-//    appT.addService(httpApiService);
+    OfflineNodeHttpApiService httpApiService = context.getBean(OfflineNodeHttpApiService.class);
+    appT.addService(httpApiService);
 
     appT.initServices(cfgArgs);
     appT.startServices();

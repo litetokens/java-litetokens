@@ -40,7 +40,8 @@ public class StringUtil {
   }
 
   public static String createReadableString(byte[] bytes) {
-    return ByteArray.toHexString(bytes);
+    return Wallet.encode58Check(bytes);
+//    return ByteArray.toHexString(bytes);
   }
 
   public static String createReadableString(ByteString string) {

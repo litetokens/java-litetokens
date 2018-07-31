@@ -74,7 +74,7 @@ public class ProposalController {
     List<ByteString> activeWitnesses = this.manager.getWitnessScheduleStore().getActiveWitnesses();
     if (proposalCapsule.hasMostApprovals(activeWitnesses)) {
       logger.info(
-          "Processing proposal,id:{},it has received most approvals ,begin to set dynamic parameter,{},and set  proposal state as DISAPPROVED",
+          "Processing proposal,id:{},it has received most approvals ,begin to set dynamic parameter,{},and set  proposal state as APPROVED",
           proposalCapsule.getID(), proposalCapsule.getParameters());
       setDynamicParameters(proposalCapsule);
       proposalCapsule.setState(State.APPROVED);

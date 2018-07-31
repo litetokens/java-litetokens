@@ -160,14 +160,18 @@ public class WitnessController {
     if (!scheduledWitness.equals(witnessAddress)) {
       logger.warn(
           "Witness is out of order, scheduledWitness[{}],blockWitnessAddress[{}],blockTimeStamp[{}],slot[{}]",
-          ByteArray.toHexString(scheduledWitness.toByteArray()),
-          ByteArray.toHexString(witnessAddress.toByteArray()), new DateTime(block.getTimeStamp()),
+          StringUtil.createReadableString(scheduledWitness),
+          StringUtil.createReadableString(witnessAddress),
+//          ByteArray.toHexString(scheduledWitness.toByteArray()),
+//          ByteArray.toHexString(witnessAddress.toByteArray()),
+          new DateTime(block.getTimeStamp()),
           slot);
       return false;
     }
 
     logger.debug("Validate witnessSchedule successfully,scheduledWitness:{}",
-        ByteArray.toHexString(witnessAddress.toByteArray()));
+        StringUtil.createReadableString(witnessAddress));
+//        ByteArray.toHexString(witnessAddress.toByteArray()));
     return true;
   }
 

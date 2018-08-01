@@ -582,7 +582,7 @@ public class Program {
     }
 
     //Repository track = getStorage().startTracking();
-    Deposit deposit = getStorage().newDepositChild();
+    Deposit deposit = getStorage().newDepositChildFromGivenDeposit(getStorage());
 
     // 2.1 PERFORM THE VALUE (endowment) PART
     long endowment = msg.getEndowment().value().longValue();
@@ -614,7 +614,7 @@ public class Program {
     InternalTransaction internalTx = addInternalTx(getDroplimit(), senderAddress, contextAddress,
         endowment, data, "call");
 
-    checkCPULimit("BEFORE CALL");
+    //checkCPULimit("BEFORE CALL");
 
     ProgramResult result = null;
     if (isNotEmpty(programCode)) {
@@ -664,7 +664,7 @@ public class Program {
       deposit.commit();
       stackPushOne();
     }
-    checkCPULimit("AFTER CALL");
+    //checkCPULimit("AFTER CALL");
 
     // 3. APPLY RESULTS: result.getHReturn() into out_memory allocated
     if (result != null) {

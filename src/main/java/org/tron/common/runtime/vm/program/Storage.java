@@ -46,6 +46,10 @@ public class Storage implements Deposit, ProgramListenerAware {
     this.deposit = programInvoke.getDeposit();
   }
 
+  public Deposit getDeposit(){
+    return deposit;
+  }
+
   @Override
   public Manager getDbManager() {
     return deposit.getDbManager();
@@ -142,6 +146,11 @@ public class Storage implements Deposit, ProgramListenerAware {
   @Override
   public Deposit newDepositChild() {
     return deposit.newDepositChild();
+  }
+
+  @Override
+  public Deposit newDepositChildFromGivenDeposit(Deposit inputDeposit){
+    return deposit.newDepositChildFromGivenDeposit(((Storage)inputDeposit).getDeposit());
   }
 
   @Override

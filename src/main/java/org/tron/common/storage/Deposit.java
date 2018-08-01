@@ -51,6 +51,8 @@ public interface Deposit {
 
   Deposit newDepositChild();
 
+  Deposit newDepositChildFromGivenDeposit(Deposit deposit);
+
   Deposit newDepositNext();
 
   void setParent(Deposit deposit);

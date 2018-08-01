@@ -114,6 +114,13 @@ public class DepositImpl implements Deposit {
   }
 
   @Override
+  public Deposit newDepositChildFromGivenDeposit(Deposit Deposit) {
+    DepositImpl newDepositImpl = (DepositImpl)Deposit;
+    newDepositImpl.init(dbManager,this,null);
+    return newDepositImpl;
+  }
+
+  @Override
   public Deposit newDepositNext() {
     return nextDeposit = new DepositImpl(dbManager, null, this);
   }
@@ -145,13 +152,13 @@ public class DepositImpl implements Deposit {
     }
 
     AccountCapsule accountCapsule;
-    if (parent != null) {
-      accountCapsule = parent.getAccount(address);
-    } else if (prevDeposit != null) {
-      accountCapsule = prevDeposit.getAccount(address);
-    } else {
+//    if (parent != null) {
+//      accountCapsule = parent.getAccount(address);
+//    } else if (prevDeposit != null) {
+//      accountCapsule = prevDeposit.getAccount(address);
+//    } else {
       accountCapsule = getAccountStore().get(address);
-    }
+//    }
 
     if (accountCapsule != null) {
       accounCache.put(key, Value.create(accountCapsule.getData()));
@@ -168,13 +175,13 @@ public class DepositImpl implements Deposit {
     }
 
     BytesCapsule contract;
-    if (parent != null) {
-      contract = parent.getContractByNormalAccount(address);
-    } else if (prevDeposit != null) {
-      contract = prevDeposit.getContractByNormalAccount(address);
-    } else {
+//    if (parent != null) {
+//      contract = parent.getContractByNormalAccount(address);
+//    } else if (prevDeposit != null) {
+//      contract = prevDeposit.getContractByNormalAccount(address);
+//    } else {
       contract = getAccountContractIndexStore().get(address);
-    }
+//    }
 
     if (contract != null) {
       accountContractIndexCache.put(key, Value.create(contract.getData()));
@@ -205,13 +212,13 @@ public class DepositImpl implements Deposit {
     }
 
     ContractCapsule contractCapsule;
-    if (parent != null) {
-      contractCapsule = parent.getContract(address);
-    } else if (prevDeposit != null) {
-      contractCapsule = prevDeposit.getContract(address);
-    } else {
+//    if (parent != null) {
+//      contractCapsule = parent.getContract(address);
+//    } else if (prevDeposit != null) {
+//      contractCapsule = prevDeposit.getContract(address);
+//    } else {
       contractCapsule = getContractStore().get(address);
-    }
+//    }
 
     if (contractCapsule != null) {
       contractCache.put(key, Value.create(contractCapsule.getData()));
@@ -234,17 +241,17 @@ public class DepositImpl implements Deposit {
     }
 
     byte[] code;
-    if (parent != null) {
-      code = parent.getCode(codeHash);
-    } else if (prevDeposit != null) {
-      code = prevDeposit.getCode(codeHash);
-    } else {
+//    if (parent != null) {
+//      code = parent.getCode(codeHash);
+//    } else if (prevDeposit != null) {
+//      code = prevDeposit.getCode(codeHash);
+//    } else {
       if (null == getCodeStore().get(codeHash)) {
         code = null;
       } else {
         code = getCodeStore().get(codeHash).getData();
       }
-    }
+//    }
 
     if (code != null) {
       codeCache.put(key, Value.create(code));
@@ -269,13 +276,13 @@ public class DepositImpl implements Deposit {
 
     // first access the storageCapsule
     StorageCapsule storageCapsule;
-    if (this.parent != null) {
-      storageCapsule = parent.getStorage(address);
-    } else if (prevDeposit != null) {
-      storageCapsule = prevDeposit.getStorage(address);
-    } else {
+//    if (this.parent != null) {
+//      storageCapsule = parent.getStorage(address);
+//    } else if (prevDeposit != null) {
+//      storageCapsule = prevDeposit.getStorage(address);
+//    } else {
       storageCapsule = getStorageStore().get(address);
-    }
+//    }
 
     if (storageCapsule != null) {
       storageCache.put(key, Value.create(storageCapsule.getData(), Type.VALUE_TYPE_NORMAL));
@@ -387,17 +394,17 @@ public class DepositImpl implements Deposit {
     }
 
     TransactionCapsule transactionCapsule;
-    if (parent != null) {
-      transactionCapsule = parent.getTransaction(trxHash);
-    } else if (prevDeposit != null) {
-      transactionCapsule = prevDeposit.getTransaction(trxHash);
-    } else {
+//    if (parent != null) {
+//      transactionCapsule = parent.getTransaction(trxHash);
+//    } else if (prevDeposit != null) {
+//      transactionCapsule = prevDeposit.getTransaction(trxHash);
+//    } else {
       try {
         transactionCapsule = getTransactionStore().get(trxHash);
       } catch (BadItemException e) {
         transactionCapsule = null;
       }
-    }
+//    }
 
     if (transactionCapsule != null) {
       transactionCache.put(key, Value.create(transactionCapsule.getData()));

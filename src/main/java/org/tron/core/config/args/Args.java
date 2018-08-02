@@ -61,6 +61,10 @@ public class Args {
   private boolean help = false;
 
   @Getter
+  @Parameter(names = {"--sync-number"}, required = true, help = true, description = "Sync block number")
+  private long syncNumber = 0L;
+
+  @Getter
   @Setter
   @Parameter(names = {"-w", "--witness"})
   private boolean witness = false;
@@ -309,6 +313,7 @@ public class Args {
     INSTANCE.nodeDiscoveryEnable = false;
     INSTANCE.nodeDiscoveryPersist = false;
     INSTANCE.nodeConnectionTimeout = 0;
+    INSTANCE.syncNumber = 0L;
     INSTANCE.activeNodes = Collections.emptyList();
     INSTANCE.passiveNodes = Collections.emptyList();
     INSTANCE.nodeChannelReadTimeout = 0;

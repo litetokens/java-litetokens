@@ -1,13 +1,16 @@
 package org.tron.program;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Vector;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.ListUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.util.StringUtils;
@@ -18,10 +21,12 @@ import org.tron.common.overlay.discover.DiscoverServer;
 import org.tron.common.overlay.discover.node.NodeManager;
 import org.tron.common.overlay.server.ChannelManager;
 import org.tron.common.utils.ByteArray;
+import org.tron.common.utils.Sha256Hash;
 import org.tron.core.Constant;
 import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.capsule.TransactionCapsule;
 import org.tron.core.capsule.TransactionInfoCapsule;
+import org.tron.core.capsule.utils.MerkleTree;
 import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.args.Args;
 import org.tron.core.db.Manager;
@@ -98,11 +103,13 @@ public class StateCheckNode {
     accountAddressMap.put(ByteArray.toHexString(dbManager.getAccountStore().getSun().getAddress().toByteArray()), true);
     accountAddressMap.put(ByteArray.toHexString(dbManager.getAccountStore().getZion().getAddress().toByteArray()), true);
 
-    System.out.println(11);
     DynamicProperties remoteDynamicProperties = databaseGrpcClient.getDynamicProperties();
-    System.out.println(12);
     long remoteLastSolidityBlockNum = remoteDynamicProperties.getLastSolidityBlockNum();
-    System.out.println(13);
+
+    long startTime = System.currentTimeMillis();
+    long startBlockNumber = dbManager.getDynamicPropertiesStore()
+        .getLatestSolidifiedBlockNum();
+
     while (true) {
 
 //      try {
@@ -126,8 +133,9 @@ public class StateCheckNode {
         System.exit(0);
       }
 
+      ConsolePrint consolePrint = new ConsolePrint(lastSolidityBlockNum, syncNumber);
+
       if (lastSolidityBlockNum < syncNumber) {
-        System.out.println(14);
         Block block = databaseGrpcClient.getBlock(lastSolidityBlockNum + 1);
         try {
           BlockCapsule blockCapsule = new BlockCapsule(block);
@@ -156,6 +164,13 @@ public class StateCheckNode {
           }
           dbManager.getDynamicPropertiesStore()
               .saveLatestSolidifiedBlockNum(lastSolidityBlockNum + 1);
+
+          long currentTime = System.currentTimeMillis();
+
+          long remainTime = (long)((currentTime - startTime) * 1.0 / (lastSolidityBlockNum - startBlockNumber) * (syncNumber - lastSolidityBlockNum));
+
+          consolePrint.show(lastSolidityBlockNum + 1, syncNumber, currentTime - startTime, remainTime);
+
         } catch (AccountResourceInsufficientException e) {
           throw new BadBlockException("validate AccountResource exception");
         } catch (ValidateScheduleException e) {
@@ -193,11 +208,8 @@ public class StateCheckNode {
 
   private void start(Args cfgArgs) {
     try {
-      System.out.println(1);
       initGrpcClient(cfgArgs.getTrustNodeAddr());
-      System.out.println(2);
       syncSolidityBlock();
-      System.out.println(3);
       // 计算AccountState
 
       List<String> addressList = new ArrayList<>();
@@ -207,16 +219,49 @@ public class StateCheckNode {
         }
       });
 
-      String [] addresses = (String[]) addressList.toArray();
-      Arrays.sort(addresses);
+      Collections.sort(addressList,new Comparator<String>() {
+        @Override
+        public int compare(String o1, String o2) {
+          if(o1 == null || o2 == null){
+            return -1;
+          }
+          if(o1.length() > o2.length()){
+            return 1;
+          }
+          if(o1.length() < o2.length()){
+            return -1;
+          }
+          if(o1.compareTo(o2) > 0){
+            return 1;
+          }
+          if(o1.compareTo(o2) < 0){
+            return -1;
+          }
+          if(o1.compareTo(o2) == 0){
+            return 0;
+          }
+          return 0;
+        }
+      });
 
-      System.out.println(addresses);
+      List<Long> balanceList = new ArrayList<>();
+
+      addressList.forEach(v -> {
+        balanceList.add(dbManager.getAccountStore().get(ByteArray.fromHexString(v)).getBalance());
+      });
+
+      Vector<Sha256Hash> ids = new Vector<>();
+     balanceList.stream()
+          .forEach(v -> {
+            ids.add(Sha256Hash.of(ByteArray.fromLong(v)));
+          });
+
+      System.out.println("Result: " + MerkleTree.getInstance().createTree(ids).getRoot().getHash());
 
     } catch (BadBlockException e) {
       e.printStackTrace();
     }
     shutdownGrpcClient();
-    System.out.println("exit");
     System.exit(0);
   }
 
@@ -268,5 +313,53 @@ public class StateCheckNode {
     node.start(cfgArgs);
 
     rpcApiService.blockUntilShutdown();
+  }
+
+  class ConsolePrint {
+    private long startBlockNumber;
+    private long endBlockNumber;
+    private long currentBlockNumber;
+    private long tipsLength = 100;
+    private char showTips = '>';
+    private char hiddenTips = '-';
+    private DecimalFormat formater = new DecimalFormat("0.00%");
+
+    public ConsolePrint(long startBlockNumber, long endBlockNumber) {
+      this.startBlockNumber = startBlockNumber;
+      this.endBlockNumber = endBlockNumber;
+    }
+
+    public void show(long value, long total, long useTime, long remainTime) {
+      if (value < startBlockNumber || value > endBlockNumber) {
+        return;
+      }
+
+      System.out.print('\r');
+      currentBlockNumber = value;
+      float rate = (float) (currentBlockNumber * 1.0 / endBlockNumber);
+      long len = (long) (rate * tipsLength);
+      draw(len, rate, value, total, useTime, remainTime);
+      if (currentBlockNumber == endBlockNumber) {
+        System.out.println();
+      }
+    }
+
+    private void draw(long len, float rate, long value, long total, long useTime, long remainTime) {
+      System.out.print("Progress: ");
+      for (int i = 0; i < len; i++) {
+        System.out.print(showTips);
+      }
+
+      for (long i = len; i < tipsLength; i++) {
+        System.out.print(hiddenTips);
+      }
+
+      System.out.print(' ');
+      System.out.print(formater.format(rate));
+      System.out.print(" Current: " + value);
+      System.out.print(" Total: " + total);
+      System.out.print(" Time: " + (useTime / 1000) + "s");
+      System.out.print(" Remain: " + (remainTime / 1000) + "s");
+    }
   }
 }

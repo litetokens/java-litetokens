@@ -220,38 +220,45 @@ public class WitnessService implements Service {
       return BlockProductionCondition.NO_PRIVATE_KEY;
     }
 
-    try {
-      controller.setGeneratingBlock(true);
-      BlockCapsule block = generateBlock(scheduledTime, scheduledWitness);
+    int ll =100;
+    while (ll >0) {
 
-      if (block == null) {
-        logger.warn("exception when generate block");
+      try {
+        controller.setGeneratingBlock(true);
+        BlockCapsule block = generateBlock(scheduledTime, scheduledWitness);
+
+        if (block == null) {
+          logger.warn("exception when generate block");
+          return BlockProductionCondition.EXCEPTION_PRODUCING_BLOCK;
+        }
+        if (DateTime.now().getMillis() - now
+            > ChainConstant.BLOCK_PRODUCED_INTERVAL * ChainConstant.BLOCK_PRODUCED_TIME_OUT / 100) {
+          logger.warn("Task timeout ( > {}ms)，startTime:{},endTime:{}",
+              ChainConstant.BLOCK_PRODUCED_INTERVAL * ChainConstant.BLOCK_PRODUCED_TIME_OUT / 100,
+              new DateTime(now), DateTime.now());
+          return BlockProductionCondition.TIME_OUT;
+        }
+
+        logger.info(
+            "Produce block successfully, blockNumber:{}, abSlot[{}], blockId:{}, transactionSize:{}, blockTime:{}, parentBlockId:{}",
+            block.getNum(), controller.getAbSlotAtTime(now), block.getBlockId(),
+            block.getTransactions().size(),
+            new DateTime(block.getTimeStamp()),
+            this.tronApp.getDbManager().getDynamicPropertiesStore().getLatestBlockHeaderHash());
+        broadcastBlock(block);
+
+//        return BlockProductionCondition.PRODUCED;
+      } catch (TronException e) {
+        logger.error(e.getMessage(), e);
         return BlockProductionCondition.EXCEPTION_PRODUCING_BLOCK;
-      }
-      if (DateTime.now().getMillis() - now
-          > ChainConstant.BLOCK_PRODUCED_INTERVAL * ChainConstant.BLOCK_PRODUCED_TIME_OUT / 100) {
-        logger.warn("Task timeout ( > {}ms)，startTime:{},endTime:{}",
-            ChainConstant.BLOCK_PRODUCED_INTERVAL * ChainConstant.BLOCK_PRODUCED_TIME_OUT / 100,
-            new DateTime(now), DateTime.now());
-        return BlockProductionCondition.TIME_OUT;
+      } finally {
+        controller.setGeneratingBlock(false);
       }
 
-      logger.info(
-          "Produce block successfully, blockNumber:{}, abSlot[{}], blockId:{}, transactionSize:{}, blockTime:{}, parentBlockId:{}",
-          block.getNum(), controller.getAbSlotAtTime(now), block.getBlockId(),
-          block.getTransactions().size(),
-          new DateTime(block.getTimeStamp()),
-          this.tronApp.getDbManager().getDynamicPropertiesStore().getLatestBlockHeaderHash());
-      broadcastBlock(block);
+      ll--;
 
-      return BlockProductionCondition.PRODUCED;
-    } catch (TronException e) {
-      logger.error(e.getMessage(), e);
-      return BlockProductionCondition.EXCEPTION_PRODUCING_BLOCK;
-    } finally {
-      controller.setGeneratingBlock(false);
     }
-
+    return BlockProductionCondition.PRODUCED;
   }
 
   private void broadcastBlock(BlockCapsule block) {

@@ -255,6 +255,7 @@ public class WitnessService implements Service {
         controller.setGeneratingBlock(false);
       }
 
+
       ll--;
 
     }

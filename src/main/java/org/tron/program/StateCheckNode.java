@@ -38,6 +38,7 @@ import org.tron.core.exception.ContractExeException;
 import org.tron.core.exception.ContractValidateException;
 import org.tron.core.exception.DupTransactionException;
 import org.tron.core.exception.NonCommonBlockException;
+import org.tron.core.exception.OutOfSlotTimeException;
 import org.tron.core.exception.ReceiptException;
 import org.tron.core.exception.TaposException;
 import org.tron.core.exception.TooBigTransactionException;
@@ -139,7 +140,11 @@ public class StateCheckNode {
         Block block = databaseGrpcClient.getBlock(lastSolidityBlockNum + 1);
         try {
           BlockCapsule blockCapsule = new BlockCapsule(block);
-          dbManager.pushBlock(blockCapsule);
+          try {
+            dbManager.pushBlock(blockCapsule);
+          } catch (OutOfSlotTimeException e) {
+            e.printStackTrace();
+          }
           for (TransactionCapsule trx : blockCapsule.getTransactions()) {
 
             byte[] owner = TransactionCapsule

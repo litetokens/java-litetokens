@@ -35,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.tron.common.overlay.discover.node.Node;
 import org.tron.common.runtime.Runtime;
+import org.tron.common.runtime.vm.LogInfo;
 import org.tron.common.runtime.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.tron.common.storage.DepositImpl;
 import org.tron.common.utils.ByteArray;
@@ -71,6 +72,7 @@ import org.tron.core.exception.HeaderNotFound;
 import org.tron.core.exception.HighFreqException;
 import org.tron.core.exception.ItemNotFoundException;
 import org.tron.core.exception.NonCommonBlockException;
+import org.tron.core.exception.OutOfSlotTimeException;
 import org.tron.core.exception.ReceiptException;
 import org.tron.core.exception.TaposException;
 import org.tron.core.exception.TooBigTransactionException;
@@ -84,7 +86,8 @@ import org.tron.core.witness.WitnessController;
 import org.tron.protos.Protocol.AccountType;
 import org.tron.protos.Protocol.Block;
 import org.tron.protos.Protocol.Transaction;
-import org.tron.protos.Protocol.Transaction.Result;
+import org.tron.protos.Protocol.TransactionInfo.Log;
+
 
 @Slf4j
 @Component
@@ -535,7 +538,7 @@ public class Manager {
   public boolean pushTransactions(final TransactionCapsule trx)
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
       AccountResourceInsufficientException, DupTransactionException, TaposException,
-      TooBigTransactionException, TransactionExpirationException, ReceiptException, TransactionTraceException {
+      TooBigTransactionException, TransactionExpirationException, ReceiptException, TransactionTraceException, OutOfSlotTimeException {
 
     if (!trx.validateSignature()) {
       throw new ValidateSignatureException("trans sig validate failed");
@@ -624,7 +627,7 @@ public class Manager {
   private void applyBlock(BlockCapsule block) throws ContractValidateException,
       ContractExeException, ValidateSignatureException, AccountResourceInsufficientException,
       TransactionExpirationException, TooBigTransactionException, DupTransactionException, ReceiptException,
-      TaposException, ValidateScheduleException, TransactionTraceException {
+      TaposException, ValidateScheduleException, TransactionTraceException, OutOfSlotTimeException {
     processBlock(block);
     this.blockStore.put(block.getBlockId().getBytes(), block);
     this.blockIndexStore.put(block.getBlockId());
@@ -634,7 +637,7 @@ public class Manager {
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
       ValidateScheduleException, AccountResourceInsufficientException, TaposException,
       TooBigTransactionException, DupTransactionException, TransactionExpirationException,
-      NonCommonBlockException, ReceiptException, TransactionTraceException {
+      NonCommonBlockException, ReceiptException, TransactionTraceException, OutOfSlotTimeException {
     Pair<LinkedList<KhaosBlock>, LinkedList<KhaosBlock>> binaryTree;
     try {
       binaryTree =
@@ -677,6 +680,7 @@ public class Manager {
             | TransactionExpirationException
             | TransactionTraceException
             | ReceiptException
+            | OutOfSlotTimeException
             | TooBigTransactionException
             | ValidateScheduleException e) {
           logger.warn(e.getMessage(), e);
@@ -733,7 +737,7 @@ public class Manager {
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
       UnLinkedBlockException, ValidateScheduleException, AccountResourceInsufficientException,
       TaposException, TooBigTransactionException, DupTransactionException, TransactionExpirationException,
-      BadNumberBlockException, BadBlockException, NonCommonBlockException, ReceiptException, TransactionTraceException {
+      BadNumberBlockException, BadBlockException, NonCommonBlockException, ReceiptException, TransactionTraceException, OutOfSlotTimeException {
     try (PendingManager pm = new PendingManager(this)) {
 
       if (!block.generatedByMyself) {
@@ -946,7 +950,7 @@ public class Manager {
   public boolean processTransaction(final TransactionCapsule trxCap, Block block)
       throws ValidateSignatureException, ContractValidateException, ContractExeException, ReceiptException,
       AccountResourceInsufficientException, TransactionExpirationException, TooBigTransactionException,
-      DupTransactionException, TaposException, TransactionTraceException {
+      DupTransactionException, TaposException, TransactionTraceException, OutOfSlotTimeException {
 
     if (trxCap == null) {
       return false;
@@ -977,30 +981,41 @@ public class Manager {
     //exec
     trace.exec(runtime);
 
-    //check SR's bill and ours.
-    if (block != null) {
-      trace.checkBill();
-    }
-
     trace.pay();
 
     if (runtime.getResult().getException() != null) {
-      throw new RuntimeException("Runtime exe failed!");
+      throw new RuntimeException(
+          "Runtime exe failed :" + runtime.getResult().getException().getMessage());
     }
-    // todo judge result in runtime same as block,trx,recipt
-    TransactionResultCapsule resultCapsule = new TransactionResultCapsule(
-        Result.newBuilder().setReceipt(trace.getReceipt().getReceipt()).build());
-    trxCap.setResult(resultCapsule);
+
     transactionStore.put(trxCap.getTransactionId().getBytes(), trxCap);
     TransactionInfoCapsule transactionInfoCapsule = new TransactionInfoCapsule();
     transactionInfoCapsule.setId(trxCap.getTransactionId().getBytes());
     transactionInfoCapsule.setFee(runtime.getResult().getRet().getFee());
     transactionInfoCapsule.setContractResult(runtime.getResult().getHReturn());
     transactionInfoCapsule.setContractAddress(runtime.getResult().getContractAddress());
-    transactionInfoCapsule.setResult(resultCapsule);
+
+    List<Log> logList = getLogsByLogInfoList(runtime.getResult().getLogInfoList());
+    transactionInfoCapsule.addAllLog(logList);
+    transactionInfoCapsule.setReceipt(trace.getReceipt());
+
     transactionHistoryStore.put(trxCap.getTransactionId().getBytes(), transactionInfoCapsule);
 
     return true;
+  }
+
+  private List<Log> getLogsByLogInfoList(List<LogInfo> logInfos) {
+    List<Log> logList = Lists.newArrayList();
+    logInfos.forEach(logInfo -> {
+      List<ByteString> topics = Lists.newArrayList();
+      logInfo.getTopics().forEach(topic -> {
+        topics.add(ByteString.copyFrom(topic.getData()));
+      });
+      ByteString address = ByteString.copyFrom(logInfo.getAddress());
+      ByteString data = ByteString.copyFrom(logInfo.getData());
+      logList.add(Log.newBuilder().setAddress(address).addAllTopics(topics).setData(data).build());
+    });
+    return logList;
   }
 
 
@@ -1021,7 +1036,8 @@ public class Manager {
   public synchronized BlockCapsule generateBlock(
       final WitnessCapsule witnessCapsule, final long when, final byte[] privateKey)
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
-      UnLinkedBlockException, ValidateScheduleException, AccountResourceInsufficientException, ReceiptException, TransactionTraceException {
+
+      UnLinkedBlockException, ValidateScheduleException, AccountResourceInsufficientException, TransactionTraceException {
 
     final long timestamp = this.dynamicPropertiesStore.getLatestBlockHeaderTimestamp();
     final long number = this.dynamicPropertiesStore.getLatestBlockHeaderNumber();
@@ -1085,6 +1101,11 @@ public class Manager {
       } catch (ValidateSignatureException e) {
         logger.info("contract not processed during ValidateSignatureException");
         logger.debug(e.getMessage(), e);
+      } catch (ReceiptException e) {
+        logger.info("receipt exception: {}", e.getMessage());
+        logger.debug(e.getMessage(), e);
+      } catch (OutOfSlotTimeException e) {
+        e.printStackTrace();
       }
     }
 
@@ -1117,6 +1138,12 @@ public class Manager {
       logger.info("block exception");
     } catch (NonCommonBlockException e) {
       logger.info("non common exception");
+    } catch (ReceiptException e) {
+      logger.info("receipt exception: {}", e.getMessage());
+      logger.debug(e.getMessage(), e);
+    } catch (OutOfSlotTimeException e) {
+      logger.info("OutOfSlotTime exception: {}", e.getMessage());
+      logger.debug(e.getMessage(), e);
     }
 
     return null;
@@ -1164,7 +1191,7 @@ public class Manager {
   public void processBlock(BlockCapsule block)
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
       AccountResourceInsufficientException, TaposException, TooBigTransactionException,
-      DupTransactionException, TransactionExpirationException, ValidateScheduleException, ReceiptException, TransactionTraceException {
+      DupTransactionException, TransactionExpirationException, ValidateScheduleException, ReceiptException, TransactionTraceException, OutOfSlotTimeException {
     // todo set revoking db max size.
 
     // checkWitness

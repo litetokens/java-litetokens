@@ -23,6 +23,7 @@ import org.tron.common.overlay.server.ChannelManager;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Sha256Hash;
 import org.tron.core.Constant;
+import org.tron.core.Wallet;
 import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.capsule.TransactionCapsule;
 import org.tron.core.capsule.TransactionInfoCapsule;
@@ -240,7 +241,13 @@ public class StateCheckNode {
       List<Long> balanceList = new ArrayList<>();
 
       addressList.forEach(v -> {
-        balanceList.add(dbManager.getAccountStore().get(ByteArray.fromHexString(v)).getBalance());
+        long balance = dbManager.getAccountStore().get(ByteArray.fromHexString(v)).getBalance();
+
+        if (balanceList.size() % 4000 == 0) {
+          System.out.println("address: " + Wallet.encode58Check(ByteArray.fromHexString(v)) + ", balance: " + balance);
+        }
+
+        balanceList.add(balance);
       });
 
       Vector<Sha256Hash> ids = new Vector<>();

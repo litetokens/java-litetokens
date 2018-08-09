@@ -20,6 +20,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -47,13 +48,14 @@ public class InitAccount {
     try {
       fis = new FileInputStream(ff);
       ObjectInputStream ois = new ObjectInputStream(fis);
-      int counter = 0;
+      int counter = 1;
+      System.out.println("Read accounts file:");
+      ConsolePrint consolePrint = new ConsolePrint();
+      long startTime = System.currentTimeMillis();
       while (fis.available() > 0) {
         Account account = (Account) ois.readObject();
         accounts.add(account);
-        if ((counter + 1) % 100000 == 0) {
-          System.out.println("read account current: " + (counter + 1));
-        }
+        consolePrint.show(counter, System.currentTimeMillis() - startTime);
         counter++;
       }
 
@@ -65,9 +67,12 @@ public class InitAccount {
       e.printStackTrace();
     }
 
+    System.out.println();
     // 开始存
-    int counter = 0;
-
+    int counter = 1;
+    System.out.println("Save accounts:");
+    ConsolePrint consolePrint = new ConsolePrint(counter, accounts.size());
+    long startTime = System.currentTimeMillis();
     for (int index = 0; index < accounts.size(); index++) {
       String addressBase58 = accounts.get(index).getAddress();
       byte[] addressBytes = ByteArray.fromHexString(addressBase58);
@@ -84,13 +89,78 @@ public class InitAccount {
       );
 
       accountStore.put(addressBytes, accountCapsule);
-
-      if ((counter + 1) % 100000 == 0) {
-        System.out.println("save account current: " + (counter + 1));
-      }
+      long useTime = System.currentTimeMillis() - startTime;
+      long remainTime = (accounts.size() - counter) * useTime / counter;
+      consolePrint.show(counter, accounts.size(), useTime, remainTime);
       counter++;
     }
 
+    System.out.println("Completed!");
     System.exit(0);
+  }
+}
+
+class ConsolePrint {
+  private long startBlockNumber;
+  private long endBlockNumber;
+  private long currentBlockNumber;
+  private long tipsLength = 20;
+  private char showTips = '>';
+  private char hiddenTips = '-';
+  private DecimalFormat formater = new DecimalFormat("0.00%");
+
+  public ConsolePrint(long startBlockNumber, long endBlockNumber) {
+    this.startBlockNumber = startBlockNumber;
+    this.endBlockNumber = endBlockNumber;
+  }
+
+  public ConsolePrint() {
+
+  }
+
+  public void show(long value, long total, long useTime, long remainTime) {
+    if (value < startBlockNumber || value > endBlockNumber) {
+      return;
+    }
+
+    System.out.print('\r');
+    currentBlockNumber = value;
+    float rate = (float) (currentBlockNumber * 1.0 / endBlockNumber);
+    long len = (long) (rate * tipsLength);
+    draw(len, rate, value, total, useTime, remainTime);
+    if (currentBlockNumber == endBlockNumber) {
+      System.out.println();
+    }
+  }
+
+  private void draw(long len, float rate, long value, long total, long useTime, long remainTime) {
+    System.out.print("Progress: ");
+    for (int i = 0; i < len; i++) {
+      System.out.print(showTips);
+    }
+
+    for (long i = len; i < tipsLength; i++) {
+      System.out.print(hiddenTips);
+    }
+
+    System.out.print(' ');
+    System.out.print(formater.format(rate));
+    System.out.print(" Current: " + value);
+    System.out.print(" Total: " + total);
+    System.out.print(" Time: " + (useTime / 1000) + "s");
+    System.out.print(" Remain: " + (remainTime / 1000) + "s");
+  }
+
+  public void show(long value, long useTime) {
+    System.out.print('\r');
+    currentBlockNumber = value;
+    draw(value, useTime);
+  }
+
+  private void draw(long value, long useTime) {
+    System.out.print("Progress: ");
+    System.out.print(' ');
+    System.out.print(" Current: " + value);
+    System.out.print(" Time: " + (useTime / 1000) + "s");
   }
 }

@@ -125,24 +125,24 @@ public class WitnessService implements Service {
    */
   private Runnable repushLoop =
       () -> {
-        // int index = 0;
+        int index = 0;
         while (isRunning) {
-          // try {
-          //   if (this.tronApp.getDbManager().getRepushTransactions().isEmpty()) {
-          //     index = 0;
-          //   }
-          //   TransactionCapsule tx = this.tronApp.getDbManager().getRepushTransactions().take();
-          //   index = this.tronApp.getDbManager().rePush(tx, index);
-          // } catch (InterruptedException e) {
-          //   // do nothing
-          // }
-
           try {
+            if (this.tronApp.getDbManager().getRepushTransactions().isEmpty()) {
+              index = 0;
+            }
             TransactionCapsule tx = this.tronApp.getDbManager().getRepushTransactions().take();
-            this.tronApp.getDbManager().rePush(tx, -1);
+            index = this.tronApp.getDbManager().rePush(tx, index);
           } catch (InterruptedException e) {
             // do nothing
           }
+
+          // try {
+          //   TransactionCapsule tx = this.tronApp.getDbManager().getRepushTransactions().take();
+          //   this.tronApp.getDbManager().rePush(tx, -1);
+          // } catch (InterruptedException e) {
+          //   // do nothing
+          // }
 
 
         }

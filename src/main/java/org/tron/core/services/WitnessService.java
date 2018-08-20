@@ -45,6 +45,7 @@ public class WitnessService implements Service {
   protected Map<ByteString, WitnessCapsule> localWitnessStateMap = Maps
       .newHashMap(); //  <address,WitnessCapsule>
   private Thread generateThread;
+
   private volatile boolean isRunning = false;
   private Map<ByteString, byte[]> privateKeyMap = Maps.newHashMap();
   private volatile boolean needSyncCheck = Args.getInstance().isNeedSyncCheck();
@@ -221,6 +222,7 @@ public class WitnessService implements Service {
     }
 
     try {
+
       controller.setGeneratingBlock(true);
       BlockCapsule block = generateBlock(scheduledTime, scheduledWitness);
 
@@ -251,7 +253,6 @@ public class WitnessService implements Service {
     } finally {
       controller.setGeneratingBlock(false);
     }
-
   }
 
   private void broadcastBlock(BlockCapsule block) {
@@ -301,6 +302,7 @@ public class WitnessService implements Service {
   public void start() {
     isRunning = true;
     generateThread.start();
+
   }
 
   @Override

@@ -225,6 +225,17 @@ public class Wallet {
 
   }
 
+  public static byte[] generateContractAddress(byte[] ownerAddress,byte[] txRawDataHash) {
+
+
+    byte[] combined = new byte[txRawDataHash.length + ownerAddress.length];
+    System.arraycopy(txRawDataHash, 0, combined, 0, txRawDataHash.length);
+    System.arraycopy(ownerAddress, 0, combined, txRawDataHash.length, ownerAddress.length);
+
+    return Hash.sha3omit12(combined);
+
+  }
+
   public static byte[] decodeFromBase58Check(String addressBase58) {
     if (StringUtils.isEmpty(addressBase58)) {
       logger.warn("Warning: Address is empty !!");
@@ -382,7 +393,7 @@ public class Wallet {
         dbManager.getTransactionIdCache().put(trx.getTransactionId(), true);
       }
 
-      dbManager.pushTransactions(trx);
+      dbManager.pushTransaction(trx);
       p2pNode.broadcast(message);
       return builder.setResult(true).setCode(response_code.SUCCESS).build();
     } catch (ValidateSignatureException e) {
@@ -535,6 +546,12 @@ public class Wallet {
         .setKey(ChainParameters.CREATE_NEW_ACCOUNT_BANDWIDTH_RATE.name())
         .setValue(
             dynamicPropertiesStore.getCreateNewAccountBandwidthRate())
+        .build());
+
+    builder.addChainParameter(builder1
+        .setKey(ChainParameters.ALLOW_CREATION_OF_CONTRACTS.name())
+        .setValue(
+            dynamicPropertiesStore.getAllowCreationOfContracts())
         .build());
 
     return builder.build();
@@ -809,6 +826,7 @@ public class Wallet {
         runtime.init();
         runtime.execute();
         runtime.go();
+        runtime.finalization();
         if (runtime.getResult().getException() != null) {
           throw new RuntimeException("Runtime exe failed!");
         }
@@ -860,6 +878,10 @@ public class Wallet {
   }
 
   private static boolean isConstant(SmartContract.ABI abi, byte[] selector) throws Exception {
+
+    if (abi.getEntrysList().size() == 0) {
+      return false;
+    }
     if (selector == null || selector.length != 4) {
       throw new Exception("Selector's length or selector itself is invalid");
     }

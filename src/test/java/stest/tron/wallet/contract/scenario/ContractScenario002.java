@@ -1,5 +1,6 @@
 package stest.tron.wallet.contract.scenario;
 
+import com.google.protobuf.ByteString;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import java.util.concurrent.TimeUnit;
@@ -10,6 +11,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 import org.tron.api.GrpcAPI.AccountResourceMessage;
+import org.tron.api.GrpcAPI.BytesMessage;
 import org.tron.api.WalletGrpc;
 import org.tron.common.crypto.ECKey;
 import org.tron.common.utils.ByteArray;
@@ -162,15 +164,12 @@ public class ContractScenario002 {
     logger.info("after storage usaged is " + Long.toString(storageUsage));
   }
 
-  @Test(enabled = false)
+  @Test(enabled = true)
   public void getContractWithInvaildAddress() {
     byte[] contractAddress = contract002Address;
     SmartContract smartContract = PublicMethed.getContract(contractAddress,blockingStubFull);
-    Assert.assertTrue(smartContract.getAbi() == null);
-
-    contractAddress = null;
-    smartContract = PublicMethed.getContract(contractAddress,blockingStubFull);
-    Assert.assertTrue(smartContract.getAbi() == null);
+    logger.info(smartContract.getAbi().toString());
+    Assert.assertTrue(smartContract.getAbi().toString().isEmpty());
   }
 
   @AfterClass

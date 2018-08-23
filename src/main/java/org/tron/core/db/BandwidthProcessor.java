@@ -12,6 +12,9 @@ import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.AssetIssueCapsule;
 import org.tron.core.capsule.TransactionCapsule;
 import org.tron.core.capsule.TransactionResultCapsule;
+import org.tron.core.config.Parameter;
+import org.tron.core.config.Parameter.AdaptiveResourceLimitConstants;
+import org.tron.core.config.args.Args;
 import org.tron.core.exception.AccountResourceInsufficientException;
 import org.tron.core.exception.ContractValidateException;
 import org.tron.protos.Contract.TransferAssetContract;
@@ -354,6 +357,25 @@ public class BandwidthProcessor extends ResourceProcessor {
     dbManager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
     return true;
 
+  }
+
+  public void updateAdaptiveBandwidthLimit() {
+
+    long publicNetAverageUsage = dbManager.getDynamicPropertiesStore().getPublicNetAverageUsage();
+//    long publicNetAverageTime = dbManager.getDynamicPropertiesStore().getPublicNetAverageTime();
+    long targetPublicNetLimit = dbManager.getDynamicPropertiesStore().getTargetPublicNetLimit();
+    long publicNetLimit = dbManager.getDynamicPropertiesStore().getPublicNetLimit();
+
+    long result;
+    if (publicNetAverageUsage > targetPublicNetLimit) {
+      result = publicNetLimit * AdaptiveResourceLimitConstants.contractRateNumerator
+          / AdaptiveResourceLimitConstants.contractRateDenominator;
+    } else {
+      result = publicNetLimit * AdaptiveResourceLimitConstants.expandRateNumerator
+          / AdaptiveResourceLimitConstants.expandRateDenominator;
+    }
+
+    dbManager.getDynamicPropertiesStore().savePublicNetLimit(result);
   }
 
 }

@@ -624,7 +624,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
         new BytesCapsule(ByteArray.fromLong(publicNetAverageUsage)));
   }
 
-  public long getPublicNetAveragetUsage() {
+  public long getPublicNetAverageUsage() {
     return Optional.ofNullable(getUnchecked(DynamicResourceProperties.PUBLIC_NET_AVERAGE_USAGE))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)

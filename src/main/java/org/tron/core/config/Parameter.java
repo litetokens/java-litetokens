@@ -57,12 +57,12 @@ public interface Parameter {
     int ASSET_ISSUE_COUNT_LIMIT_MAX = 1000;
   }
 
-  interface adaptiveResourceLimitConstants {
+  interface AdaptiveResourceLimitConstants {
 
     int contractRateNumerator = 99;
     int contractRateDenominator = 100;
-    int expandRateNumerator = 999;
-    int expandRateDenominator = 1000;
+    int expandRateNumerator = 1000;
+    int expandRateDenominator = 999;
     int periods = 60; //s
   }
 

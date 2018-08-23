@@ -355,4 +355,7 @@ public class BandwidthProcessorTest {
   }
 
 
+  @Test
+  public void updateAdaptiveBandwidthLimit() {
+  }
 }

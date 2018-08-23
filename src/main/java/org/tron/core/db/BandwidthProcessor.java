@@ -12,9 +12,7 @@ import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.AssetIssueCapsule;
 import org.tron.core.capsule.TransactionCapsule;
 import org.tron.core.capsule.TransactionResultCapsule;
-import org.tron.core.config.Parameter;
 import org.tron.core.config.Parameter.AdaptiveResourceLimitConstants;
-import org.tron.core.config.args.Args;
 import org.tron.core.exception.AccountResourceInsufficientException;
 import org.tron.core.exception.ContractValidateException;
 import org.tron.protos.Contract.TransferAssetContract;
@@ -332,7 +330,7 @@ public class BandwidthProcessor extends ResourceProcessor {
       return false;
     }
 
-    long publicNetLimit = dbManager.getDynamicPropertiesStore().getPublicNetLimit();
+    long publicNetLimit = dbManager.getDynamicPropertiesStore().getPublicNetCurrentLimit();
     long publicNetUsage = dbManager.getDynamicPropertiesStore().getPublicNetUsage();
     long publicNetTime = dbManager.getDynamicPropertiesStore().getPublicNetTime();
 
@@ -355,27 +353,63 @@ public class BandwidthProcessor extends ResourceProcessor {
     dbManager.getDynamicPropertiesStore().savePublicNetUsage(newPublicNetUsage);
     dbManager.getDynamicPropertiesStore().savePublicNetTime(publicNetTime);
     dbManager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
-    return true;
 
+    updateAdaptiveFreeBandwidthLimit(now);
+    return true;
   }
 
-  public void updateAdaptiveBandwidthLimit() {
-
+  private void updatePublicNetAverageUsage(long now) {
     long publicNetAverageUsage = dbManager.getDynamicPropertiesStore().getPublicNetAverageUsage();
-//    long publicNetAverageTime = dbManager.getDynamicPropertiesStore().getPublicNetAverageTime();
-    long targetPublicNetLimit = dbManager.getDynamicPropertiesStore().getTargetPublicNetLimit();
-    long publicNetLimit = dbManager.getDynamicPropertiesStore().getPublicNetLimit();
+    long publicNetAverageTime = dbManager.getDynamicPropertiesStore().getPublicNetAverageTime();
+    long newPublicNetAverageUsage = increase(publicNetAverageUsage, 0, publicNetAverageTime, now);
 
-    long result;
-    if (publicNetAverageUsage > targetPublicNetLimit) {
-      result = publicNetLimit * AdaptiveResourceLimitConstants.contractRateNumerator
-          / AdaptiveResourceLimitConstants.contractRateDenominator;
-    } else {
-      result = publicNetLimit * AdaptiveResourceLimitConstants.expandRateNumerator
-          / AdaptiveResourceLimitConstants.expandRateDenominator;
+    dbManager.getDynamicPropertiesStore().savePublicNetAverageUsage(newPublicNetAverageUsage);
+  }
+
+  public void updateAdaptiveFreeBandwidthLimit(long now) {
+    boolean usingAdaptiveLimit = false;//switch on by the committee
+    if (usingAdaptiveLimit) {
+      return;
     }
 
-    dbManager.getDynamicPropertiesStore().savePublicNetLimit(result);
+    updatePublicNetAverageUsage(now);
+
+    long publicNetAverageUsage =
+        dbManager.getDynamicPropertiesStore().getPublicNetAverageUsage() * 24 * 3600
+            / AdaptiveResourceLimitConstants.PERIODS;
+    long targetPublicNetLimit = dbManager.getDynamicPropertiesStore().getPublicNetTargetLimit();
+    long publicNetCurrentLimit = dbManager.getDynamicPropertiesStore().getPublicNetCurrentLimit();
+
+    long targetPublicNetLimitLess =
+        targetPublicNetLimit * (AdaptiveResourceLimitConstants.ALLOWED_DYNAMIC_RANGE_DENOMINATOR
+            - AdaptiveResourceLimitConstants.ALLOWED_DYNAMIC_RANGE_NUMERATOR)
+            / AdaptiveResourceLimitConstants.ALLOWED_DYNAMIC_RANGE_DENOMINATOR;
+
+    long targetPublicNetLimitMore =
+        targetPublicNetLimit * (AdaptiveResourceLimitConstants.ALLOWED_DYNAMIC_RANGE_DENOMINATOR
+            + AdaptiveResourceLimitConstants.ALLOWED_DYNAMIC_RANGE_NUMERATOR)
+            / AdaptiveResourceLimitConstants.ALLOWED_DYNAMIC_RANGE_DENOMINATOR;
+
+    long result = publicNetCurrentLimit;
+    if (publicNetAverageUsage > targetPublicNetLimitMore) {
+      result = publicNetCurrentLimit * AdaptiveResourceLimitConstants.CONTRACT_RATE_NUMERATOR
+          / AdaptiveResourceLimitConstants.CONTRACT_RATE_DENOMINATOR;
+    }
+
+    if (publicNetAverageUsage < targetPublicNetLimitLess) {
+      result = publicNetCurrentLimit * AdaptiveResourceLimitConstants.EXPAND_RATE_NUMERATOR
+          / AdaptiveResourceLimitConstants.EXPAND_RATE_DENOMINATOR;
+    }
+
+    result = Math.min(Math.max(result, dbManager.getDynamicPropertiesStore().getPublicNetLimit()),
+        dbManager.getDynamicPropertiesStore().getPublicNetLimit()
+            * AdaptiveResourceLimitConstants.LIMIT_MULTIPLIER);
+
+    if (result != publicNetCurrentLimit) {
+      dbManager.getDynamicPropertiesStore().savePublicNetCurrentLimit(result);
+      logger.info(
+          "adjust publicNetCurrentLimit,old[" + publicNetCurrentLimit + "],new[" + result + "]");
+    }
   }
 
 }

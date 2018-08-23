@@ -59,11 +59,14 @@ public interface Parameter {
 
   interface AdaptiveResourceLimitConstants {
 
-    int contractRateNumerator = 99;
-    int contractRateDenominator = 100;
-    int expandRateNumerator = 1000;
-    int expandRateDenominator = 999;
-    int periods = 60; //s
+    int CONTRACT_RATE_NUMERATOR = 99;
+    int CONTRACT_RATE_DENOMINATOR = 100;
+    int EXPAND_RATE_NUMERATOR = 1000;
+    int EXPAND_RATE_DENOMINATOR = 999;
+    int ALLOWED_DYNAMIC_RANGE_NUMERATOR = 5;
+    int ALLOWED_DYNAMIC_RANGE_DENOMINATOR = 100;
+    int PERIODS = 60; //s
+    int LIMIT_MULTIPLIER = 1000; //s
   }
 
   enum ChainParameters {

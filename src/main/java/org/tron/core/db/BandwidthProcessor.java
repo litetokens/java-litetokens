@@ -13,6 +13,7 @@ import org.tron.core.capsule.AssetIssueCapsule;
 import org.tron.core.capsule.TransactionCapsule;
 import org.tron.core.capsule.TransactionResultCapsule;
 import org.tron.core.config.Parameter.AdaptiveResourceLimitConstants;
+import org.tron.core.config.Parameter.ChainConstant;
 import org.tron.core.exception.AccountResourceInsufficientException;
 import org.tron.core.exception.ContractValidateException;
 import org.tron.protos.Contract.TransferAssetContract;
@@ -354,29 +355,29 @@ public class BandwidthProcessor extends ResourceProcessor {
     dbManager.getDynamicPropertiesStore().savePublicNetTime(publicNetTime);
     dbManager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
 
-    updateAdaptiveFreeBandwidthLimit(now);
+    updateAdaptiveFreeBandwidthLimit(now,false);
     return true;
   }
 
-  private void updatePublicNetAverageUsage(long now) {
+  public void updatePublicNetAverageUsage(long now) {
     long publicNetAverageUsage = dbManager.getDynamicPropertiesStore().getPublicNetAverageUsage();
     long publicNetAverageTime = dbManager.getDynamicPropertiesStore().getPublicNetAverageTime();
-    long newPublicNetAverageUsage = increase(publicNetAverageUsage, 0, publicNetAverageTime, now);
+    long newPublicNetAverageUsage = increase(publicNetAverageUsage, 0, publicNetAverageTime, now,
+        averageWindowSize);
 
     dbManager.getDynamicPropertiesStore().savePublicNetAverageUsage(newPublicNetAverageUsage);
+    dbManager.getDynamicPropertiesStore().savePublicNetAverageTime(now);
   }
 
-  public void updateAdaptiveFreeBandwidthLimit(long now) {
-    boolean usingAdaptiveLimit = false;//switch on by the committee
-    if (usingAdaptiveLimit) {
+  public void updateAdaptiveFreeBandwidthLimit(long now, boolean usingAdaptiveLimit) {
+    if (!usingAdaptiveLimit) {
       return;
     }
-
     updatePublicNetAverageUsage(now);
 
     long publicNetAverageUsage =
-        dbManager.getDynamicPropertiesStore().getPublicNetAverageUsage() * 24 * 3600
-            / AdaptiveResourceLimitConstants.PERIODS;
+        dbManager.getDynamicPropertiesStore().getPublicNetAverageUsage() * ChainConstant.WINDOW_SIZE_MS
+            / AdaptiveResourceLimitConstants.PERIODS_MS;
     long targetPublicNetLimit = dbManager.getDynamicPropertiesStore().getPublicNetTargetLimit();
     long publicNetCurrentLimit = dbManager.getDynamicPropertiesStore().getPublicNetCurrentLimit();
 

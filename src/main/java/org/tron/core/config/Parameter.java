@@ -65,8 +65,8 @@ public interface Parameter {
     int EXPAND_RATE_DENOMINATOR = 999;
     int ALLOWED_DYNAMIC_RANGE_NUMERATOR = 5;
     int ALLOWED_DYNAMIC_RANGE_DENOMINATOR = 100;
-    int PERIODS = 60; //s
-    int LIMIT_MULTIPLIER = 1000; //s
+    int PERIODS_MS = 60_000;
+    int LIMIT_MULTIPLIER = 100; //s
   }
 
   enum ChainParameters {

@@ -17,6 +17,8 @@ import org.tron.core.capsule.AssetIssueCapsule;
 import org.tron.core.capsule.TransactionCapsule;
 import org.tron.core.capsule.TransactionResultCapsule;
 import org.tron.core.config.DefaultConfig;
+import org.tron.core.config.Parameter.AdaptiveResourceLimitConstants;
+import org.tron.core.config.Parameter.ChainConstant;
 import org.tron.core.config.args.Args;
 import org.tron.core.db.BandwidthProcessor;
 import org.tron.core.db.Manager;
@@ -356,6 +358,55 @@ public class BandwidthProcessorTest {
 
 
   @Test
-  public void updateAdaptiveBandwidthLimit() {
+  public void updateAdaptiveFreeBandwidthLimit() {
+    BandwidthProcessor processor = new BandwidthProcessor(dbManager);
+
+    //Test resource auto reply
+    dbManager.getDynamicPropertiesStore().saveLatestBlockHeaderTimestamp(1526647838000L);
+    long now = dbManager.getWitnessController().getHeadSlot();
+    dbManager.getDynamicPropertiesStore().savePublicNetAverageTime(now);
+
+    dbManager.getDynamicPropertiesStore().savePublicNetAverageUsage(4000L);
+    dbManager.getDynamicPropertiesStore().saveLatestBlockHeaderTimestamp(
+        1526647838000L + AdaptiveResourceLimitConstants.PERIODS_MS / 2);
+    now = dbManager.getWitnessController().getHeadSlot();
+
+    processor.updatePublicNetAverageUsage(now);
+    Assert.assertEquals(2000L, dbManager.getDynamicPropertiesStore().getPublicNetAverageUsage());
+
+    //
+    long ratio = ChainConstant.WINDOW_SIZE_MS / AdaptiveResourceLimitConstants.PERIODS_MS;
+    dbManager.getDynamicPropertiesStore().savePublicNetLimit(1000L * ratio);
+    dbManager.getDynamicPropertiesStore().savePublicNetTargetLimit(2000 * ratio);
+
+    //Test exceeds resource limit
+    dbManager.getDynamicPropertiesStore().savePublicNetCurrentLimit(2000L * ratio);
+    dbManager.getDynamicPropertiesStore().savePublicNetAverageUsage(3000L);
+
+    processor.updateAdaptiveFreeBandwidthLimit(now, true);
+    Assert.assertEquals(2000L * ratio * 99 / 100L,
+        dbManager.getDynamicPropertiesStore().getPublicNetCurrentLimit());
+
+    //Test less than resource limit
+    dbManager.getDynamicPropertiesStore().savePublicNetCurrentLimit(2000L * ratio);
+    dbManager.getDynamicPropertiesStore().savePublicNetAverageUsage(500L);
+    processor.updateAdaptiveFreeBandwidthLimit(now, true);
+    Assert.assertEquals(2000L * ratio * 1000 / 999L,
+        dbManager.getDynamicPropertiesStore().getPublicNetCurrentLimit());
+
+    //Test within the allowable range
+    dbManager.getDynamicPropertiesStore().savePublicNetCurrentLimit(2000L * ratio);
+    dbManager.getDynamicPropertiesStore().savePublicNetAverageUsage(2000L * 95 / 100);
+    processor.updateAdaptiveFreeBandwidthLimit(now, true);
+    Assert.assertEquals(2000L * ratio,
+        dbManager.getDynamicPropertiesStore().getPublicNetCurrentLimit());
+
+    //Test within the allowable range
+    dbManager.getDynamicPropertiesStore().savePublicNetCurrentLimit(2000L * ratio);
+    dbManager.getDynamicPropertiesStore().savePublicNetAverageUsage(2000L * 105 / 100);
+    processor.updateAdaptiveFreeBandwidthLimit(now, true);
+    Assert.assertEquals(2000L * ratio,
+        dbManager.getDynamicPropertiesStore().getPublicNetCurrentLimit());
+
   }
 }

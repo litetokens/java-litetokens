@@ -52,8 +52,18 @@ public interface Parameter {
   }
 
   interface DatabaseConstants {
+
     int TRANSACTIONS_COUNT_LIMIT_MAX = 1000;
     int ASSET_ISSUE_COUNT_LIMIT_MAX = 1000;
+  }
+
+  interface adaptiveResourceLimitConstants {
+
+    int contractRateNumerator = 99;
+    int contractRateDenominator = 100;
+    int expandRateNumerator = 999;
+    int expandRateDenominator = 1000;
+    int periods = 60; //s
   }
 
   enum ChainParameters {

@@ -26,7 +26,7 @@ public class ForkController {
 
   public void init(Manager manager) {
     this.manager = manager;
-    forked = manager.getDynamicPropertiesStore().getForked();
+    forked = true;
     slots = new int[manager.getWitnessController().getActiveWitnesses().size()];
   }
 

@@ -25,7 +25,7 @@ public class ForkController {
 
   public void init(Manager manager) {
     this.manager = manager;
-    forked = manager.getDynamicPropertiesStore().getForked();
+    forked = true;
   }
 
   public synchronized boolean shouldBeForked() {

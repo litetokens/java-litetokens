@@ -597,7 +597,7 @@ public class Manager {
       }
 
       try (ISession tmpSession = revokingStore.buildSession()) {
-        processTransaction(trx, null);
+//        processTransaction(trx, null);
         pendingTransactions.add(trx);
         tmpSession.merge();
       }
@@ -1107,44 +1107,12 @@ public class Manager {
       }
       // apply transaction
       try (ISession tmpSeesion = revokingStore.buildSession()) {
-        processTransaction(trx, null);
+//        processTransaction(trx, null);
         // trx.resetResult();
         tmpSeesion.merge();
         // push into block
         blockCapsule.addTransaction(trx);
         iterator.remove();
-      } catch (ContractExeException e) {
-        logger.info("contract not processed during execute");
-        logger.debug(e.getMessage(), e);
-      } catch (ContractValidateException e) {
-        logger.info("contract not processed during validate");
-        logger.debug(e.getMessage(), e);
-      } catch (TaposException e) {
-        logger.info("contract not processed during TaposException");
-        logger.debug(e.getMessage(), e);
-      } catch (DupTransactionException e) {
-        logger.info("contract not processed during DupTransactionException");
-        logger.debug(e.getMessage(), e);
-      } catch (TooBigTransactionException e) {
-        logger.info("contract not processed during TooBigTransactionException");
-        logger.debug(e.getMessage(), e);
-      } catch (TransactionExpirationException e) {
-        logger.info("contract not processed during TransactionExpirationException");
-        logger.debug(e.getMessage(), e);
-      } catch (AccountResourceInsufficientException e) {
-        logger.info("contract not processed during AccountResourceInsufficientException");
-        logger.debug(e.getMessage(), e);
-      } catch (ValidateSignatureException e) {
-        logger.info("contract not processed during ValidateSignatureException");
-        logger.debug(e.getMessage(), e);
-      } catch (ReceiptException e) {
-        logger.info("receipt exception: {}", e.getMessage());
-        logger.debug(e.getMessage(), e);
-      } catch (OutOfSlotTimeException e) {
-        logger.info("OutOfSlotTime exception: {}", e.getMessage());
-        logger.debug(e.getMessage(), e);
-      } catch (UnsupportVMException e) {
-        logger.warn(e.getMessage(), e);
       }
     }
 
@@ -1238,7 +1206,7 @@ public class Manager {
       if (block.generatedByMyself) {
         transactionCapsule.setVerified(true);
       }
-      processTransaction(transactionCapsule, block.getInstance());
+//      processTransaction(transactionCapsule, block.getInstance());
     }
 
     boolean needMaint = needMaintenance(block.getTimeStamp());

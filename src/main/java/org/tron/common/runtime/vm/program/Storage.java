@@ -4,6 +4,7 @@ import static java.lang.System.arraycopy;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
+import org.spongycastle.util.encoders.Hex;
 import org.tron.common.crypto.Hash;
 import org.tron.common.runtime.vm.DataWord;
 import org.tron.core.capsule.StorageRowCapsule;
@@ -25,7 +26,11 @@ public class Storage {
   }
 
   public DataWord getValue(DataWord key) {
+    System.err.println("get " + key);
+
     if (rowCache.containsKey(key)) {
+      System.err.println("get " + key + " " + rowCache.get(key).getValue());
+
       return rowCache.get(key).getValue();
     } else {
       StorageRowCapsule row = store.get(compose(key.getData(), addrHash));
@@ -35,11 +40,13 @@ public class Storage {
         beforeUseSize += row.getInstance().length;
       }
       rowCache.put(key, row);
+      System.err.println("get " + key + " " + row.getValue());
       return row.getValue();
     }
   }
 
   public void put(DataWord key, DataWord value) {
+    System.err.println("put " + key + " " +  value);
     if (rowCache.containsKey(key)) {
       rowCache.get(key).setValue(value);
     } else {
@@ -83,6 +90,8 @@ public class Storage {
 
   public void commit() {
     rowCache.forEach((key, value) -> {
+      System.err.println("commit, dirty：" + value.isDirty());
+      System.err.println("key:" + Hex.toHexString(value.getRowKey()) + " value:" + value.getValue() );
       if (value.isDirty()) {
         if (value.getValue().isZero()) {
           this.store.delete(value.getRowKey());
@@ -91,5 +100,6 @@ public class Storage {
         }
       }
     });
+    System.err.println("===================================");;
   }
 }

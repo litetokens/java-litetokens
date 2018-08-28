@@ -20,7 +20,6 @@ import org.tron.api.GrpcAPI.AccountResourceMessage;
 import org.tron.api.WalletGrpc;
 import org.tron.core.Wallet;
 import org.tron.protos.Protocol.Account;
-import org.tron.protos.Protocol.SmartContract;
 import org.tron.protos.Protocol.TransactionInfo;
 import stest.tron.wallet.common.client.Configuration;
 import stest.tron.wallet.common.client.Parameter.CommonConstant;
@@ -31,8 +30,8 @@ public class TestExceptionCodeAndAbi {
 
   //testng001、testng002、testng003、testng004
   private final String testNetAccountKey =
-      "FC8BF0238748587B9617EB6D15D47A66C0E07C1A1959033CF249C6532DC29FE6";
-  //"BC70ADC5A0971BA3F7871FBB7249E345D84CE7E5458828BE1E28BF8F98F2795B";
+      //"FC8BF0238748587B9617EB6D15D47A66C0E07C1A1959033CF249C6532DC29FE6";
+      "FE22C55DCF5CBA27241796EEF710C7445CFEDCDA2F3DF886E1E0DCF8FEEB73E0";
   private final byte[] testNetAccountAddress = PublicMethed.getFinalAddress(testNetAccountKey);
 
   private ManagedChannel channelFull = null;
@@ -49,7 +48,7 @@ public class TestExceptionCodeAndAbi {
     Wallet.setAddressPreFixByte(CommonConstant.ADD_PRE_FIX_BYTE_MAINNET);
   }
 
-  @BeforeClass(enabled = false)
+  @BeforeClass(enabled = true)
   public void beforeClass() {
     PublicMethed.printAddress(testNetAccountKey);
     channelFull = ManagedChannelBuilder.forTarget(fullnode)
@@ -125,7 +124,7 @@ public class TestExceptionCodeAndAbi {
     //logger.info(smartContract.getAbi().toString());
   }
 
-  @Test(enabled = false)
+  @Test(enabled = true)
   public void testtimeout() {
     String txid;
     Long energyTotal;
@@ -187,7 +186,7 @@ public class TestExceptionCodeAndAbi {
       String netUsageString,
       String netFeeString,String txid,String energyTotalString) {
     try {
-      File csv = new File("/Users/wangzihe/Documents/timeoutCpuEnergy.csv");
+      File csv = new File("/Users/tron/Documents/timeoutCpuEnergy.csv");
       String time = Long.toString(System.currentTimeMillis());
       BufferedWriter bw = new BufferedWriter(new FileWriter(csv, true));
       /*      bw.write(time + "," + feeString + "," + cpuFeeString + "," + cpuUsageString + ","

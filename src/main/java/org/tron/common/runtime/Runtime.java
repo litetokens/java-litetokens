@@ -494,6 +494,10 @@ public class Runtime {
       logger.error("runtime error is :{}", result.getException().getMessage());
     }
     trace.setBill(result.getEnergyUsed());
+
+    logger.error("jack log, this tx consume time: {}",
+        System.nanoTime() / 1000 - program.getInvoke().getVmStartInUs());
+
   }
 
   private long getEnergyFee(long callerEnergyUsage, long callerEnergyFrozen,

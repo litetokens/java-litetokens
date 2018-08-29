@@ -121,6 +121,10 @@ public class Program {
 
   private InternalTransaction transaction;
 
+  public ProgramInvoke getInvoke() {
+    return invoke;
+  }
+
   private ProgramInvoke invoke;
   private ProgramInvokeFactory programInvokeFactory = new ProgramInvokeFactoryImpl();
 

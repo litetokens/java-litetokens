@@ -81,7 +81,7 @@ public class Args {
   @Getter
   @Setter
   @Parameter(names = {"--min-time-ratio"})
-  private double minTimeRatio = 1.0; // 50ms * 1.0 = 50ms = 50000us
+  private double minTimeRatio = 0.6;
 
   @Getter
   @Setter
@@ -372,6 +372,9 @@ public class Args {
     INSTANCE.receiveTcpMinDataLength = 2048;
     INSTANCE.isOpenFullTcpDisconnect = false;
     INSTANCE.supportConstant = false;
+    INSTANCE.debug = false;
+    INSTANCE.minTimeRatio = 0.6;
+    INSTANCE.maxTimeRatio = 5.0;
   }
 
   /**
@@ -804,7 +807,7 @@ public class Args {
   }
 
   private static double calcMaxTimeRatio() {
-    return max(1, min(5.0, 5 * 4.0 / max(Runtime.getRuntime().availableProcessors(), 1)));
+    return max(2.0, min(5.0, 5 * 4.0 / max(Runtime.getRuntime().availableProcessors(), 1)));
   }
 
   private static void initBackupProperty(Config config) {

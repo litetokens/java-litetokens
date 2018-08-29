@@ -89,8 +89,8 @@ public class TransactionTrace {
   }
 
   //set bill
-  public void setBill(long energyUseage) {
-    receipt.setEnergyUsageTotal(energyUseage);
+  public void setBill(long energyUsage) {
+    receipt.setEnergyUsageTotal(energyUsage);
   }
 
   //set net bill
@@ -100,11 +100,10 @@ public class TransactionTrace {
   }
 
   public void exec(Runtime runtime)
-      throws ContractExeException, ContractValidateException, ReceiptCheckErrException {
+      throws ContractExeException, ContractValidateException {
     /**  VM execute  **/
     runtime.execute();
     runtime.go();
-    setResult(runtime);
   }
 
   public void finalization(Runtime runtime) {
@@ -168,6 +167,9 @@ public class TransactionTrace {
   }
 
   public void setResult(Runtime runtime) {
+    if (!needVM()) {
+      return;
+    }
     RuntimeException exception = runtime.getResult().getException();
     if (Objects.isNull(exception) && StringUtils
         .isEmpty(runtime.getRuntimeError()) && !runtime.getResult().isRevert()) {

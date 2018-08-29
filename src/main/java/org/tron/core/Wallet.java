@@ -146,7 +146,6 @@ public class Wallet {
     try {
       boolean constant = isConstant(abi, getSelector(triggerSmartContract.getData().toByteArray()));
       if (constant) {
-        logger.info("jack log: {}", Args.getInstance().isSupportConstant());
         if (!Args.getInstance().isSupportConstant()) {
           throw new ContractValidateException("this node don't support constant");
         }
@@ -408,7 +407,9 @@ public class Wallet {
       } else {
         dbManager.getTransactionIdCache().put(trx.getTransactionId(), true);
       }
-
+      if (dbManager.getDynamicPropertiesStore().supportVM()) {
+        trx.resetResult();
+      }
       dbManager.pushTransaction(trx);
       p2pNode.broadcast(message);
 
@@ -577,6 +578,30 @@ public class Wallet {
         .setKey(ChainParameters.ALLOW_CREATION_OF_CONTRACTS.name())
         .setValue(
             dynamicPropertiesStore.getAllowCreationOfContracts())
+        .build());
+
+    builder.addChainParameter(builder1
+        .setKey(ChainParameters.REMOVE_THE_POWER_OF_THE_GR.name())
+        .setValue(
+            dynamicPropertiesStore.getRemoveThePowerOfTheGr())
+        .build());
+
+    builder.addChainParameter(builder1
+        .setKey(ChainParameters.ENERGY_FEE.name())
+        .setValue(
+            dynamicPropertiesStore.getEnergyFee())
+        .build());
+
+    builder.addChainParameter(builder1
+        .setKey(ChainParameters.EXCHANGE_CREATE_FEE.name())
+        .setValue(
+            dynamicPropertiesStore.getExchangeCreateFee())
+        .build());
+
+    builder.addChainParameter(builder1
+        .setKey(ChainParameters.MAX_CPU_TIME_OF_ONE_TX.name())
+        .setValue(
+            dynamicPropertiesStore.getMaxCpuTimeOfOneTX())
         .build());
 
     return builder.build();
@@ -887,6 +912,8 @@ public class Wallet {
         trxCap.setResult(ret);
         return trxCap.getInstance();
       }
+    } catch (ContractValidateException e) {
+      throw e;
     } catch (Exception e) {
       logger.error(e.getMessage());
       return null;

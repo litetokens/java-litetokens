@@ -772,7 +772,11 @@ public class PublicMethed {
   }
 
 
+<<<<<<< Updated upstream
   public static Boolean freezeBalanceGetEnergy(byte[] addRess, long freezeBalance,
+=======
+  public static Boolean freezeBalanceGetenergy(byte[] addRess, long freezeBalance,
+>>>>>>> Stashed changes
       long freezeDuration,
       int resourceCode, String priKey, WalletGrpc.WalletBlockingStub blockingStubFull) {
     Wallet.setAddressPreFixByte(CommonConstant.ADD_PRE_FIX_BYTE_MAINNET);

@@ -52,7 +52,11 @@ public class ContractScenario002 {
     blockingStubFull = WalletGrpc.newBlockingStub(channelFull);
     Assert.assertTrue(PublicMethed.sendcoin(contract002Address,20000000L,fromAddress,
         testKey002,blockingStubFull));
+<<<<<<< Updated upstream
     Assert.assertTrue(PublicMethed.freezeBalanceGetEnergy(contract002Address, 5000000L,
+=======
+    Assert.assertTrue(PublicMethed.freezeBalanceGetenergy(contract002Address, 5000000L,
+>>>>>>> Stashed changes
         3,1,contract002Key,blockingStubFull));
     /*    Assert.assertTrue(PublicMethed.buyStorage(5000000L,contract002Address,contract002Key,
         blockingStubFull));*/
@@ -63,6 +67,7 @@ public class ContractScenario002 {
   public void deployTronNative() {
     AccountResourceMessage accountResource = PublicMethed.getAccountResource(contract002Address,
         blockingStubFull);
+<<<<<<< Updated upstream
     Long energyLimit = accountResource.getEnergyLimit();
     //Long storageLimit = accountResource.getStorageLimit();
     Long energyUsage = accountResource.getEnergyUsed();
@@ -72,6 +77,17 @@ public class ContractScenario002 {
     logger.info("before energy usage is " + Long.toString(energyUsage));
     //logger.info("before storage limit is " + Long.toString(storageLimit));
     //logger.info("before storage usaged is " + Long.toString(storageUsage));
+=======
+    Long energyLimit = accountResource.getenergyLimit();
+    Long storageLimit = accountResource.getStorageLimit();
+    Long energyUsage = accountResource.getenergyUsed();
+    Long storageUsage = accountResource.getStorageUsed();
+
+    logger.info("before energy limit is " + Long.toString(energyLimit));
+    logger.info("before energy usage is " + Long.toString(energyUsage));
+    logger.info("before storage limit is " + Long.toString(storageLimit));
+    logger.info("before storage usaged is " + Long.toString(storageUsage));
+>>>>>>> Stashed changes
     Long maxFeeLimit = 5000000L;
     String contractName = "tronNative";
     String code = "608060405260008054600160a060020a03199081166201000117909155600180548216620100021"
@@ -149,6 +165,7 @@ public class ContractScenario002 {
     SmartContract smartContract = PublicMethed.getContract(contractAddress,blockingStubFull);
     Assert.assertTrue(smartContract.getAbi() != null);
     accountResource = PublicMethed.getAccountResource(contract002Address,blockingStubFull);
+<<<<<<< Updated upstream
     energyLimit = accountResource.getEnergyLimit();
     //storageLimit = accountResource.getStorageLimit();
     energyUsage = accountResource.getEnergyUsed();
@@ -160,6 +177,19 @@ public class ContractScenario002 {
     logger.info("after energy usage is " + Long.toString(energyUsage));
     //logger.info("after storage limit is " + Long.toString(storageLimit));
     //logger.info("after storage usaged is " + Long.toString(storageUsage));
+=======
+    energyLimit = accountResource.getenergyLimit();
+    storageLimit = accountResource.getStorageLimit();
+    energyUsage = accountResource.getenergyUsed();
+    storageUsage = accountResource.getStorageUsed();
+    Assert.assertTrue(energyUsage > 0);
+    Assert.assertTrue(storageUsage > 0);
+
+    logger.info("after energy limit is " + Long.toString(energyLimit));
+    logger.info("after energy usage is " + Long.toString(energyUsage));
+    logger.info("after storage limit is " + Long.toString(storageLimit));
+    logger.info("after storage usaged is " + Long.toString(storageUsage));
+>>>>>>> Stashed changes
   }
 
   @Test(enabled = true)

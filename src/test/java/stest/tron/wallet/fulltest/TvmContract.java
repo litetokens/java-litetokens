@@ -54,7 +54,11 @@ public class TvmContract {
         testKey002,blockingStubFull));
     logger.info(Long.toString(PublicMethed.queryAccount(contract008Key,blockingStubFull)
         .getBalance()));
+<<<<<<< Updated upstream
     Assert.assertTrue(PublicMethed.freezeBalanceGetEnergy(contract008Address, 1000000L,
+=======
+    Assert.assertTrue(PublicMethed.freezeBalanceGetenergy(contract008Address, 1000000L,
+>>>>>>> Stashed changes
         3,1,contract008Key,blockingStubFull));
     Assert.assertTrue(PublicMethed.buyStorage(50000000L,contract008Address,contract008Key,
         blockingStubFull));

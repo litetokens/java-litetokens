@@ -614,7 +614,11 @@ public class Manager {
     processor.consume(trx, ret, trace);
   }
 
+<<<<<<< Updated upstream
   public void consumeEnergy(TransactionCapsule trx, TransactionResultCapsule ret,
+=======
+  public void consumeenergy(TransactionCapsule trx, TransactionResultCapsule ret,
+>>>>>>> Stashed changes
       TransactionTrace trace)
       throws ContractValidateException, AccountResourceInsufficientException {
     EnergyProcessor processor = new EnergyProcessor(this);

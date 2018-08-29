@@ -64,6 +64,7 @@ public class ContractLinkage002 {
     AccountResourceMessage accountResource = PublicMethed.getAccountResource(linkage002Address,
         blockingStubFull);
     Long energyLimit = accountResource.getEnergyLimit();
+<<<<<<< Updated upstream
     //Long storageLimit = accountResource.getStorageLimit();
     Long energyUsage = accountResource.getEnergyUsed();
     //Long storageUsage = accountResource.getStorageUsed();
@@ -72,6 +73,16 @@ public class ContractLinkage002 {
     logger.info("before energy usage is " + Long.toString(energyUsage));
     //logger.info("before storage limit is " + Long.toString(storageLimit));
     //logger.info("before storage usaged is " + Long.toString(storageUsage));
+=======
+    Long storageLimit = accountResource.getStorageLimit();
+    Long energyUsage = accountResource.getEnergyUsed();
+    Long storageUsage = accountResource.getStorageUsed();
+
+    logger.info("before energy limit is " + Long.toString(energyLimit));
+    logger.info("before energy usage is " + Long.toString(energyUsage));
+    logger.info("before storage limit is " + Long.toString(storageLimit));
+    logger.info("before storage usaged is " + Long.toString(storageUsage));
+>>>>>>> Stashed changes
     Long maxFeeLimit = 5000000L;
     String contractName = "tronNative";
     String code = "608060405260008054600160a060020a03199081166201000117909155600180548216620100021"

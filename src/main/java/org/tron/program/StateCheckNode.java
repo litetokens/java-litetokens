@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -38,13 +37,15 @@ import org.tron.core.exception.ContractExeException;
 import org.tron.core.exception.ContractValidateException;
 import org.tron.core.exception.DupTransactionException;
 import org.tron.core.exception.NonCommonBlockException;
-import org.tron.core.exception.OutOfSlotTimeException;
+import org.tron.core.exception.ReceiptCheckErrException;
 import org.tron.core.exception.ReceiptException;
 import org.tron.core.exception.TaposException;
 import org.tron.core.exception.TooBigTransactionException;
+import org.tron.core.exception.TooBigTransactionResultException;
 import org.tron.core.exception.TransactionExpirationException;
 import org.tron.core.exception.TransactionTraceException;
 import org.tron.core.exception.UnLinkedBlockException;
+import org.tron.core.exception.UnsupportVMException;
 import org.tron.core.exception.ValidateScheduleException;
 import org.tron.core.exception.ValidateSignatureException;
 import org.tron.core.services.RpcApiService;
@@ -142,7 +143,11 @@ public class StateCheckNode {
           BlockCapsule blockCapsule = new BlockCapsule(block);
           try {
             dbManager.pushBlock(blockCapsule);
-          } catch (OutOfSlotTimeException e) {
+          } catch (TooBigTransactionResultException e) {
+            e.printStackTrace();
+          } catch (UnsupportVMException e) {
+            e.printStackTrace();
+          } catch (ReceiptCheckErrException e) {
             e.printStackTrace();
           }
           for (TransactionCapsule trx : blockCapsule.getTransactions()) {

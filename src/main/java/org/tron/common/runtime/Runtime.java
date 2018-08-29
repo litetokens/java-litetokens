@@ -66,31 +66,27 @@ import org.tron.protos.Protocol.Transaction.Contract.ContractType;
 
 @Slf4j(topic = "Runtime")
 public class Runtime {
-
-
   private SystemProperties config = SystemProperties.getInstance();
+  private VM vm;
+  private Program program;
 
   private Transaction trx;
-  private Block block = null;
+  private Block block;
   private Deposit deposit;
-  private ProgramInvokeFactory programInvokeFactory = null;
+  private ProgramInvokeFactory programInvokeFactory;
   private String runtimeError;
 
-  private EnergyProcessor energyProcessor = null;
-  private StorageMarket storageMarket = null;
-  PrecompiledContracts.PrecompiledContract precompiledContract = null;
+  // FIXME should be static
+  private EnergyProcessor energyProcessor;
+  private StorageMarket storageMarket;
+
   private ProgramResult result = new ProgramResult();
 
-
-  private VM vm = null;
-  private Program program = null;
-
-  private InternalTransaction.TrxType trxType = TRX_UNKNOWN_TYPE;
+  private InternalTransaction.TrxType trxType;
   private ExecutorType executorType = ET_UNKNOWN_TYPE;
 
   //tx trace
   private TransactionTrace trace;
-
 
   /**
    * For block's trx run

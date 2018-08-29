@@ -6,21 +6,19 @@ import com.google.protobuf.ByteString;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import org.tron.common.runtime.vm.DataWord;
+import org.tron.common.runtime.vm.program.Storage;
 import org.tron.common.utils.StringUtil;
 import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.BlockCapsule;
-import org.tron.core.capsule.BytesCapsule;
 import org.tron.core.capsule.ContractCapsule;
-import org.tron.core.capsule.StorageCapsule;
 import org.tron.core.capsule.TransactionCapsule;
-import org.tron.core.db.AccountContractIndexStore;
 import org.tron.core.db.AccountStore;
 import org.tron.core.db.AssetIssueStore;
 import org.tron.core.db.BlockStore;
 import org.tron.core.db.CodeStore;
 import org.tron.core.db.ContractStore;
 import org.tron.core.db.Manager;
-import org.tron.core.db.StorageStore;
+import org.tron.core.db.StorageRowStore;
 import org.tron.core.db.TransactionStore;
 import org.tron.core.db.VotesStore;
 import org.tron.core.db.WitnessStore;
@@ -28,39 +26,30 @@ import org.tron.core.exception.BadItemException;
 import org.tron.protos.Protocol;
 import org.tron.protos.Protocol.AccountType;
 
-/**
- * @author Guo Yonggang
- * @since 27.04.2018
- */
 public class DepositImpl implements Deposit {
 
   private Manager dbManager;
   private Deposit parent = null;
-  private Deposit prevDeposit = null;
-  private Deposit nextDeposit = null;
 
-  private long beforeRunStorageSize = 0;
-  private HashMap<Key, Value> accounCache = new HashMap<>();
+  private HashMap<Key, Value> accountCache = new HashMap<>();
   private HashMap<Key, Value> transactionCache = new HashMap<>();
   private HashMap<Key, Value> blockCache = new HashMap<>();
   private HashMap<Key, Value> witnessCache = new HashMap<>();
   private HashMap<Key, Value> blockIndexCache = new HashMap<>();
   private HashMap<Key, Value> codeCache = new HashMap<>();
   private HashMap<Key, Value> contractCache = new HashMap<>();
-  private HashMap<Key, Value> storageCache = new HashMap<>();
-  private HashMap<Key, Value> votesCache = new HashMap<>();
-  private HashMap<Key, Value> assetIssueCache = new HashMap<>();
-  private HashMap<Key, Value> accountContractIndexCache = new HashMap<>();
 
-  private DepositImpl(Manager dbManager, DepositImpl parent, DepositImpl prev) {
-    init(dbManager, parent, prev);
+  private HashMap<Key, Value> votesCache = new HashMap<>();
+  private HashMap<Key, Value> accountContractIndexCache = new HashMap<>();
+  private HashMap<Key, Storage> storageCache = new HashMap<>();
+
+  private DepositImpl(Manager dbManager, DepositImpl parent) {
+    init(dbManager, parent);
   }
 
-  protected void init(Manager dbManager, DepositImpl parent, DepositImpl prev) {
+  protected void init(Manager dbManager, DepositImpl parent) {
     this.dbManager = dbManager;
     this.parent = parent;
-    prevDeposit = prev;
-    nextDeposit = null;
   }
 
   @Override
@@ -96,33 +85,24 @@ public class DepositImpl implements Deposit {
     return dbManager.getCodeStore();
   }
 
-  private StorageStore getStorageStore() {
-    return dbManager.getStorageStore();
+  private StorageRowStore getStorageRowStore() {
+    return dbManager.getStorageRowStore();
   }
 
   private AssetIssueStore getAssetIssueStore() {
     return dbManager.getAssetIssueStore();
   }
 
-  private AccountContractIndexStore getAccountContractIndexStore() {
-    return dbManager.getAccountContractIndexStore();
-  }
-
   @Override
   public Deposit newDepositChild() {
-    return new DepositImpl(dbManager, this, null);
-  }
-
-  @Override
-  public Deposit newDepositNext() {
-    return nextDeposit = new DepositImpl(dbManager, null, this);
+    return new DepositImpl(dbManager, this);
   }
 
   @Override
   public synchronized AccountCapsule createAccount(byte[] address, Protocol.AccountType type) {
     Key key = new Key(address);
     AccountCapsule account = new AccountCapsule(ByteString.copyFrom(address), type);
-    accounCache.put(key, new Value(account.getData(), Type.VALUE_TYPE_CREATE));
+    accountCache.put(key, new Value(account.getData(), Type.VALUE_TYPE_CREATE));
     return account;
   }
 
@@ -133,65 +113,35 @@ public class DepositImpl implements Deposit {
         ByteString.copyFromUtf8(accountName),
         type);
 
-    accounCache.put(key, new Value(account.getData(), Type.VALUE_TYPE_CREATE));
+    accountCache.put(key, new Value(account.getData(), Type.VALUE_TYPE_CREATE));
     return account;
-//    return null;
   }
-
-//  @Override
-//  public synchronized AccountCapsule createAccount(byte[] address, ByteString accountName,
-//      Protocol.AccountType type) {
-//    Key key = new Key(address);
-//    AccountCapsule account = new AccountCapsule(ByteString.copyFrom(address), accountName,
-//        type);
-//
-//    accounCache.put(key, new Value(account.getData(), Type.VALUE_TYPE_CREATE));
-//    return account;
-//  }
 
   @Override
   public synchronized AccountCapsule getAccount(byte[] address) {
     Key key = new Key(address);
-    if (accounCache.containsKey(key)) {
-      return accounCache.get(key).getAccount();
+    if (accountCache.containsKey(key)) {
+      return accountCache.get(key).getAccount();
     }
 
     AccountCapsule accountCapsule;
     if (parent != null) {
       accountCapsule = parent.getAccount(address);
-    } else if (prevDeposit != null) {
-      accountCapsule = prevDeposit.getAccount(address);
     } else {
       accountCapsule = getAccountStore().get(address);
     }
 
     if (accountCapsule != null) {
-      accounCache.put(key, Value.create(accountCapsule.getData()));
+      accountCache.put(key, Value.create(accountCapsule.getData()));
     }
     return accountCapsule;
   }
-
-
-  public synchronized BytesCapsule getContractByNormalAccount(byte[] address) {
-
-    Key key = new Key(address);
-    if (accountContractIndexCache.containsKey(key)) {
-      return accountContractIndexCache.get(key).getBytes();
-    }
-
-    BytesCapsule contract;
-    if (parent != null) {
-      contract = parent.getContractByNormalAccount(address);
-    } else if (prevDeposit != null) {
-      contract = prevDeposit.getContractByNormalAccount(address);
-    } else {
-      contract = getAccountContractIndexStore().get(address);
-    }
-
-    if (contract != null) {
-      accountContractIndexCache.put(key, Value.create(contract.getData()));
-    }
-    return contract;
+  // just for depositRoot
+  @Override
+  public void deleteContract(byte[] address) {
+    getCodeStore().delete(address);
+    getAccountStore().delete(address);
+    getContractStore().delete(address);
   }
 
   @Override
@@ -199,14 +149,6 @@ public class DepositImpl implements Deposit {
     Key key = Key.create(address);
     Value value = Value.create(contractCapsule.getData(), Type.VALUE_TYPE_CREATE);
     contractCache.put(key, value);
-  }
-
-  @Override
-  public synchronized void createContractByNormalAccountIndex(byte[] address,
-      BytesCapsule contractAddress) {
-    Key key = new Key(address);
-    accountContractIndexCache
-        .put(key, Value.create(contractAddress.getData(), Type.VALUE_TYPE_CREATE));
   }
 
   @Override
@@ -219,8 +161,6 @@ public class DepositImpl implements Deposit {
     ContractCapsule contractCapsule;
     if (parent != null) {
       contractCapsule = parent.getContract(address);
-    } else if (prevDeposit != null) {
-      contractCapsule = prevDeposit.getContract(address);
     } else {
       contractCapsule = getContractStore().get(address);
     }
@@ -239,96 +179,59 @@ public class DepositImpl implements Deposit {
   }
 
   @Override
-  public synchronized byte[] getCode(byte[] codeHash) {
-    Key key = Key.create(codeHash);
+  public synchronized byte[] getCode(byte[] addr) {
+    Key key = Key.create(addr);
     if (codeCache.containsKey(key)) {
-      codeCache.get(key).getCode().getData();
+      return codeCache.get(key).getCode().getData();
     }
 
     byte[] code;
     if (parent != null) {
-      code = parent.getCode(codeHash);
-    } else if (prevDeposit != null) {
-      code = prevDeposit.getCode(codeHash);
+      code = parent.getCode(addr);
     } else {
-      if (null == getCodeStore().get(codeHash)) {
+      if (null == getCodeStore().get(addr)) {
         code = null;
       } else {
-        code = getCodeStore().get(codeHash).getData();
+        code = getCodeStore().get(addr).getData();
       }
     }
-
     if (code != null) {
       codeCache.put(key, Value.create(code));
     }
     return code;
   }
 
-    /*
-    @Override
-    public byte[] getCodeHash(byte[] address) {
-        AccountCapsule accountCapsule = getAccount(address);
-        return accountCapsule != null ? accountCapsule.getCodeHash() : null;
-    }
-    */
-
   @Override
-  public synchronized StorageCapsule getStorage(byte[] address) {
+  public synchronized Storage getStorage(byte[] address) {
     Key key = Key.create(address);
     if (storageCache.containsKey(key)) {
-      return storageCache.get(key).getStorage();
+      return storageCache.get(key);
     }
 
-    // first access the storageCapsule
-    StorageCapsule storageCapsule;
+    Storage storage;
     if (this.parent != null) {
-      storageCapsule = parent.getStorage(address);
-    } else if (prevDeposit != null) {
-      storageCapsule = prevDeposit.getStorage(address);
+      storage = parent.getStorage(address);
     } else {
-      storageCapsule = getStorageStore().get(address);
+      storage = new Storage(address, dbManager.getStorageRowStore());
     }
-
-    if (storageCapsule != null) {
-      storageCache.put(key, Value.create(storageCapsule.getData(), Type.VALUE_TYPE_NORMAL));
-      this.beforeRunStorageSize += storageCapsule.getInstance().getSerializedSize();
-    }
-    return storageCapsule;
+    return storage;
   }
 
   @Override
-  public synchronized void addStorageValue(byte[] address, DataWord key, DataWord value) {
+  public synchronized void putStorageValue(byte[] address, DataWord key, DataWord value) {
     address = convertToTronAddress(address);
     if (getAccount(address) == null) {
       return;
     }
     Key addressKey = Key.create(address);
+    Storage storage;
     if (storageCache.containsKey(addressKey)) {
-      StorageCapsule storageCapsule = storageCache.get(addressKey).getStorage();
-
-      if (storageCapsule != null) {
-        storageCapsule.put(key, value);
-        Value V = Value.create(storageCapsule.getData(),
-            Type.VALUE_TYPE_DIRTY | storageCache.get(addressKey).getType().getType());
-        storageCache.put(addressKey, V);
-      }
+      storage = storageCache.get(addressKey);
     } else {
-      StorageCapsule storageCapsule = getStorage(address);
-      if (storageCapsule == null) {
-        Protocol.StorageItem.Builder builder = Protocol.StorageItem.newBuilder();
-        builder.setContractAddress(ByteString.copyFrom(address));
-        Protocol.StorageItem storageItem = builder.build();
-        storageCapsule = new StorageCapsule(storageItem);
-        storageCapsule.put(key, value);
-        Value V = Value.create(storageCapsule.getData(), Type.VALUE_TYPE_CREATE);
-        storageCache.put(addressKey, V);
-      } else {
-        storageCapsule.put(key, value);
-        Value V = Value.create(storageCapsule.getData(),
-            Type.VALUE_TYPE_DIRTY | storageCache.get(addressKey).getType().getType());
-        storageCache.put(addressKey, V);
-      }
+      storage = getStorage(address);
+      storageCache.put(addressKey, storage);
     }
+    storage.put(key, value);
   }
 
   @Override
@@ -338,25 +241,14 @@ public class DepositImpl implements Deposit {
       return null;
     }
     Key addressKey = Key.create(address);
+    Storage storage;
     if (storageCache.containsKey(addressKey)) {
-      StorageCapsule storageCapsule = storageCache.get(addressKey).getStorage();
-      return storageCapsule.get(key);
-    }
-
-    StorageCapsule storageCapsule = getStorage(address);
-    if (storageCapsule != null) {
-      Value V = Value.create(storageCapsule.getData(), Type.VALUE_TYPE_NORMAL);
-      storageCache.put(addressKey, V);
-      return storageCapsule.get(key);
+      storage = storageCache.get(addressKey);
     } else {
-      Protocol.StorageItem.Builder builder = Protocol.StorageItem.newBuilder();
-      builder.setContractAddress(ByteString.copyFrom(address));
-      Protocol.StorageItem storageItem = builder.build();
-      storageCapsule = new StorageCapsule(storageItem);
-      Value V = Value.create(storageCapsule.getData(), Type.VALUE_TYPE_CREATE);
-      storageCache.put(addressKey, V);
-      return storageCapsule.get(key);
+      storage = getStorage(address);
+      storageCache.put(addressKey, storage);
     }
+    return storage.getValue(key);
   }
 
   @Override
@@ -385,8 +277,8 @@ public class DepositImpl implements Deposit {
     accountCapsule.setBalance(Math.addExact(balance, value));
     Key key = Key.create(address);
     Value V = Value.create(accountCapsule.getData(),
-        Type.VALUE_TYPE_DIRTY | accounCache.get(key).getType().getType());
-    accounCache.put(key, V);
+        Type.VALUE_TYPE_DIRTY | accountCache.get(key).getType().getType());
+    accountCache.put(key, V);
     return accountCapsule.getBalance();
   }
 
@@ -400,8 +292,6 @@ public class DepositImpl implements Deposit {
     TransactionCapsule transactionCapsule;
     if (parent != null) {
       transactionCapsule = parent.getTransaction(trxHash);
-    } else if (prevDeposit != null) {
-      transactionCapsule = prevDeposit.getTransaction(trxHash);
     } else {
       try {
         transactionCapsule = getTransactionStore().get(trxHash);
@@ -427,8 +317,6 @@ public class DepositImpl implements Deposit {
     try {
       if (parent != null) {
         ret = parent.getBlock(blockHash);
-      } else if (prevDeposit != null) {
-        ret = prevDeposit.getBlock(blockHash);
       } else {
         ret = getBlockStore().get(blockHash);
       }
@@ -445,21 +333,25 @@ public class DepositImpl implements Deposit {
   @Override
   public long computeAfterRunStorageSize() {
     AtomicLong afterRunStorageSize = new AtomicLong();
-    storageCache.forEach(((key, value) -> {
-      afterRunStorageSize.addAndGet(value.getStorage().getInstance().getSerializedSize());
-    }));
+    storageCache.forEach((key, value) -> {
+      afterRunStorageSize.getAndAdd(value.computeSize());
+    });
     return afterRunStorageSize.get();
   }
 
   @Override
   public long getBeforeRunStorageSize() {
-    return beforeRunStorageSize;
+    AtomicLong beforeRunStorageSize = new AtomicLong();
+    storageCache.forEach((key, value) -> {
+      beforeRunStorageSize.getAndAdd(value.getBeforeUseSize());
+    });
+    return beforeRunStorageSize.get();
   }
 
 
   @Override
   public void putAccount(Key key, Value value) {
-    accounCache.put(key, value);
+    accountCache.put(key, value);
   }
 
   @Override
@@ -487,14 +379,14 @@ public class DepositImpl implements Deposit {
     contractCache.put(key, value);
   }
 
-  @Override
-  public void putContractByNormalAccountIndex(Key key, Value value) {
-    accountContractIndexCache.put(key, value);
-  }
+//  @Override
+//  public void putStorage(Key key, Value value) {
+//    storageCache.put(key, value);
+//  }
 
   @Override
-  public void putStorage(Key key, Value value) {
-    storageCache.put(key, value);
+  public void putStorage(Key key, Storage cache) {
+    storageCache.put(key, cache);
   }
 
   @Override
@@ -503,7 +395,7 @@ public class DepositImpl implements Deposit {
   }
 
   private void commitAccountCache(Deposit deposit) {
-    accounCache.forEach((key, value) -> {
+    accountCache.forEach((key, value) -> {
       if (value.getType().isCreate() || value.getType().isDirty()) {
         if (deposit != null) {
           deposit.putAccount(key, value);
@@ -575,15 +467,16 @@ public class DepositImpl implements Deposit {
   }
 
   private void commitStorageCache(Deposit deposit) {
-    storageCache.forEach(((key, value) -> {
-      if (value.getType().isDirty() || value.getType().isCreate()) {
-        if (deposit != null) {
-          deposit.putStorage(key, value);
-        } else {
-          getStorageStore().put(key.getData(), value.getStorage());
-        }
+    storageCache.forEach((key, value) -> {
+      if (deposit != null) {
+        // write to parent cache
+        deposit.putStorage(key, value);
+      } else {
+        // persistence
+        value.commit();
       }
-    }));
+    });
+
   }
 
   private void commitVoteCache(Deposit deposit) {
@@ -598,29 +491,17 @@ public class DepositImpl implements Deposit {
     }));
   }
 
-  private void commitAccountContractIndex(Deposit deposit) {
-    accountContractIndexCache.forEach(((key, value) -> {
-      if (value.getType().isDirty() || value.getType().isCreate()) {
-        if (deposit != null) {
-          deposit.putContractByNormalAccountIndex(key, value);
-        } else {
-          getAccountContractIndexStore().put(key.getData(), value.getBytes());
-        }
-      }
-    }));
-  }
-
   @Override
   public void syncCacheFromAccountStore(byte[] address) {
     Key key = Key.create(address);
     int type;
-    if (null == accounCache.get(key)) {
+    if (null == accountCache.get(key)) {
       type = Type.VALUE_TYPE_DIRTY;
     } else {
-      type = Type.VALUE_TYPE_DIRTY | accounCache.get(key).getType().getType();
+      type = Type.VALUE_TYPE_DIRTY | accountCache.get(key).getType().getType();
     }
     Value V = Value.create(getAccountStore().get(address).getData(), type);
-    accounCache.put(key, V);
+    accountCache.put(key, V);
   }
 
   @Override
@@ -641,8 +522,6 @@ public class DepositImpl implements Deposit {
     Deposit deposit = null;
     if (parent != null) {
       deposit = parent;
-    } else if (prevDeposit != null) {
-      deposit = prevDeposit;
     }
 
     commitAccountCache(deposit);
@@ -653,7 +532,7 @@ public class DepositImpl implements Deposit {
     commitContractCache(deposit);
     commitStorageCache(deposit);
     commitVoteCache(deposit);
-    commitAccountContractIndex(deposit);
+    // commitAccountContractIndex(deposit);
   }
 
   @Override
@@ -666,17 +545,7 @@ public class DepositImpl implements Deposit {
     parent = deposit;
   }
 
-  @Override
-  public void setPrevDeposit(Deposit deposit) {
-    prevDeposit = deposit;
-  }
-
-  @Override
-  public void setNextDeposit(Deposit deposit) {
-    nextDeposit = deposit;
-  }
-
   public static DepositImpl createRoot(Manager dbManager) {
-    return new DepositImpl(dbManager, null, null);
+    return new DepositImpl(dbManager, null);
   }
 }

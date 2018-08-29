@@ -8,7 +8,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.tron.common.application.TronApplicationContext;
 import org.tron.common.application.Application;
 import org.tron.common.application.ApplicationFactory;
 import org.tron.common.crypto.ECKey;
@@ -43,7 +43,7 @@ import java.util.stream.IntStream;
 
 @Slf4j
 public class GetBlockChainSummaryTest{
-    private static AnnotationConfigApplicationContext context;
+    private static TronApplicationContext context;
     private NodeImpl node;
     RpcApiService rpcApiService;
     PeerClient peerClient;
@@ -73,8 +73,8 @@ public class GetBlockChainSummaryTest{
 
         long number = dbManager.getDynamicPropertiesStore().getLatestBlockHeaderNumber() + 1;
         Map<ByteString, String> addressToProvateKeys = addTestWitnessAndAccount();
-        BlockCapsule capsule = createTestBlockCapsule(number, dbManager.getDynamicPropertiesStore().getLatestBlockHeaderHash().getByteString(),
-                addressToProvateKeys);
+        BlockCapsule capsule = createTestBlockCapsule(1533529947843L,number, dbManager.getDynamicPropertiesStore().getLatestBlockHeaderHash().getByteString(),
+            addressToProvateKeys);
         try {
             dbManager.pushBlock(capsule);
         } catch (Exception e) {
@@ -82,7 +82,7 @@ public class GetBlockChainSummaryTest{
         }
         for (int i = 1; i < 5; i++) {
             number = dbManager.getDynamicPropertiesStore().getLatestBlockHeaderNumber() + 1;
-            capsule = createTestBlockCapsule(number, dbManager.getDynamicPropertiesStore().getLatestBlockHeaderHash().getByteString(), addressToProvateKeys);
+            capsule = createTestBlockCapsule(1533529947843L + 3000L * i,number, dbManager.getDynamicPropertiesStore().getLatestBlockHeaderHash().getByteString(), addressToProvateKeys);
             try {
                 dbManager.pushBlock(capsule);
             } catch (Exception e) {
@@ -92,7 +92,7 @@ public class GetBlockChainSummaryTest{
 
         BlockCapsule.BlockId commonBlockId = null;
 
-        //共有头块是创世块，syncBlockToFetch为空。代表建立连接后第1次区块清单同步。
+        //the common block is genesisblock，syncBlockToFetch is empty。
         try {
             commonBlockId = del.getGenesisBlock().getBlockId();
             peer_he.getSyncBlockToFetch().clear();
@@ -104,14 +104,14 @@ public class GetBlockChainSummaryTest{
             System.out.println("exception!");
         }
 
-        //共有头块是创世块，syncBlockToFetch不空。代表第2次区块清单同步，但是没有收到区块。
+        //the common block is genesisblock，syncBlockToFetch is not empty。
         peer_he.getSyncBlockToFetch().addAll(toFetch);
         try {
             toFetch.clear();
             peer_he.getSyncBlockToFetch().clear();
             for(int i=0; i<4 ;i++){
                 number = dbManager.getDynamicPropertiesStore().getLatestBlockHeaderNumber() + 1;
-                capsule = createTestBlockCapsule(number, dbManager.getDynamicPropertiesStore().getLatestBlockHeaderHash().getByteString(),
+                capsule = createTestBlockCapsule(1533529947843L + 3000L * i, number, dbManager.getDynamicPropertiesStore().getLatestBlockHeaderHash().getByteString(),
                         addressToProvateKeys);
                 toFetch.add(capsule.getBlockId());
             }
@@ -126,23 +126,23 @@ public class GetBlockChainSummaryTest{
             System.out.println("exception!");
         }
 
-        //共有头块不是创世块，syncBlockToFetc不空。代表第2次区块清单同步，但是收到过2个区块
+        //the common block is a normal block(not genesisblock)，syncBlockToFetc is not empty.
         try {
             toFetch.clear();
             peer_he.getSyncBlockToFetch().clear();
             number = dbManager.getDynamicPropertiesStore().getLatestBlockHeaderNumber() + 1;
-            BlockCapsule capsule1 = createTestBlockCapsule(number, dbManager.getDynamicPropertiesStore().getLatestBlockHeaderHash().getByteString(),
+            BlockCapsule capsule1 = createTestBlockCapsule(1533529947843L + 3000L * 6, number, dbManager.getDynamicPropertiesStore().getLatestBlockHeaderHash().getByteString(),
                     addressToProvateKeys);
             dbManager.pushBlock(capsule1);
 
             number = dbManager.getDynamicPropertiesStore().getLatestBlockHeaderNumber() + 1;
-            BlockCapsule capsule2 = createTestBlockCapsule(number, dbManager.getDynamicPropertiesStore().getLatestBlockHeaderHash().getByteString(),
+            BlockCapsule capsule2 = createTestBlockCapsule(1533529947843L + 3000L * 7, number, dbManager.getDynamicPropertiesStore().getLatestBlockHeaderHash().getByteString(),
                     addressToProvateKeys);
             dbManager.pushBlock(capsule2);
 
             for(int i=0; i<2; i++){
                 number = dbManager.getDynamicPropertiesStore().getLatestBlockHeaderNumber() + 1;
-                capsule = createTestBlockCapsule(number, dbManager.getDynamicPropertiesStore().getLatestBlockHeaderHash().getByteString(),
+                capsule = createTestBlockCapsule(1533529947843L + 3000L * 8 + 3000L * i, number, dbManager.getDynamicPropertiesStore().getLatestBlockHeaderHash().getByteString(),
                         addressToProvateKeys);
                 toFetch.add(capsule.getBlockId());
             }
@@ -185,6 +185,11 @@ public class GetBlockChainSummaryTest{
     private BlockCapsule createTestBlockCapsule(
             long number, ByteString hash, Map<ByteString, String> addressToProvateKeys) {
         long time = System.currentTimeMillis();
+        return createTestBlockCapsule(time,number,hash,addressToProvateKeys);
+    }
+
+    private BlockCapsule createTestBlockCapsule(long time ,
+        long number, ByteString hash, Map<ByteString, String> addressToProvateKeys) {
         WitnessController witnessController = dbManager.getWitnessController();
         ByteString witnessAddress =
                 witnessController.getScheduledWitness(witnessController.getSlotAtTime(time));
@@ -216,7 +221,7 @@ public class GetBlockChainSummaryTest{
                 cfgArgs.setNeedSyncCheck(false);
                 cfgArgs.setNodeExternalIp("127.0.0.1");
 
-                context = new AnnotationConfigApplicationContext(DefaultConfig.class);
+                context = new TronApplicationContext(DefaultConfig.class);
 
                 if (cfgArgs.isHelp()) {
                     logger.info("Here is the help message.");

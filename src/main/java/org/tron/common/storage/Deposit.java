@@ -1,19 +1,14 @@
 package org.tron.common.storage;
 
 import org.tron.common.runtime.vm.DataWord;
+import org.tron.common.runtime.vm.program.Storage;
 import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.BlockCapsule;
-import org.tron.core.capsule.BytesCapsule;
 import org.tron.core.capsule.ContractCapsule;
-import org.tron.core.capsule.StorageCapsule;
 import org.tron.core.capsule.TransactionCapsule;
 import org.tron.core.db.Manager;
 import org.tron.protos.Protocol;
 
-/**
- * @author Guo Yonggang
- * @since 2018.04
- */
 public interface Deposit {
 
   Manager getDbManager();
@@ -24,9 +19,9 @@ public interface Deposit {
 
   AccountCapsule getAccount(byte[] address);
 
-  void createContract(byte[] address, ContractCapsule contractCapsule);
+  void deleteContract(byte[] address);
 
-  void createContractByNormalAccountIndex(byte[] address, BytesCapsule contractAddress);
+  void createContract(byte[] address, ContractCapsule contractCapsule);
 
   ContractCapsule getContract(byte[] address);
 
@@ -36,11 +31,11 @@ public interface Deposit {
 
   //byte[] getCodeHash(byte[] address);
 
-  void addStorageValue(byte[] address, DataWord key, DataWord value);
+  void putStorageValue(byte[] address, DataWord key, DataWord value);
 
   DataWord getStorageValue(byte[] address, DataWord key);
 
-  StorageCapsule getStorage(byte[] address);
+  Storage getStorage(byte[] address);
 
   long getBalance(byte[] address);
 
@@ -49,13 +44,7 @@ public interface Deposit {
 
   Deposit newDepositChild();
 
-  Deposit newDepositNext();
-
   void setParent(Deposit deposit);
-
-  void setPrevDeposit(Deposit deposit);
-
-  void setNextDeposit(Deposit deposit);
 
   void flush();
 
@@ -73,9 +62,7 @@ public interface Deposit {
 
   void putContract(Key key, Value value);
 
-  void putContractByNormalAccountIndex(Key key, Value value);
-
-  void putStorage(Key key, Value value);
+  void putStorage(Key key, Storage cache);
 
   void putVotes(Key key, Value value);
 
@@ -86,8 +73,6 @@ public interface Deposit {
   TransactionCapsule getTransaction(byte[] trxHash);
 
   BlockCapsule getBlock(byte[] blockHash);
-
-  BytesCapsule getContractByNormalAccount(byte[] address);
 
   long computeAfterRunStorageSize();
 

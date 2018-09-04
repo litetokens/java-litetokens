@@ -9,7 +9,10 @@ import com.googlecode.cqengine.resultset.ResultSet;
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
 import org.tron.core.capsule.ProtoCapsule;
 import org.tron.core.config.args.Args;
 import org.tron.core.db.api.index.Index.Iface;
@@ -17,10 +20,19 @@ import org.tron.core.db.common.WrappedByteArray;
 import org.tron.core.db.common.WrappedResultSet;
 import org.tron.core.db2.core.ITronChainBase;
 
+@Slf4j
 public abstract class AbstractIndex<E extends ProtoCapsule<T>, T> implements Iface<T> {
 
+  public static final int MAX_CACHE_SIZE = 1;
   protected ITronChainBase<E> database;
   protected ConcurrentIndexedCollection<WrappedByteArray> index;
+  protected Map<WrappedByteArray, T> cache = new LinkedHashMap<WrappedByteArray, T>() {
+    @Override
+    protected boolean removeEldestEntry(Map.Entry<WrappedByteArray, T> eldest) {
+      return size() > MAX_CACHE_SIZE;
+    }
+  };
+
   private File parent = new File(Args.getInstance().getOutputDirectory() + "index");
   protected File indexPath;
 
@@ -55,7 +67,14 @@ public abstract class AbstractIndex<E extends ProtoCapsule<T>, T> implements Ifa
     return this.getClass().getSimpleName();
   }
 
-  protected T getObject(final byte[] key) {
+  protected synchronized T getObject(final byte[] key) {
+    T t = cache.get(WrappedByteArray.of(key));
+    if (t != null) {
+      logger.info("*********getObject true");
+      return t;
+    }
+    logger.info("*********getObject false");
+
     try {
       E e = database.get(key);
       if (Objects.isNull(e)) {
@@ -77,6 +96,11 @@ public abstract class AbstractIndex<E extends ProtoCapsule<T>, T> implements Ifa
     if (size != 0 && !indexPath.exists()) {
       database.forEach(e -> add(e.getKey()));
     }
+  }
+
+  @Override
+  public synchronized void addCache(byte[] key, T t) {
+    cache.put(WrappedByteArray.of(key), t);
   }
 
   @Override

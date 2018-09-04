@@ -1274,7 +1274,10 @@ public class Manager {
       if (block.generatedByMyself) {
         transactionCapsule.setVerified(true);
       }
+      long start = System.currentTimeMillis();
       processTransaction(transactionCapsule, block);
+      logger.info(
+          "checkblock num:" + block.getNum() + ",trx cost:" + (System.currentTimeMillis() - start));
     }
 
     boolean needMaint = needMaintenance(block.getTimeStamp());

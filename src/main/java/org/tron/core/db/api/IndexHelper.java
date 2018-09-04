@@ -73,7 +73,9 @@ public class IndexHelper {
   }
 
   public void update(Transaction t) {
-    update(transactionIndex, getKey(t));
+    byte[] key = getKey(t);
+    transactionIndex.addCache(key, t);
+    update(transactionIndex, key);
   }
 
   public void update(Block b) {

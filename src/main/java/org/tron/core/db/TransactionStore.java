@@ -1,8 +1,7 @@
 package org.tron.core.db;
 
-import java.util.Objects;
-
 import com.google.common.collect.Streams;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +24,9 @@ public class TransactionStore extends TronStoreWithRevoking<TransactionCapsule> 
   public void put(byte[] key, TransactionCapsule item) {
     super.put(key, item);
     if (Objects.nonNull(indexHelper)) {
+      long start = System.currentTimeMillis();
       indexHelper.update(item.getInstance());
+      logger.info("checkblock cost:" + (System.currentTimeMillis() - start));
     }
   }
 

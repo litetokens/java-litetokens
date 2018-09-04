@@ -46,8 +46,7 @@ public class TransactionIndex extends AbstractIndex<TransactionCapsule, Transact
   @Override
   protected void setAttribute() {
     Transaction_ID =
-        attribute("transaction id",
-            bytes -> new TransactionCapsule(getObject(bytes)).getTransactionId().toString());
+        attribute("transaction id", bytes -> ByteArray.toHexString(bytes.getBytes()));
     OWNERS =
         attribute(String.class, "owner address",
             bytes -> getObject(bytes).getRawData().getContractList().stream()

@@ -29,5 +29,7 @@ public class Index {
     String getName();
 
     void fill();
+
+    void addCache(byte[] key, T t);
   }
 }

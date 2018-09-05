@@ -329,6 +329,12 @@ public class Runtime {
     newSmartContract = newSmartContract.toBuilder()
         .setContractAddress(ByteString.copyFrom(contractAddress)).build();
     long callValue = newSmartContract.getCallValue();
+
+    logger.error("jack: bytecode: {}", Hex.toHexString(code));
+    logger.error("jack: contractAddress: {}", Wallet.encode58Check(contractAddress));
+    logger.error("jack: ownerAddress: {}", Wallet.encode58Check(ownerAddress));
+    logger.error("jack: percent: {}", percent);
+
     // create vm to constructor smart contract
     try {
 
@@ -350,13 +356,23 @@ public class Runtime {
       long vmStartInUs = System.nanoTime() / 1000;
       long vmShouldEndInUs = vmStartInUs + thisTxCPULimitInUs;
 
+      logger.error("jack: thisTxCPULimitInUs: {}", thisTxCPULimitInUs);
+
       long feeLimit = trx.getRawData().getFeeLimit();
+
       if (feeLimit < 0) {
         logger.info("feeLimit < 0");
         throw new ContractValidateException("feeLimit must be >= 0");
       }
 
       long energyLimit = getEnergyLimit(creator, feeLimit, callValue);
+
+      logger.error("jack: callValue: {}", callValue);
+      logger.error("jack: feeLimit: {}", feeLimit);
+      logger.error("jack: energyLimit: {}", energyLimit);
+      logger.error("jack: owner balance: {}",
+          deposit.getBalance(contract.getOwnerAddress().toByteArray()));
+
       byte[] ops = newSmartContract.getBytecode().toByteArray();
       InternalTransaction internalTransaction = new InternalTransaction(trx);
 
@@ -414,6 +430,11 @@ public class Runtime {
 
     } else {
 
+      logger.error("jack: bytecode: {}", Hex.toHexString(code));
+      logger.error("jack: contractAddress: {}", Wallet.encode58Check(contractAddress));
+      logger.error("jack: ownerAddress: {}",
+          Wallet.encode58Check(contract.getOwnerAddress().toByteArray()));
+
       AccountCapsule caller = this.deposit.getAccount(contract.getOwnerAddress().toByteArray());
       AccountCapsule creator = this.deposit.getAccount(
           this.deposit.getContract(contractAddress).getInstance()
@@ -438,6 +459,13 @@ public class Runtime {
       } else {
         energyLimit = getEnergyLimit(creator, caller, contract, feeLimit, callValue);
       }
+
+      logger.error("jack: thisTxCPULimitInUs: {}", thisTxCPULimitInUs);
+      logger.error("jack: callValue: {}", callValue);
+      logger.error("jack: feeLimit: {}", feeLimit);
+      logger.error("jack: energyLimit: {}", energyLimit);
+      logger.error("jack: owner balance: {}",
+          deposit.getBalance(contract.getOwnerAddress().toByteArray()));
 
       ProgramInvoke programInvoke = programInvokeFactory
           .createProgramInvoke(TRX_CONTRACT_CALL_TYPE, executorType, trx,

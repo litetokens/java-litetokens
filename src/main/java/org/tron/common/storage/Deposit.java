@@ -98,6 +98,8 @@ public interface Deposit {
 
   long getNextMaintenanceTime();
 
+  long getCreateNewAccountFeeInSystemContract();
+
   TransactionCapsule getTransaction(byte[] trxHash);
 
   BlockCapsule getBlock(byte[] blockHash);

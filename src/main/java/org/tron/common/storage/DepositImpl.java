@@ -42,6 +42,8 @@ public class DepositImpl implements Deposit {
       .getBytes();
   private static final byte[] MAINTENANCE_TIME_INTERVAL = "MAINTENANCE_TIME_INTERVAL".getBytes();
   private static final byte[] NEXT_MAINTENANCE_TIME = "NEXT_MAINTENANCE_TIME".getBytes();
+  private static final byte[] CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT
+      = "CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT".getBytes();
 
   private Manager dbManager;
   private Deposit parent = null;
@@ -523,6 +525,13 @@ public class DepositImpl implements Deposit {
   public long getNextMaintenanceTime() {
     return Longs.fromByteArray(getDynamic(NEXT_MAINTENANCE_TIME).getData());
   }
+
+  @Override
+  public long getCreateNewAccountFeeInSystemContract() {
+    return Longs.fromByteArray(getDynamic(CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT).getData());
+  }
+
+
 
   public BytesCapsule getDynamic(byte[] word){
     Key key = Key.create(word);

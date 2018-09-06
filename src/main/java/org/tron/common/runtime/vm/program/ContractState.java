@@ -278,6 +278,11 @@ public class ContractState implements Deposit, ProgramListenerAware {
   }
 
   @Override
+  public long getCreateNewAccountFeeInSystemContract() {
+    return  deposit.getCreateNewAccountFeeInSystemContract();
+  }
+
+  @Override
   public BlockCapsule getBlock(byte[] blockHash) {
     return this.deposit.getBlock(blockHash);
   }

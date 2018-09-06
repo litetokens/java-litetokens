@@ -20,6 +20,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.tron.common.utils.ByteArray;
 import org.tron.core.Wallet;
@@ -50,27 +51,45 @@ public class TransferAssetActuator extends AbstractActuator {
       AccountStore accountStore = this.dbManager.getAccountStore();
       byte[] ownerAddress = transferAssetContract.getOwnerAddress().toByteArray();
       byte[] toAddress = transferAssetContract.getToAddress().toByteArray();
-      AccountCapsule toAccountCapsule = accountStore.get(toAddress);
+      AccountCapsule toAccountCapsule = Objects.isNull(deposit)? accountStore.get(toAddress) : deposit.getAccount(toAddress);
       if (toAccountCapsule == null) {
         toAccountCapsule = new AccountCapsule(ByteString.copyFrom(toAddress), AccountType.Normal,
             dbManager.getHeadBlockTimeStamp());
-        dbManager.getAccountStore().put(toAddress, toAccountCapsule);
-
-        fee = fee + dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+        if (Objects.isNull(deposit)) {
+          dbManager.getAccountStore().put(toAddress, toAccountCapsule);
+          fee =
+              fee + dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+        }
+        else{
+          deposit.putAccountValue(toAddress,toAccountCapsule);
+          fee = fee + deposit.getCreateNewAccountFeeInSystemContract();
+        }
       }
       ByteString assetName = transferAssetContract.getAssetName();
       long amount = transferAssetContract.getAmount();
 
-      dbManager.adjustBalance(ownerAddress, -fee);
+      if (Objects.isNull(deposit)) {
+        dbManager.adjustBalance(ownerAddress, -fee);
+        AccountCapsule ownerAccountCapsule = accountStore.get(ownerAddress);
+        if (!ownerAccountCapsule.reduceAssetAmount(assetName.toByteArray(), amount)) {
+          throw new ContractExeException("reduceAssetAmount failed !");
+        }
+        accountStore.put(ownerAddress, ownerAccountCapsule);
 
-      AccountCapsule ownerAccountCapsule = accountStore.get(ownerAddress);
-      if (!ownerAccountCapsule.reduceAssetAmount(assetName.toByteArray(), amount)) {
-        throw new ContractExeException("reduceAssetAmount failed !");
+        toAccountCapsule.addAssetAmount(assetName.toByteArray(), amount);
+        accountStore.put(toAddress, toAccountCapsule);
       }
-      accountStore.put(ownerAddress, ownerAccountCapsule);
+      else {
+        deposit.addBalance(ownerAddress,-fee);
+        AccountCapsule ownerAccountCapsule = deposit.getAccount(ownerAddress);
+        if (!ownerAccountCapsule.reduceAssetAmount(assetName.toByteArray(), amount)) {
+          throw new ContractExeException("reduceAssetAmount failed !");
+        }
+        deposit.putAccountValue(ownerAddress, ownerAccountCapsule);
 
-      toAccountCapsule.addAssetAmount(assetName.toByteArray(), amount);
-      accountStore.put(toAddress, toAccountCapsule);
+        toAccountCapsule.addAssetAmount(assetName.toByteArray(), amount);
+        deposit.putAccountValue(toAddress, toAccountCapsule);
+      }
 
       ret.setStatus(fee, code.SUCESS);
     } catch (BalanceInsufficientException e) {
@@ -93,7 +112,7 @@ public class TransferAssetActuator extends AbstractActuator {
     if (this.contract == null) {
       throw new ContractValidateException("No contract!");
     }
-    if (this.dbManager == null) {
+    if (this.dbManager == null && (deposit == null || deposit.getDbManager() == null)) {
       throw new ContractValidateException("No dbManager!");
     }
     if (!this.contract.is(TransferAssetContract.class)) {
@@ -132,11 +151,12 @@ public class TransferAssetActuator extends AbstractActuator {
       throw new ContractValidateException("Cannot transfer asset to yourself.");
     }
 
-    AccountCapsule ownerAccount = this.dbManager.getAccountStore().get(ownerAddress);
+    AccountCapsule ownerAccount = Objects.isNull(deposit) ? this.dbManager.getAccountStore().get(ownerAddress) : deposit.getAccount(ownerAddress);
     if (ownerAccount == null) {
       throw new ContractValidateException("No owner account!");
     }
 
+    //TODO: ADD assetsIssueStore in deposit
     if (!this.dbManager.getAssetIssueStore().has(assetName)) {
       throw new ContractValidateException("No asset !");
     }

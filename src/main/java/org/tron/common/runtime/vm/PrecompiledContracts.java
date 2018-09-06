@@ -58,6 +58,7 @@ import org.tron.core.actuator.ActuatorFactory;
 import org.tron.core.actuator.ProposalApproveActuator;
 import org.tron.core.actuator.ProposalCreateActuator;
 import org.tron.core.actuator.ProposalDeleteActuator;
+import org.tron.core.actuator.TransferAssetActuator;
 import org.tron.core.actuator.VoteWitnessActuator;
 import org.tron.core.actuator.WithdrawBalanceActuator;
 import org.tron.core.capsule.TransactionCapsule;
@@ -1262,55 +1263,69 @@ public class PrecompiledContracts {
     @Override
     public Pair<Boolean, byte[]> execute(byte[] data) {
 
-//      if (isRootCallConstant()){
-//        return Pair.of(true, new DataWord(0).getData());
-//      }
-//
-//      if (data == null || (data.length <= DataWord.DATAWORD_UNIT_SIZE * 2 || data.length > DataWord.DATAWORD_UNIT_SIZE * 3)) {
-//        return Pair.of(false, new DataWord(0).getData());
-//      }
-//
-//      byte[] toAddress = new byte[32];
-//      System.arraycopy(data, 0, toAddress, 0, 32);
-//      byte[] amount = new byte[8];
-//      System.arraycopy(data, 32 + 16 + 8, amount, 0, 8);
-//      // we already have a restrict for token name length, no more than 32 bytes. don't need to check again
-//      byte[] name = new byte[32];
-//      System.arraycopy(data, 64, name, 0, data.length-64);
-//      int length =name.length;
-//      while(length>0 && name[length -1] ==0){
-//        length--;
-//      }
-//      name = ByteArray.subArray(name,0,length);
-//      Contract.TransferAssetContract.Builder builder = Contract.TransferAssetContract
-//          .newBuilder();
-//      builder.setOwnerAddress(ByteString.copyFrom(getCallerAddress()));
-//      builder.setToAddress(ByteString.copyFrom(convertToTronAddress(new DataWord(toAddress).getLast20Bytes())));
-//      builder.setAmount(Longs.fromByteArray(amount));
-//      builder.setAssetName(ByteString.copyFrom(name));
-//
-//
-//      TransferAssetContract contract = builder.build();
-//
-//      TransactionCapsule trx = new TransactionCapsule(contract,
-//          ContractType.TransferAssetContract);
-//
-//      final List<Actuator> actuatorList = ActuatorFactory
-//          .createActuator(trx, getDeposit().getDbManager());
-//      try {
-//        actuatorList.get(0).validate();
-//        actuatorList.get(0).execute(getResult().getRet());
-//      } catch (ContractExeException e) {
-//        logger.debug("ContractExeException when calling transferAssetContract in vm");
-//        logger.debug("ContractExeException: {}", e.getMessage());
-//        this.getResult().setException(new Program.Exception().contractExecuteException(e));
-//        return Pair.of(false, new DataWord(0).getData());
-//      } catch (ContractValidateException e) {
-//        logger.debug("ContractValidateException when calling transferAssetContract in vm");
-//        logger.debug("ContractValidateException: {}", e.getMessage());
-//        this.getResult().setException(new Program.Exception().contractValidateException(e));
-//        return Pair.of(false, new DataWord(0).getData());
-//      }
+      if (isRootCallConstant()){
+        return Pair.of(true, new DataWord(0).getData());
+      }
+
+      if (data == null || (data.length <= DataWord.DATAWORD_UNIT_SIZE * 2 || data.length > DataWord.DATAWORD_UNIT_SIZE * 3)) {
+        return Pair.of(false, new DataWord(0).getData());
+      }
+
+      byte[] toAddress = new byte[32];
+      System.arraycopy(data, 0, toAddress, 0, 32);
+      byte[] amount = new byte[8];
+      System.arraycopy(data, 32 + 16 + 8, amount, 0, 8);
+      // we already have a restrict for token name length, no more than 32 bytes. don't need to check again
+      byte[] name = new byte[32];
+      System.arraycopy(data, 64, name, 0, data.length-64);
+      int length =name.length;
+      while(length>0 && name[length -1] ==0){
+        length--;
+      }
+      name = ByteArray.subArray(name,0,length);
+      Contract.TransferAssetContract.Builder builder = Contract.TransferAssetContract
+          .newBuilder();
+      builder.setOwnerAddress(ByteString.copyFrom(getCallerAddress()));
+      builder.setToAddress(ByteString.copyFrom(convertToTronAddress(new DataWord(toAddress).getLast20Bytes())));
+      builder.setAmount(Longs.fromByteArray(amount));
+      builder.setAssetName(ByteString.copyFrom(name));
+
+
+      TransferAssetContract contract = builder.build();
+
+      TransactionCapsule trx = new TransactionCapsule(contract,
+          ContractType.TransferAssetContract);
+
+      final List<Actuator> actuatorList = ActuatorFactory
+          .createActuator(trx, getDeposit().getDbManager());
+      TransferAssetActuator transferAssetActuator;
+      try {
+        if (Objects.isNull(actuatorList) || actuatorList.isEmpty()){
+          throw new ContractExeException("can't initiate TransferAssetActuator for precompiled vm method");
+        }
+        else {
+          Optional transferAssetOptional = actuatorList.stream().findFirst();
+          if (transferAssetOptional.isPresent()) {
+            transferAssetActuator  = (TransferAssetActuator) transferAssetOptional.get();
+          } else {
+            throw new ContractExeException(
+                "can't initiate TransferAssetActuator for precompiled vm method");
+          }
+        }
+        transferAssetActuator.setDeposit(getDeposit());
+        transferAssetActuator.validate();
+        transferAssetActuator.execute(getResult().getRet());
+      } catch (ContractExeException e) {
+        logger.debug("ContractExeException when calling transferAssetContract in vm");
+        logger.debug("ContractExeException: {}", e.getMessage());
+        this.getResult().setException(Program.Exception.contractExecuteException(e));
+        return Pair.of(false, new DataWord(0).getData());
+      } catch (ContractValidateException e) {
+        logger.debug("ContractValidateException when calling transferAssetContract in vm");
+        logger.debug("ContractValidateException: {}", e.getMessage());
+        this.getResult().setException(Program.Exception.contractValidateException(e));
+        return Pair.of(false, new DataWord(0).getData());
+      }
       return Pair.of(true, new DataWord(1).getData());
     }
   }

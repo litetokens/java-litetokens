@@ -156,7 +156,6 @@ public class TransferAssetActuator extends AbstractActuator {
       throw new ContractValidateException("No owner account!");
     }
 
-    //TODO: ADD assetsIssueStore in deposit
     if (!Objects.isNull(deposit)) {
       if(Objects.isNull(deposit.getAssetIssue(assetName))){
         throw new ContractValidateException("No asset !");

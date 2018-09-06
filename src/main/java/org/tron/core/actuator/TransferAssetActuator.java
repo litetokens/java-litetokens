@@ -157,7 +157,12 @@ public class TransferAssetActuator extends AbstractActuator {
     }
 
     //TODO: ADD assetsIssueStore in deposit
-    if (!this.dbManager.getAssetIssueStore().has(assetName)) {
+    if (!Objects.isNull(deposit)) {
+      if(Objects.isNull(deposit.getAssetIssue(assetName))){
+        throw new ContractValidateException("No asset !");
+      }
+    }
+    else if (!this.dbManager.getAssetIssueStore().has(assetName)) {
       throw new ContractValidateException("No asset !");
     }
 
@@ -174,7 +179,7 @@ public class TransferAssetActuator extends AbstractActuator {
       throw new ContractValidateException("assetBalance is not sufficient.");
     }
 
-    AccountCapsule toAccount = this.dbManager.getAccountStore().get(toAddress);
+    AccountCapsule toAccount = Objects.isNull(deposit) ? this.dbManager.getAccountStore().get(toAddress) : deposit.getAccount(toAddress);
     if (toAccount != null) {
       assetBalance = toAccount.getAssetMap().get(ByteArray.toStr(assetName));
       if (assetBalance != null) {
@@ -186,7 +191,9 @@ public class TransferAssetActuator extends AbstractActuator {
         }
       }
     } else {
-      fee = fee + dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+      fee = fee + (Objects.isNull(deposit) ?
+          dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract() :
+          deposit.getCreateNewAccountFeeInSystemContract());
       if (ownerAccount.getBalance() < fee) {
         throw new ContractValidateException(
             "Validate TransferAssetActuator error, insufficient fee.");

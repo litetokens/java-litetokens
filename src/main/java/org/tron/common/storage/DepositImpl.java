@@ -11,6 +11,7 @@ import org.tron.common.runtime.vm.program.Storage;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.StringUtil;
 import org.tron.core.capsule.AccountCapsule;
+import org.tron.core.capsule.AssetIssueCapsule;
 import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.capsule.BytesCapsule;
 import org.tron.core.capsule.ContractCapsule;
@@ -30,6 +31,7 @@ import org.tron.core.db.StorageRowStore;
 import org.tron.core.db.TransactionStore;
 import org.tron.core.db.VotesStore;
 import org.tron.core.db.WitnessStore;
+import org.tron.core.db.api.pojo.AssetIssue;
 import org.tron.core.exception.BadItemException;
 import org.tron.core.exception.ItemNotFoundException;
 import org.tron.protos.Protocol;
@@ -59,6 +61,7 @@ public class DepositImpl implements Deposit {
   private HashMap<Key, Value> votesCache = new HashMap<>();
   private HashMap<Key, Value> proposalCache = new HashMap<>();
   private HashMap<Key, Value> dynamicPropertiesCache = new HashMap<>();
+  private HashMap<Key, Value> assetIssueCache = new HashMap<>();
   private HashMap<Key, Value> accountContractIndexCache = new HashMap<>();
   private HashMap<Key, Storage> storageCache = new HashMap<>();
 
@@ -228,6 +231,25 @@ public class DepositImpl implements Deposit {
       proposalCache.put(key, Value.create(proposalCapsule.getData()));
     }
     return proposalCapsule;
+  }
+
+  public synchronized AssetIssueCapsule getAssetIssue(byte[] name){
+    Key key = new Key(name);
+    if (assetIssueCache.containsKey(key)) {
+      return assetIssueCache.get(key).getAssetIssue();
+    }
+
+    AssetIssueCapsule assetIssueCapsule;
+    if (parent != null) {
+      assetIssueCapsule = parent.getAssetIssue(name);
+    } else {
+        assetIssueCapsule = getAssetIssueStore().get(name);
+    }
+
+    if (assetIssueCapsule != null) {
+      assetIssueCache.put(key, Value.create(assetIssueCapsule.getData()));
+    }
+    return assetIssueCapsule;
   }
 
   // just for depositRoot
@@ -499,6 +521,11 @@ public class DepositImpl implements Deposit {
   }
 
   @Override
+  public void putAssetIssue(Key key, Value value) {
+    assetIssueCache.put(key, value);
+  }
+
+  @Override
   public long getLatestProposalNum(){
     return Longs.fromByteArray(getDynamic(LATEST_PROPOSAL_NUM).getData());
   }
@@ -679,6 +706,18 @@ public class DepositImpl implements Deposit {
     }));
   }
 
+  private void commitAssetIssueCache(Deposit deposit) {
+    assetIssueCache.forEach(((key, value) -> {
+      if (value.getType().isDirty() || value.getType().isCreate()) {
+        if (deposit != null) {
+          deposit.putAssetIssue(key, value);
+        } else {
+          getAssetIssueStore().put(key.getData(), value.getAssetIssue());
+        }
+      }
+    }));
+  }
+
 
   @Override
   public void putAccountValue(byte[] address, AccountCapsule accountCapsule) {
@@ -721,6 +760,7 @@ public class DepositImpl implements Deposit {
     commitVoteCache(deposit);
     commitProposalCache(deposit);
     commitDynamicPropertiesCache(deposit);
+    commitAssetIssueCache(deposit);
     // commitAccountContractIndex(deposit);
   }
 

@@ -3,6 +3,7 @@ package org.tron.common.storage;
 import org.tron.common.runtime.vm.DataWord;
 import org.tron.common.runtime.vm.program.Storage;
 import org.tron.core.capsule.AccountCapsule;
+import org.tron.core.capsule.AssetIssueCapsule;
 import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.capsule.BytesCapsule;
 import org.tron.core.capsule.ContractCapsule;
@@ -11,6 +12,7 @@ import org.tron.core.capsule.TransactionCapsule;
 import org.tron.core.capsule.VotesCapsule;
 import org.tron.core.capsule.WitnessCapsule;
 import org.tron.core.db.Manager;
+import org.tron.core.db.api.pojo.AssetIssue;
 import org.tron.protos.Protocol;
 
 public interface Deposit {
@@ -30,6 +32,8 @@ public interface Deposit {
   ProposalCapsule getProposalCapsule(byte[] id);
 
   BytesCapsule getDynamic(byte[] bytesKey);
+
+  AssetIssueCapsule getAssetIssue(byte[] name);
 
   void deleteContract(byte[] address);
 
@@ -79,6 +83,8 @@ public interface Deposit {
   void putVotes(Key key, Value value);
 
   void putProposal(Key key, Value value);
+
+  void putAssetIssue(Key key,Value value);
 
   void putDynamicProperties(Key key, Value value);
 

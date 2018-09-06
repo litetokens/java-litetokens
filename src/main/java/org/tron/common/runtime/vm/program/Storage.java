@@ -91,6 +91,7 @@ public class Storage {
   public void commit() {
     rowCache.forEach((key, value) -> {
       System.err.println("commit, dirty：" + value.isDirty());
+      System.err.println("addrHash:" + Hex.toHexString(addrHash));
       System.err.println("key:" + Hex.toHexString(value.getRowKey()) + " value:" + value.getValue() );
       if (value.isDirty()) {
         if (value.getValue().isZero()) {

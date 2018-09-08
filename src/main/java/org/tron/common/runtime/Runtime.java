@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.spongycastle.util.encoders.Hex;
 import org.tron.common.runtime.config.VMConfig;
@@ -496,8 +495,8 @@ public class Runtime {
       if (null != blockCap && blockCap.generatedByMyself && null != trxCap.getContractRet()
           && contractResult.OUT_OF_TIME
           .equals(trxCap.getContractRet())) {
-        result = program.getResult();
         program.spendAllEnergy();
+        result = program.getResult();
         runtimeError = "Haven Time Out";
         result.setException(Program.Exception.notEnoughTime("Haven Time Out"));
         throw Program.Exception.notEnoughTime("Haven Time Out");
@@ -551,6 +550,8 @@ public class Runtime {
       } else {
         deposit.commit();
       }
+    } catch (ContractValidateException e) {
+      logger.error("run isCallConstant() have error: {}", e.getMessage());
     } catch (JVMStackOverFlowException e) {
       program.spendAllEnergy();
       result = program.getResult();
@@ -563,18 +564,19 @@ public class Runtime {
       result.setException(e);
       runtimeError = result.getException().getMessage();
       logger.error("runtime error is :{}", result.getException().getMessage());
-    } catch (Throwable e) {
-      program.spendAllEnergy();
-      result = program.getResult();
-      if (Objects.isNull(result.getException())) {
-        logger.error(e.getMessage(), e);
-        result.setException(new RuntimeException("Unknown Throwable"));
-      }
-      if (StringUtils.isEmpty(runtimeError)) {
-        runtimeError = result.getException().getMessage();
-      }
-      logger.error("runtime error is :{}", result.getException().getMessage());
     }
+    // catch (Throwable e) {
+    //   program.spendAllEnergy();
+    //   result = program.getResult();
+    //   if (Objects.isNull(result.getException())) {
+    //     logger.error(e.getMessage(), e);
+    //     result.setException(new RuntimeException("Unknown Throwable"));
+    //   }
+    //   if (StringUtils.isEmpty(runtimeError)) {
+    //     runtimeError = result.getException().getMessage();
+    //   }
+    //   logger.error("runtime error is :{}", result.getException().getMessage());
+    // }
     trace.setBill(result.getEnergyUsed());
   }
 

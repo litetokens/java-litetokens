@@ -29,25 +29,7 @@ import org.tron.core.capsule.utils.MerkleTree;
 import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.args.Args;
 import org.tron.core.db.Manager;
-import org.tron.core.exception.AccountResourceInsufficientException;
-import org.tron.core.exception.BadBlockException;
-import org.tron.core.exception.BadItemException;
-import org.tron.core.exception.BadNumberBlockException;
-import org.tron.core.exception.ContractExeException;
-import org.tron.core.exception.ContractValidateException;
-import org.tron.core.exception.DupTransactionException;
-import org.tron.core.exception.NonCommonBlockException;
-import org.tron.core.exception.ReceiptCheckErrException;
-import org.tron.core.exception.ReceiptException;
-import org.tron.core.exception.TaposException;
-import org.tron.core.exception.TooBigTransactionException;
-import org.tron.core.exception.TooBigTransactionResultException;
-import org.tron.core.exception.TransactionExpirationException;
-import org.tron.core.exception.TransactionTraceException;
-import org.tron.core.exception.UnLinkedBlockException;
-import org.tron.core.exception.UnsupportVMException;
-import org.tron.core.exception.ValidateScheduleException;
-import org.tron.core.exception.ValidateSignatureException;
+import org.tron.core.exception.*;
 import org.tron.core.services.RpcApiService;
 import org.tron.core.services.http.solidity.SolidityNodeHttpApiService;
 import org.tron.protos.Protocol.Block;
@@ -145,9 +127,9 @@ public class StateCheckNode {
             dbManager.pushBlock(blockCapsule);
           } catch (TooBigTransactionResultException e) {
             e.printStackTrace();
-          } catch (UnsupportVMException e) {
-            e.printStackTrace();
           } catch (ReceiptCheckErrException e) {
+            e.printStackTrace();
+          } catch (VMIllegalException e) {
             e.printStackTrace();
           }
           for (TransactionCapsule trx : blockCapsule.getTransactions()) {

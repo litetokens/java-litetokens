@@ -786,6 +786,7 @@ public class Program {
     }
     long vmNowInUs = System.nanoTime() / 1000;
     if (vmNowInUs > getVmShouldEndInUs()) {
+      logger.error("vm now time: {}", vmNowInUs);
       logger.error("minTimeRatio: {}", Args.getInstance().getMinTimeRatio());
       logger.error("maxTimeRatio: {}", Args.getInstance().getMaxTimeRatio());
       logger.error("vm should end time in us: {}", getVmShouldEndInUs());

@@ -21,6 +21,8 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
 import org.spongycastle.util.encoders.Hex;
@@ -87,6 +89,8 @@ public class Runtime {
   private VM vm = null;
   private Program program = null;
 
+  @Getter
+  @Setter
   private InternalTransaction.TrxType trxType = TRX_UNKNOWN_TYPE;
   private ExecutorType executorType = ET_UNKNOWN_TYPE;
 
@@ -183,7 +187,7 @@ public class Runtime {
                 .getTimestamp())); // us
     BigInteger curBlockCPULimitInUs = BigInteger.valueOf((long)
         (1000 * ChainConstant.BLOCK_PRODUCED_INTERVAL * 0.5
-            * ChainConstant.BLOCK_PRODUCED_TIME_OUT
+            * Args.getInstance().getBlockProducedTimeOut()
             / 100)); // us
 
     return curBlockCPULimitInUs.subtract(curBlockHaveElapsedCPUInUs);
@@ -191,24 +195,18 @@ public class Runtime {
   }
 
   public void execute() throws ContractValidateException, ContractExeException {
-    try {
-      switch (trxType) {
-        case TRX_PRECOMPILED_TYPE:
-          precompiled();
-          break;
-        case TRX_CONTRACT_CREATION_TYPE:
-          create();
-          break;
-        case TRX_CONTRACT_CALL_TYPE:
-          call();
-          break;
-        default:
-          throw new ContractValidateException("Unknown contract type");
-      }
-    } catch (ContractExeException | ContractValidateException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new ContractValidateException("Unknown contract error");
+    switch (trxType) {
+      case TRX_PRECOMPILED_TYPE:
+        precompiled();
+        break;
+      case TRX_CONTRACT_CREATION_TYPE:
+        create();
+        break;
+      case TRX_CONTRACT_CALL_TYPE:
+        call();
+        break;
+      default:
+        throw new ContractValidateException("Unknown contract type");
     }
   }
 
@@ -312,6 +310,9 @@ public class Runtime {
     }
 
     CreateSmartContract contract = ContractCapsule.getSmartContractFromTransaction(trx);
+    if (contract == null) {
+      throw new ContractValidateException("Cannot get CreateSmartContract from transaction");
+    }
     SmartContract newSmartContract = contract.getNewContract();
     if (!contract.getOwnerAddress().equals(newSmartContract.getOriginAddress())) {
       logger.error("OwnerAddress not equals OriginAddress");
@@ -421,6 +422,10 @@ public class Runtime {
     Contract.TriggerSmartContract contract = ContractCapsule.getTriggerContractFromTransaction(trx);
     if (contract == null) {
       return;
+    }
+
+    if(contract.getContractAddress() == null){
+      throw new ContractValidateException("Cannot get contract address from TriggerContract");
     }
 
     byte[] contractAddress = contract.getContractAddress().toByteArray();

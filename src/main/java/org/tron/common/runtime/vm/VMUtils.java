@@ -17,18 +17,25 @@
  */
 package org.tron.common.runtime.vm;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.tron.common.runtime.config.VMConfig;
-import java.io.*;
+import static java.lang.String.format;
+import static org.apache.commons.codec.binary.Base64.decodeBase64;
+import static org.apache.commons.codec.binary.Base64.encodeBase64String;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterOutputStream;
-
-import static java.lang.String.format;
-import static org.apache.commons.codec.binary.Base64.decodeBase64;
-import static org.apache.commons.codec.binary.Base64.encodeBase64String;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.tron.common.runtime.config.VMConfig;
 
 public final class VMUtils {
 
@@ -46,6 +53,34 @@ public final class VMUtils {
             // ignore
         }
     }
+
+
+    private static File createTimeFile(VMConfig config, String txHash) {
+        File result = null;
+
+        if (true) {
+
+            File file = new File(new File("./", "time_log"), txHash + ".json");
+
+            if (file.exists()) {
+                if (file.isFile() && file.canWrite()) {
+                    result = file;
+                }
+            } else {
+                try {
+                    file.getParentFile().mkdirs();
+                    file.createNewFile();
+                    result = file;
+                } catch (IOException e) {
+                    // ignored
+                }
+            }
+        }
+
+        return result;
+    }
+
+
 
     private static File createProgramTraceFile(VMConfig config, String txHash) {
         File result = null;

@@ -493,6 +493,9 @@ public class Runtime {
   }
 
   public void go() {
+
+    program.pairList = new java.util.ArrayList<>();
+
     try {
 
       TransactionCapsule trxCap = new TransactionCapsule(trx);
@@ -507,6 +510,9 @@ public class Runtime {
       }
 
       if (vm != null) {
+
+        program.setPreviousTime(System.nanoTime() / 1000);
+
         vm.play(program);
 
         result = program.getResult();
@@ -581,6 +587,10 @@ public class Runtime {
       logger.error("runtime error is :{}", result.getException().getMessage());
     }
     trace.setBill(result.getEnergyUsed());
+    TransactionCapsule trxCap = new TransactionCapsule(trx);
+    logger.error("txid: {}, vm time log: \n{}", trxCap.getTransactionId(),
+        program.pairList.toString());
+
   }
 
   private long getEnergyFee(long callerEnergyUsage, long callerEnergyFrozen,

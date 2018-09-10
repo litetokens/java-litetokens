@@ -39,6 +39,8 @@ import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Objects;
 import java.util.TreeSet;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -137,6 +139,14 @@ public class Program {
 
   private ProgramResult result = new ProgramResult();
   private ProgramTrace trace = new ProgramTrace();
+
+  @Getter
+  @Setter
+  private long previousTime;
+
+
+  public java.util.List<java.util.Map.Entry<String, Long>> pairList;
+
 
   //private byte[] codeHash;
   private byte[] ops;
@@ -537,7 +547,16 @@ public class Program {
       Program program = new Program(programCode, programInvoke, internalTx, config, this.blockCap);
       program.setRootTransactionId(this.rootTransactionId);
       program.setRootCallConstant(this.isRootCallConstant);
+
+      program.setPreviousTime(this.previousTime);
+      program.pairList = this.pairList;
+
       vm.play(program);
+
+      this.previousTime = program.getPreviousTime();
+      this.pairList = program.pairList;
+
+
       result = program.getResult();
       getTrace().merge(program.getTrace());
       // always commit nonce
@@ -692,7 +711,15 @@ public class Program {
           this.blockCap);
       program.setRootTransactionId(this.rootTransactionId);
       program.setRootCallConstant(this.isRootCallConstant);
+
+      program.setPreviousTime(this.previousTime);
+      program.pairList = this.pairList;
+
       vm.play(program);
+
+      this.previousTime = program.getPreviousTime();
+      this.pairList = program.pairList;
+
       result = program.getResult();
 
       getTrace().merge(program.getTrace());
@@ -786,11 +813,11 @@ public class Program {
     }
     long vmNowInUs = System.nanoTime() / 1000;
     if (vmNowInUs > getVmShouldEndInUs()) {
-      logger.error("vm now time: {}", vmNowInUs);
-      logger.error("minTimeRatio: {}", Args.getInstance().getMinTimeRatio());
-      logger.error("maxTimeRatio: {}", Args.getInstance().getMaxTimeRatio());
-      logger.error("vm should end time in us: {}", getVmShouldEndInUs());
-      logger.error("vm start time in us: {}", getVmStartInUs());
+      logger.error(
+          "vm now time: {}, minTimeRatio: {}, maxTimeRatio: {},"
+              + "vm should end time in us: {}, vm start time in us: {}",
+          vmNowInUs, Args.getInstance().getMinTimeRatio(), Args.getInstance().getMaxTimeRatio(),
+          getVmShouldEndInUs(), getVmStartInUs());
       throw Exception.notEnoughTime(opName);
     }
 

@@ -128,8 +128,10 @@ public class TransactionTrace {
     runtime.execute();
     runtime.go();
 
-    logger.info("this tx id: {} , end time(after runtime.go()): {}", trx.getTransactionId(),
-        System.currentTimeMillis() - txStartTimeInMs);
+    long curTime = System.currentTimeMillis();
+    logger.info("this tx id: {} , end time(after runtime.go()): {}, total consume time: {}",
+        trx.getTransactionId(),
+        curTime, curTime - txStartTimeInMs);
 
     if (TRX_PRECOMPILED_TYPE != runtime.getTrxType()) {
       if (contractResult.OUT_OF_TIME

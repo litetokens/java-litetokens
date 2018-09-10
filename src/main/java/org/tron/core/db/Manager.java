@@ -334,9 +334,9 @@ public class Manager {
             logger.error(ex.getMessage());
             Thread.currentThread().interrupt();
           } catch (Exception ex) {
-            logger.error("unknown exception happened in witness loop", ex);
+            logger.error("unknown exception happened in repush loop", ex);
           } catch (Throwable throwable) {
-            logger.error("unknown throwable happened in witness loop", throwable);
+            logger.error("unknown throwable happened in repush loop", throwable);
           }
         }
       };

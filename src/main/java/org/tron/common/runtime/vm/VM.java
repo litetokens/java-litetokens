@@ -1302,6 +1302,12 @@ public class VM {
       }
 
       program.setPreviouslyExecutedOp(op.val());
+      // program.
+      long curTime = System.nanoTime() / 1000;
+      program.pairList
+          .add(new java.util.AbstractMap.SimpleEntry<String, Long>(op.name(),
+              (curTime - program.getPreviousTime())));
+      program.setPreviousTime(curTime);
             /*
             if (logger.isInfoEnabled() && !op.isCall())
                 logger.info(logString, String.format("%5s", "[" + program.getPC() + "]"),

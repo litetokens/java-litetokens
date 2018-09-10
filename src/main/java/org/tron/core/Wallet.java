@@ -890,8 +890,20 @@ public class Wallet {
 
       Runtime runtime = new Runtime(trxCap.getInstance(), new BlockCapsule(headBlock), deposit,
           new ProgramInvokeFactoryImpl(), true);
+
+      long txStartTimeInMs = System.currentTimeMillis();
+      logger.info("this tx id: {} , start time(in constant): {}", trxCap.getTransactionId(),
+          txStartTimeInMs);
+
       runtime.execute();
       runtime.go();
+
+      long curTime = System.currentTimeMillis();
+      logger.info("this tx id: {} , end time(in constant): {}, total consume time: {}",
+          trxCap.getTransactionId(),
+          curTime, curTime - txStartTimeInMs);
+
+
       runtime.finalization();
       // TODO exception
       if (runtime.getResult().getException() != null) {

@@ -93,6 +93,8 @@ public class TransactionTrace {
   //pre transaction check
   public void init() throws TransactionTraceException {
     txStartTimeInMs = System.currentTimeMillis();
+    logger.info("this tx id: {} , start time(in trace init()): {}", trx.getTransactionId(),
+        txStartTimeInMs);
     // switch (trxType) {
     //   case TRX_PRECOMPILED_TYPE:
     //     break;
@@ -125,6 +127,9 @@ public class TransactionTrace {
     /**  VM execute  **/
     runtime.execute();
     runtime.go();
+
+    logger.info("this tx id: {} , end time(after runtime.go()): {}", trx.getTransactionId(),
+        System.currentTimeMillis() - txStartTimeInMs);
 
     if (TRX_PRECOMPILED_TYPE != runtime.getTrxType()) {
       if (contractResult.OUT_OF_TIME

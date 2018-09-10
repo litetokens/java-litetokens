@@ -494,22 +494,22 @@ public class Runtime {
 
   public void go() {
 
-    program.pairList = new java.util.ArrayList<>();
-
     try {
 
-      TransactionCapsule trxCap = new TransactionCapsule(trx);
-      if (null != blockCap && blockCap.generatedByMyself && null != trxCap.getContractRet()
-          && contractResult.OUT_OF_TIME
-          .equals(trxCap.getContractRet())) {
-        program.spendAllEnergy();
-        result = program.getResult();
-        runtimeError = "Haven Time Out";
-        result.setException(Program.Exception.notEnoughTime("Haven Time Out"));
-        throw Program.Exception.notEnoughTime("Haven Time Out");
-      }
-
       if (vm != null) {
+
+        TransactionCapsule trxCap = new TransactionCapsule(trx);
+        if (null != blockCap && blockCap.generatedByMyself && null != trxCap.getContractRet()
+            && contractResult.OUT_OF_TIME
+            .equals(trxCap.getContractRet())) {
+          program.spendAllEnergy();
+          result = program.getResult();
+          runtimeError = "Haven Time Out";
+          result.setException(Program.Exception.notEnoughTime("Haven Time Out"));
+          throw Program.Exception.notEnoughTime("Haven Time Out");
+        }
+
+        program.pairList = new java.util.ArrayList<>();
 
         program.setPreviousTime(System.nanoTime() / 1000);
 
@@ -557,6 +557,9 @@ public class Runtime {
         } else {
           deposit.commit();
         }
+
+        logger.error("txid: {}, vm time log: \n{}", trxCap.getTransactionId(),
+            program.pairList.toString());
       } else {
         deposit.commit();
       }
@@ -587,9 +590,7 @@ public class Runtime {
       logger.error("runtime error is :{}", result.getException().getMessage());
     }
     trace.setBill(result.getEnergyUsed());
-    TransactionCapsule trxCap = new TransactionCapsule(trx);
-    logger.error("txid: {}, vm time log: \n{}", trxCap.getTransactionId(),
-        program.pairList.toString());
+
 
   }
 

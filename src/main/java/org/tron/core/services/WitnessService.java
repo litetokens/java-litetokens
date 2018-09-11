@@ -241,6 +241,7 @@ public class WitnessService implements Service {
         logger.warn("Task timeout ( > {}ms)，startTime:{},endTime:{}",
             ChainConstant.BLOCK_PRODUCED_INTERVAL * blockProducedTimeOut / 100,
             new DateTime(now), DateTime.now());
+        tronApp.getDbManager().eraseBlock();
         return BlockProductionCondition.TIME_OUT;
       }
 

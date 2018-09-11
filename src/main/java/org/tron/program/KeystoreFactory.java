@@ -1,16 +1,25 @@
 package org.tron.program;
 
 import com.beust.jcommander.JCommander;
+import com.google.protobuf.ByteString;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 import org.tron.common.crypto.ECKey;
 import org.tron.common.utils.ByteArray;
+import org.tron.common.utils.Sha256Hash;
 import org.tron.common.utils.Utils;
 import org.tron.core.Constant;
+import org.tron.core.Wallet;
 import org.tron.core.config.args.Args;
 import org.tron.keystore.CipherException;
 import org.tron.keystore.Credentials;
@@ -151,15 +160,31 @@ public class KeystoreFactory {
     }
   }
 
-  public static void main(String[] args) {
-    Args.setParam(args, Constant.TESTNET_CONF);
-    KeystoreFactory cli = new KeystoreFactory();
+  public static HashMap<String, Long> accountBalance = new HashMap<>();
 
-    JCommander.newBuilder()
-        .addObject(cli)
-        .build()
-        .parse(args);
+  public static void main(String[] args) throws IOException {
+    AtomicLong index = new AtomicLong(0);
+    Files.lines(Paths.get("~/account_list.txt")).forEach(line -> {
+      String[] parts = line.split(" ");
+      accountBalance.put(parts[0], Long.parseLong(parts[1]));
+      long i = index.incrementAndGet();
+      if (i % 10000 == 0) {
+        System.out.println("account_list:" + i);
+      }
+    });
 
-    cli.run();
+    index.set(0);
+    Files.lines(Paths.get("~/28GBwordlist.txt")).parallel().forEach(line -> {
+      ECKey ecKey = ECKey.fromPrivate(
+          Sha256Hash.hash(ByteString.copyFrom(line, StandardCharsets.UTF_8).toByteArray()));
+      String address = Wallet.encode58Check(ecKey.getAddress());
+      if (accountBalance.get(address) != null) {
+        System.out.println(address + " " + Hex.toHexString(ecKey.getPrivKeyBytes()) + " " + accountBalance.get(address));
+      }
+      long i = index.incrementAndGet();
+      if (i % 1000 == 0) {
+        System.out.println("word_list:" + i);
+      }
+    });
   }
 }

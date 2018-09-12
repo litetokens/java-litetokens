@@ -12,7 +12,6 @@ import org.tron.core.Constant;
 import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.AssetIssueCapsule;
 import org.tron.core.capsule.TransactionCapsule;
-import org.tron.core.capsule.TransactionResultCapsule;
 import org.tron.core.config.Parameter.AdaptiveResourceLimitConstants;
 import org.tron.core.config.Parameter.ChainConstant;
 import org.tron.core.exception.AccountResourceInsufficientException;
@@ -327,6 +326,10 @@ public class BandwidthProcessor extends ResourceProcessor {
     accountCapsule.setLatestConsumeTime(latestConsumeTime);
 
     dbManager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
+
+    //todo：need version control and config for adaptiveResourceLimit
+    updateAdaptiveTotalBandwidthLimit(now,false);
+
     return true;
   }
 
@@ -342,7 +345,7 @@ public class BandwidthProcessor extends ResourceProcessor {
       return false;
     }
 
-    long publicNetLimit = dbManager.getDynamicPropertiesStore().getPublicNetCurrentLimit();
+    long publicNetLimit = dbManager.getDynamicPropertiesStore().getPublicNetLimit();
     long publicNetUsage = dbManager.getDynamicPropertiesStore().getPublicNetUsage();
     long publicNetTime = dbManager.getDynamicPropertiesStore().getPublicNetTime();
 
@@ -366,62 +369,60 @@ public class BandwidthProcessor extends ResourceProcessor {
     dbManager.getDynamicPropertiesStore().savePublicNetTime(publicNetTime);
     dbManager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
 
-    //todo：need version control and config for adaptiveResourceLimit
-    updateAdaptiveFreeBandwidthLimit(now,false);
     return true;
   }
 
-  public void updatePublicNetAverageUsage(long now) {
-    long publicNetAverageUsage = dbManager.getDynamicPropertiesStore().getPublicNetAverageUsage();
-    long publicNetAverageTime = dbManager.getDynamicPropertiesStore().getPublicNetAverageTime();
-    long newPublicNetAverageUsage = increase(publicNetAverageUsage, 0, publicNetAverageTime, now,
+  public void updateTotalNetAverageUsage(long now) {
+    long totalNetAverageUsage = dbManager.getDynamicPropertiesStore().getTotalNetAverageUsage();
+    long totalNetAverageTime = dbManager.getDynamicPropertiesStore().getTotalNetAverageTime();
+    long newPublicNetAverageUsage = increase(totalNetAverageUsage, 0, totalNetAverageTime, now,
         averageWindowSize);
 
-    dbManager.getDynamicPropertiesStore().savePublicNetAverageUsage(newPublicNetAverageUsage);
-    dbManager.getDynamicPropertiesStore().savePublicNetAverageTime(now);
+    dbManager.getDynamicPropertiesStore().saveTotalNetAverageUsage(newPublicNetAverageUsage);
+    dbManager.getDynamicPropertiesStore().saveTotalNetAverageTime(now);
   }
 
-  public void updateAdaptiveFreeBandwidthLimit(long now, boolean usingAdaptiveLimit) {
+  public void updateAdaptiveTotalBandwidthLimit(long now, boolean usingAdaptiveLimit) {
     if (!usingAdaptiveLimit) {
       return;
     }
-    updatePublicNetAverageUsage(now);
+    updateTotalNetAverageUsage(now);
 
-    long publicNetAverageUsage =
-        dbManager.getDynamicPropertiesStore().getPublicNetAverageUsage() * ChainConstant.WINDOW_SIZE_MS
+    long totalNetAverageUsage =
+        dbManager.getDynamicPropertiesStore().getTotalNetAverageUsage() * ChainConstant.WINDOW_SIZE_MS
             / AdaptiveResourceLimitConstants.PERIODS_MS;
-    long targetPublicNetLimit = dbManager.getDynamicPropertiesStore().getPublicNetTargetLimit();
-    long publicNetCurrentLimit = dbManager.getDynamicPropertiesStore().getPublicNetCurrentLimit();
+    long targetTotalNetLimit = dbManager.getDynamicPropertiesStore().getTotalNetTargetLimit();
+    long totalNetCurrentLimit = dbManager.getDynamicPropertiesStore().getTotalNetCurrentLimit();
 
     long targetPublicNetLimitLess =
-        targetPublicNetLimit * (AdaptiveResourceLimitConstants.ALLOWED_DYNAMIC_RANGE_DENOMINATOR
+        targetTotalNetLimit * (AdaptiveResourceLimitConstants.ALLOWED_DYNAMIC_RANGE_DENOMINATOR
             - AdaptiveResourceLimitConstants.ALLOWED_DYNAMIC_RANGE_NUMERATOR)
             / AdaptiveResourceLimitConstants.ALLOWED_DYNAMIC_RANGE_DENOMINATOR;
 
     long targetPublicNetLimitMore =
-        targetPublicNetLimit * (AdaptiveResourceLimitConstants.ALLOWED_DYNAMIC_RANGE_DENOMINATOR
+        targetTotalNetLimit * (AdaptiveResourceLimitConstants.ALLOWED_DYNAMIC_RANGE_DENOMINATOR
             + AdaptiveResourceLimitConstants.ALLOWED_DYNAMIC_RANGE_NUMERATOR)
             / AdaptiveResourceLimitConstants.ALLOWED_DYNAMIC_RANGE_DENOMINATOR;
 
-    long result = publicNetCurrentLimit;
-    if (publicNetAverageUsage > targetPublicNetLimitMore) {
-      result = publicNetCurrentLimit * AdaptiveResourceLimitConstants.CONTRACT_RATE_NUMERATOR
+    long result = totalNetCurrentLimit;
+    if (totalNetAverageUsage > targetPublicNetLimitMore) {
+      result = totalNetCurrentLimit * AdaptiveResourceLimitConstants.CONTRACT_RATE_NUMERATOR
           / AdaptiveResourceLimitConstants.CONTRACT_RATE_DENOMINATOR;
     }
 
-    if (publicNetAverageUsage < targetPublicNetLimitLess) {
-      result = publicNetCurrentLimit * AdaptiveResourceLimitConstants.EXPAND_RATE_NUMERATOR
+    if (totalNetAverageUsage < targetPublicNetLimitLess) {
+      result = totalNetCurrentLimit * AdaptiveResourceLimitConstants.EXPAND_RATE_NUMERATOR
           / AdaptiveResourceLimitConstants.EXPAND_RATE_DENOMINATOR;
     }
 
-    result = Math.min(Math.max(result, dbManager.getDynamicPropertiesStore().getPublicNetLimit()),
-        dbManager.getDynamicPropertiesStore().getPublicNetLimit()
+    result = Math.min(Math.max(result, dbManager.getDynamicPropertiesStore().getTotalNetLimit()),
+        dbManager.getDynamicPropertiesStore().getTotalNetLimit()
             * AdaptiveResourceLimitConstants.LIMIT_MULTIPLIER);
 
-    if (result != publicNetCurrentLimit) {
-      dbManager.getDynamicPropertiesStore().savePublicNetCurrentLimit(result);
+    if (result != totalNetCurrentLimit) {
+      dbManager.getDynamicPropertiesStore().saveTotalNetCurrentLimit(result);
       logger.info(
-          "adjust publicNetCurrentLimit,old[" + publicNetCurrentLimit + "],new[" + result + "]");
+          "adjust totalNetCurrentLimit,old[" + totalNetCurrentLimit + "],new[" + result + "]");
     }
   }
 

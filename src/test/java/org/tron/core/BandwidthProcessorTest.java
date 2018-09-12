@@ -373,55 +373,55 @@ public class BandwidthProcessorTest {
 
 
   @Test
-  public void updateAdaptiveFreeBandwidthLimit() {
+  public void updateAdaptiveTotalBandwidthLimit() {
     BandwidthProcessor processor = new BandwidthProcessor(dbManager);
 
     //Test resource auto reply
     dbManager.getDynamicPropertiesStore().saveLatestBlockHeaderTimestamp(1526647838000L);
     long now = dbManager.getWitnessController().getHeadSlot();
-    dbManager.getDynamicPropertiesStore().savePublicNetAverageTime(now);
+    dbManager.getDynamicPropertiesStore().saveTotalNetAverageTime(now);
 
-    dbManager.getDynamicPropertiesStore().savePublicNetAverageUsage(4000L);
+    dbManager.getDynamicPropertiesStore().saveTotalNetAverageUsage(4000L);
     dbManager.getDynamicPropertiesStore().saveLatestBlockHeaderTimestamp(
         1526647838000L + AdaptiveResourceLimitConstants.PERIODS_MS / 2);
     now = dbManager.getWitnessController().getHeadSlot();
 
-    processor.updatePublicNetAverageUsage(now);
-    Assert.assertEquals(2000L, dbManager.getDynamicPropertiesStore().getPublicNetAverageUsage());
+    processor.updateTotalNetAverageUsage(now);
+    Assert.assertEquals(2000L, dbManager.getDynamicPropertiesStore().getTotalNetAverageUsage());
 
     //
     long ratio = ChainConstant.WINDOW_SIZE_MS / AdaptiveResourceLimitConstants.PERIODS_MS;
-    dbManager.getDynamicPropertiesStore().savePublicNetLimit(1000L * ratio);
-    dbManager.getDynamicPropertiesStore().savePublicNetTargetLimit(2000 * ratio);
+    dbManager.getDynamicPropertiesStore().saveTotalNetLimit(1000L * ratio);
+    dbManager.getDynamicPropertiesStore().saveTotalNetTargetLimit(2000 * ratio);
 
     //Test exceeds resource limit
-    dbManager.getDynamicPropertiesStore().savePublicNetCurrentLimit(2000L * ratio);
-    dbManager.getDynamicPropertiesStore().savePublicNetAverageUsage(3000L);
+    dbManager.getDynamicPropertiesStore().saveTotalNetCurrentLimit(2000L * ratio);
+    dbManager.getDynamicPropertiesStore().saveTotalNetAverageUsage(3000L);
 
-    processor.updateAdaptiveFreeBandwidthLimit(now, true);
+    processor.updateAdaptiveTotalBandwidthLimit(now, true);
     Assert.assertEquals(2000L * ratio * 99 / 100L,
-        dbManager.getDynamicPropertiesStore().getPublicNetCurrentLimit());
+        dbManager.getDynamicPropertiesStore().getTotalNetCurrentLimit());
 
     //Test less than resource limit
-    dbManager.getDynamicPropertiesStore().savePublicNetCurrentLimit(2000L * ratio);
-    dbManager.getDynamicPropertiesStore().savePublicNetAverageUsage(500L);
-    processor.updateAdaptiveFreeBandwidthLimit(now, true);
+    dbManager.getDynamicPropertiesStore().saveTotalNetCurrentLimit(2000L * ratio);
+    dbManager.getDynamicPropertiesStore().saveTotalNetAverageUsage(500L);
+    processor.updateAdaptiveTotalBandwidthLimit(now, true);
     Assert.assertEquals(2000L * ratio * 1000 / 999L,
-        dbManager.getDynamicPropertiesStore().getPublicNetCurrentLimit());
+        dbManager.getDynamicPropertiesStore().getTotalNetCurrentLimit());
 
     //Test within the allowable range
-    dbManager.getDynamicPropertiesStore().savePublicNetCurrentLimit(2000L * ratio);
-    dbManager.getDynamicPropertiesStore().savePublicNetAverageUsage(2000L * 95 / 100);
-    processor.updateAdaptiveFreeBandwidthLimit(now, true);
+    dbManager.getDynamicPropertiesStore().saveTotalNetCurrentLimit(2000L * ratio);
+    dbManager.getDynamicPropertiesStore().saveTotalNetAverageUsage(2000L * 95 / 100);
+    processor.updateAdaptiveTotalBandwidthLimit(now, true);
     Assert.assertEquals(2000L * ratio,
-        dbManager.getDynamicPropertiesStore().getPublicNetCurrentLimit());
+        dbManager.getDynamicPropertiesStore().getTotalNetCurrentLimit());
 
     //Test within the allowable range
-    dbManager.getDynamicPropertiesStore().savePublicNetCurrentLimit(2000L * ratio);
-    dbManager.getDynamicPropertiesStore().savePublicNetAverageUsage(2000L * 105 / 100);
-    processor.updateAdaptiveFreeBandwidthLimit(now, true);
+    dbManager.getDynamicPropertiesStore().saveTotalNetCurrentLimit(2000L * ratio);
+    dbManager.getDynamicPropertiesStore().saveTotalNetAverageUsage(2000L * 105 / 100);
+    processor.updateAdaptiveTotalBandwidthLimit(now, true);
     Assert.assertEquals(2000L * ratio,
-        dbManager.getDynamicPropertiesStore().getPublicNetCurrentLimit());
+        dbManager.getDynamicPropertiesStore().getTotalNetCurrentLimit());
 
   }
 }

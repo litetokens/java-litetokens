@@ -7,16 +7,16 @@ import org.tron.protos.Protocol.Transaction;
 
 public class TransactionMessage extends TronMessage {
 
-  private TransactionCapsule transactionCapsule;
+//  private TransactionCapsule transactionCapsule;
 
   public TransactionMessage(byte[] data) throws BadItemException {
-    this.transactionCapsule = new TransactionCapsule(data);
+//    this.transactionCapsule = new TransactionCapsule(data);
     this.data = data;
     this.type = MessageTypes.TRX.asByte();
   }
 
   public TransactionMessage(Transaction trx) {
-    this.transactionCapsule = new TransactionCapsule(trx);
+//    this.transactionCapsule = new TransactionCapsule(trx);
     this.type = MessageTypes.TRX.asByte();
     this.data = trx.toByteArray();
   }
@@ -29,7 +29,7 @@ public class TransactionMessage extends TronMessage {
 
   @Override
   public Sha256Hash getMessageId() {
-    return this.transactionCapsule.getTransactionId();
+    return getTransactionCapsule().getTransactionId();
   }
 
   @Override
@@ -38,6 +38,10 @@ public class TransactionMessage extends TronMessage {
   }
 
   public TransactionCapsule getTransactionCapsule() {
-    return this.transactionCapsule;
+    try {
+      return new TransactionCapsule(data);
+    } catch (BadItemException e) {
+    }
+    return null;
   }
 }

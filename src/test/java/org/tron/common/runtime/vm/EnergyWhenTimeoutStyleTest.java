@@ -6,11 +6,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.testng.Assert;
+import org.tron.common.application.Application;
+import org.tron.common.application.ApplicationFactory;
+import org.tron.common.application.TronApplicationContext;
 import org.tron.common.runtime.TVMTestResult;
 import org.tron.common.runtime.TVMTestUtils;
-import org.tron.common.runtime.vm.program.Program.OutOfEnergyException;
+import org.tron.common.runtime.vm.program.Program.OutOfResourceException;
 import org.tron.common.storage.DepositImpl;
 import org.tron.common.utils.FileUtil;
 import org.tron.core.Constant;
@@ -20,18 +22,20 @@ import org.tron.core.config.args.Args;
 import org.tron.core.db.Manager;
 import org.tron.core.exception.ContractExeException;
 import org.tron.core.exception.ContractValidateException;
-import org.tron.core.exception.OutOfSlotTimeException;
-import org.tron.core.exception.TransactionTraceException;
+import org.tron.core.exception.ReceiptCheckErrException;
+import org.tron.core.exception.VMIllegalException;
 import org.tron.protos.Protocol.AccountType;
 
 @Slf4j
-public class CPUTimeTest {
+public class EnergyWhenTimeoutStyleTest {
 
   private Manager dbManager;
-  private AnnotationConfigApplicationContext context;
+  private TronApplicationContext context;
   private DepositImpl deposit;
   private String dbPath = "output_CPUTimeTest";
   private String OWNER_ADDRESS;
+  private Application AppT;
+  private long totalBalance = 30_000_000_000_000L;
 
 
   /**
@@ -39,13 +43,16 @@ public class CPUTimeTest {
    */
   @Before
   public void init() {
-    Args.setParam(new String[]{"--output-directory", dbPath}, Constant.TEST_CONF);
-    context = new AnnotationConfigApplicationContext(DefaultConfig.class);
+    Args.setParam(new String[]{"--output-directory", dbPath},
+        Constant.TEST_CONF);
+    context = new TronApplicationContext(DefaultConfig.class);
+    AppT = ApplicationFactory.create(context);
     OWNER_ADDRESS = Wallet.getAddressPreFixString() + "abd4b9367799eaa3197fecb144eb71de1e049abc";
     dbManager = context.getBean(Manager.class);
     deposit = DepositImpl.createRoot(dbManager);
     deposit.createAccount(Hex.decode(OWNER_ADDRESS), AccountType.Normal);
-    deposit.addBalance(Hex.decode(OWNER_ADDRESS), 30000000000000L);
+    deposit.addBalance(Hex.decode(OWNER_ADDRESS), totalBalance);
+    deposit.commit();
   }
 
   // solidity for endlessLoopTest
@@ -73,16 +80,19 @@ public class CPUTimeTest {
 
   @Test
   public void endlessLoopTest()
-      throws ContractExeException, TransactionTraceException, ContractValidateException, OutOfSlotTimeException {
+      throws ContractExeException, ContractValidateException, ReceiptCheckErrException, VMIllegalException {
 
     long value = 0;
-    long feeLimit = 20000000000000L;
+    long feeLimit = 1000_000_000L;
+    byte[] address = Hex.decode(OWNER_ADDRESS);
     long consumeUserResourcePercent = 0;
     TVMTestResult result = deployEndlessLoopContract(value, feeLimit,
         consumeUserResourcePercent);
-    Assert.assertEquals(result.getReceipt().getEnergyUsage(), 0);
-    Assert.assertEquals(result.getReceipt().getEnergyUsageTotal(), 5107);
-    Assert.assertEquals(result.getReceipt().getOriginEnergyUsage(), 0);
+
+    long expectEnergyUsageTotal = 55107;
+    Assert.assertEquals(result.getReceipt().getEnergyUsageTotal(), expectEnergyUsageTotal);
+    Assert.assertEquals(dbManager.getAccountStore().get(address).getBalance(),
+        totalBalance - expectEnergyUsageTotal * 100);
 
     byte[] contractAddress = result.getContractAddress();
 
@@ -90,23 +100,21 @@ public class CPUTimeTest {
     String params = "0000000000000000000000000000000000000000000000000000000000000003";
     byte[] triggerData = TVMTestUtils.parseABI("setVote(uint256)", params);
     boolean haveException = false;
-    try {
-      result = TVMTestUtils
-          .triggerContractAndReturnTVMTestResult(Hex.decode(OWNER_ADDRESS),
-              contractAddress, triggerData, value, feeLimit, deposit, null);
-      Exception exception = result.getRuntime().getResult().getException();
-      Assert.assertTrue(exception instanceof OutOfEnergyException);
-      haveException = true;
-    } catch (Exception e) {
-      haveException = true;
-      Assert.assertTrue(e instanceof OutOfSlotTimeException);
-    }
-    Assert.assertTrue(haveException);
+    result = TVMTestUtils
+        .triggerContractAndReturnTVMTestResult(Hex.decode(OWNER_ADDRESS), contractAddress,
+            triggerData, value, feeLimit, dbManager, null);
+
+    long expectEnergyUsageTotal2 = feeLimit / 100;
+    Assert.assertEquals(result.getReceipt().getEnergyUsageTotal(), expectEnergyUsageTotal2);
+    Exception exception = result.getRuntime().getResult().getException();
+    Assert.assertTrue(exception instanceof OutOfResourceException);
+    Assert.assertEquals(dbManager.getAccountStore().get(address).getBalance(),
+        totalBalance - (expectEnergyUsageTotal + expectEnergyUsageTotal2) * 100);
   }
 
   public TVMTestResult deployEndlessLoopContract(long value, long feeLimit,
       long consumeUserResourcePercent)
-      throws ContractExeException, OutOfSlotTimeException, TransactionTraceException, ContractValidateException {
+      throws ContractExeException, ReceiptCheckErrException, ContractValidateException, VMIllegalException {
     String contractName = "EndlessLoopContract";
     byte[] address = Hex.decode(OWNER_ADDRESS);
     String ABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"getVote\",\"outputs\":[{\"name\":\"_vote\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_vote\",\"type\":\"uint256\"}],\"name\":\"setVote\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"}]";
@@ -117,7 +125,7 @@ public class CPUTimeTest {
         .deployContractAndReturnTVMTestResult(contractName, address, ABI, code,
             value,
             feeLimit, consumeUserResourcePercent, libraryAddressPair,
-            deposit, null);
+            dbManager, null);
   }
 
   /**
@@ -126,11 +134,14 @@ public class CPUTimeTest {
   @After
   public void destroy() {
     Args.clearParam();
+    AppT.shutdownServices();
+    AppT.shutdown();
+    context.destroy();
     if (FileUtil.deleteDir(new File(dbPath))) {
       logger.info("Release resources successful.");
     } else {
       logger.info("Release resources failure.");
     }
-    context.destroy();
   }
+
 }

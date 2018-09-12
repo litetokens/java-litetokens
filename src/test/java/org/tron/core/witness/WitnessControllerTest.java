@@ -9,7 +9,7 @@ import java.util.List;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.tron.common.application.TronApplicationContext;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.FileUtil;
 import org.tron.core.Constant;
@@ -21,12 +21,12 @@ import org.tron.core.db.Manager;
 public class WitnessControllerTest {
 
   private static Manager dbManager = new Manager();
-  private static AnnotationConfigApplicationContext context;
+  private static TronApplicationContext context;
   private static String dbPath = "output_witness_controller_test";
 
   static {
     Args.setParam(new String[]{"-d", dbPath}, Constant.TEST_CONF);
-    context = new AnnotationConfigApplicationContext(DefaultConfig.class);
+    context = new TronApplicationContext(DefaultConfig.class);
   }
 
   @BeforeClass
@@ -37,8 +37,8 @@ public class WitnessControllerTest {
   @AfterClass
   public static void removeDb() {
     Args.clearParam();
-    FileUtil.deleteDir(new File(dbPath));
     context.destroy();
+    FileUtil.deleteDir(new File(dbPath));
   }
 
   ByteString blank = ByteString.copyFrom(new byte[1]);

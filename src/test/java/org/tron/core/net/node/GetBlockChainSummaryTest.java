@@ -4,11 +4,8 @@ import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.junit.*;
+import org.tron.common.application.TronApplicationContext;
 import org.tron.common.application.Application;
 import org.tron.common.application.ApplicationFactory;
 import org.tron.common.crypto.ECKey;
@@ -43,13 +40,13 @@ import java.util.stream.IntStream;
 
 @Slf4j
 public class GetBlockChainSummaryTest{
-    private static AnnotationConfigApplicationContext context;
-    private NodeImpl node;
+    private static TronApplicationContext context;
+    private static NodeImpl node;
     RpcApiService rpcApiService;
-    PeerClient peerClient;
+    private static PeerClient peerClient;
     ChannelManager channelManager;
     SyncPool pool;
-    Application appT;
+    private static Application appT;
     Manager dbManager;
 
     private static final String dbPath = "output-GetBlockChainSummary";
@@ -92,7 +89,7 @@ public class GetBlockChainSummaryTest{
 
         BlockCapsule.BlockId commonBlockId = null;
 
-        //共有头块是创世块，syncBlockToFetch为空。代表建立连接后第1次区块清单同步。
+        //the common block is genesisblock，syncBlockToFetch is empty。
         try {
             commonBlockId = del.getGenesisBlock().getBlockId();
             peer_he.getSyncBlockToFetch().clear();
@@ -104,7 +101,7 @@ public class GetBlockChainSummaryTest{
             System.out.println("exception!");
         }
 
-        //共有头块是创世块，syncBlockToFetch不空。代表第2次区块清单同步，但是没有收到区块。
+        //the common block is genesisblock，syncBlockToFetch is not empty。
         peer_he.getSyncBlockToFetch().addAll(toFetch);
         try {
             toFetch.clear();
@@ -126,7 +123,7 @@ public class GetBlockChainSummaryTest{
             System.out.println("exception!");
         }
 
-        //共有头块不是创世块，syncBlockToFetc不空。代表第2次区块清单同步，但是收到过2个区块
+        //the common block is a normal block(not genesisblock)，syncBlockToFetc is not empty.
         try {
             toFetch.clear();
             peer_he.getSyncBlockToFetch().clear();
@@ -221,7 +218,7 @@ public class GetBlockChainSummaryTest{
                 cfgArgs.setNeedSyncCheck(false);
                 cfgArgs.setNodeExternalIp("127.0.0.1");
 
-                context = new AnnotationConfigApplicationContext(DefaultConfig.class);
+                context = new TronApplicationContext(DefaultConfig.class);
 
                 if (cfgArgs.isHelp()) {
                     logger.info("Here is the help message.");
@@ -298,10 +295,9 @@ public class GetBlockChainSummaryTest{
         }
     }
 
-    @After
-    public void removeDb() {
+    @AfterClass
+    public static void destroy() {
         Args.clearParam();
-        FileUtil.deleteDir(new File(dbPath));
         Collection<PeerConnection> peerConnections = ReflectUtils.invokeMethod(node, "getActivePeer");
         for (PeerConnection peer : peerConnections) {
             peer.close();
@@ -310,5 +306,6 @@ public class GetBlockChainSummaryTest{
         appT.shutdownServices();
         appT.shutdown();
         context.destroy();
+        FileUtil.deleteDir(new File(dbPath));
     }
 }

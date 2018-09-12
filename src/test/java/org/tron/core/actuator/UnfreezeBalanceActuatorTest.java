@@ -13,7 +13,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.tron.common.application.TronApplicationContext;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.FileUtil;
 import org.tron.core.Constant;
@@ -36,16 +36,17 @@ public class UnfreezeBalanceActuatorTest {
 
   private static Manager dbManager;
   private static final String dbPath = "output_unfreeze_balance_test";
-  private static AnnotationConfigApplicationContext context;
+  private static TronApplicationContext context;
   private static final String OWNER_ADDRESS;
   private static final String OWNER_ADDRESS_INVALID = "aaaa";
   private static final String OWNER_ACCOUNT_INVALID;
   private static final long initBalance = 10_000_000_000L;
   private static final long frozenBalance = 1_000_000_000L;
+  private static final long smallTatalResource = 100L;
 
   static {
     Args.setParam(new String[]{"--output-directory", dbPath}, Constant.TEST_CONF);
-    context = new AnnotationConfigApplicationContext(DefaultConfig.class);
+    context = new TronApplicationContext(DefaultConfig.class);
     OWNER_ADDRESS = Wallet.getAddressPreFixString() + "548794500882809695a8a687866e76d4271a1abc";
     OWNER_ACCOUNT_INVALID =
         Wallet.getAddressPreFixString() + "548794500882809695a8a687866e76d4271a3456";
@@ -69,12 +70,12 @@ public class UnfreezeBalanceActuatorTest {
   @AfterClass
   public static void destroy() {
     Args.clearParam();
+    context.destroy();
     if (FileUtil.deleteDir(new File(dbPath))) {
       logger.info("Release resources successful.");
     } else {
       logger.info("Release resources failure.");
     }
-    context.destroy();
   }
 
   /**
@@ -96,6 +97,14 @@ public class UnfreezeBalanceActuatorTest {
         Contract.UnfreezeBalanceContract.newBuilder()
             .setOwnerAddress(ByteString.copyFrom(ByteArray.fromHexString(ownerAddress)))
             .build());
+  }
+
+  private Any getContract(String ownerAddress, Contract.ResourceCode  resourceCode) {
+    return Any.pack(
+            Contract.UnfreezeBalanceContract.newBuilder()
+                    .setOwnerAddress(ByteString.copyFrom(ByteArray.fromHexString(ownerAddress)))
+                    .setResource(resourceCode)
+                    .build());
   }
 
   @Test
@@ -285,8 +294,62 @@ public class UnfreezeBalanceActuatorTest {
       Assert.assertFalse(e instanceof ContractExeException);
     }
 
-
   }
+
+
+//  @Test
+//  public void InvalidTotalNetWeight(){
+//    long now = System.currentTimeMillis();
+//    dbManager.getDynamicPropertiesStore().saveLatestBlockHeaderTimestamp(now);
+//    dbManager.getDynamicPropertiesStore().saveTotalNetWeight(smallTatalResource);
+//
+//    AccountCapsule accountCapsule = dbManager.getAccountStore()
+//            .get(ByteArray.fromHexString(OWNER_ADDRESS));
+//    accountCapsule.setFrozen(frozenBalance, now);
+//    dbManager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
+//
+//    Assert.assertTrue(frozenBalance/1000_000L > smallTatalResource );
+//    UnfreezeBalanceActuator actuator = new UnfreezeBalanceActuator(
+//            getContract(OWNER_ADDRESS), dbManager);
+//    TransactionResultCapsule ret = new TransactionResultCapsule();
+//    try {
+//      actuator.validate();
+//      actuator.execute(ret);
+//
+//      Assert.assertTrue(dbManager.getDynamicPropertiesStore().getTotalNetWeight() >= 0);
+//    } catch (ContractValidateException e) {
+//      Assert.assertTrue(e instanceof ContractValidateException);
+//    } catch (ContractExeException e) {
+//      Assert.assertTrue(e instanceof ContractExeException);
+//    }
+//  }
+//
+//  @Test
+//  public void InvalidTotalEnergyWeight(){
+//    long now = System.currentTimeMillis();
+//    dbManager.getDynamicPropertiesStore().saveLatestBlockHeaderTimestamp(now);
+//    dbManager.getDynamicPropertiesStore().saveTotalEnergyWeight(smallTatalResource);
+//
+//    AccountCapsule accountCapsule = dbManager.getAccountStore()
+//            .get(ByteArray.fromHexString(OWNER_ADDRESS));
+//    accountCapsule.setFrozenForEnergy(frozenBalance, now);
+//    dbManager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
+//
+//    Assert.assertTrue(frozenBalance/1000_000L > smallTatalResource );
+//    UnfreezeBalanceActuator actuator = new UnfreezeBalanceActuator(
+//            getContract(OWNER_ADDRESS, Contract.ResourceCode.ENERGY), dbManager);
+//    TransactionResultCapsule ret = new TransactionResultCapsule();
+//    try {
+//      actuator.validate();
+//      actuator.execute(ret);
+//
+//      Assert.assertTrue(dbManager.getDynamicPropertiesStore().getTotalEnergyWeight() >= 0);
+//    } catch (ContractValidateException e) {
+//      Assert.assertTrue(e instanceof ContractValidateException);
+//    } catch (ContractExeException e) {
+//      Assert.assertTrue(e instanceof ContractExeException);
+//    }
+//  }
 
 }
 

@@ -34,6 +34,8 @@ import com.google.protobuf.ByteString;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.spongycastle.util.encoders.Hex;
@@ -44,6 +46,7 @@ import org.tron.common.crypto.zksnark.BN128G1;
 import org.tron.common.crypto.zksnark.BN128G2;
 import org.tron.common.crypto.zksnark.Fp;
 import org.tron.common.crypto.zksnark.PairingCheck;
+import org.tron.common.runtime.vm.program.Program;
 import org.tron.common.runtime.vm.program.ProgramResult;
 import org.tron.common.storage.Deposit;
 import org.tron.common.utils.BIUtil;
@@ -52,6 +55,11 @@ import org.tron.common.utils.Sha256Hash;
 import org.tron.core.Wallet;
 import org.tron.core.actuator.Actuator;
 import org.tron.core.actuator.ActuatorFactory;
+import org.tron.core.actuator.ProposalApproveActuator;
+import org.tron.core.actuator.ProposalCreateActuator;
+import org.tron.core.actuator.ProposalDeleteActuator;
+import org.tron.core.actuator.VoteWitnessActuator;
+import org.tron.core.actuator.WithdrawBalanceActuator;
 import org.tron.core.capsule.TransactionCapsule;
 import org.tron.core.exception.ContractExeException;
 import org.tron.core.exception.ContractValidateException;
@@ -80,17 +88,21 @@ public class PrecompiledContracts {
   private static final BN128Addition altBN128Add = new BN128Addition();
   private static final BN128Multiplication altBN128Mul = new BN128Multiplication();
   private static final BN128Pairing altBN128Pairing = new BN128Pairing();
-  private static final VoteWitnessNative voteContract = new VoteWitnessNative();
-  private static final FreezeBalanceNative freezeBalance = new FreezeBalanceNative();
-  private static final UnfreezeBalanceNative unFreezeBalance = new UnfreezeBalanceNative();
-  private static final WithdrawBalanceNative withdrawBalance = new WithdrawBalanceNative();
-  private static final ProposalApproveNative proposalApprove = new ProposalApproveNative();
-  private static final ProposalCreateNative proposalCreate = new ProposalCreateNative();
-  private static final ProposalDeleteNative proposalDelete = new ProposalDeleteNative();
-  private static final ConvertFromTronBytesAddressNative convertFromTronBytesAddress = new ConvertFromTronBytesAddressNative();
-  private static final ConvertFromTronBase58AddressNative convertFromTronBase58Address = new ConvertFromTronBase58AddressNative();
-  private static final TransferAssetNative transferAsset = new TransferAssetNative();
-  private static final GetTransferAssetNative getTransferAssetAmount =  new GetTransferAssetNative();
+//  private static final VoteWitnessNative voteContract = new VoteWitnessNative();
+//  private static final FreezeBalanceNative freezeBalance = new FreezeBalanceNative();
+//  private static final UnfreezeBalanceNative unFreezeBalance = new UnfreezeBalanceNative();
+//  private static final WithdrawBalanceNative withdrawBalance = new WithdrawBalanceNative();
+//  private static final ProposalApproveNative proposalApprove = new ProposalApproveNative();
+//  private static final ProposalCreateNative proposalCreate = new ProposalCreateNative();
+//  private static final ProposalDeleteNative proposalDelete = new ProposalDeleteNative();
+//  private static final ConvertFromTronBytesAddressNative convertFromTronBytesAddress = new ConvertFromTronBytesAddressNative();
+//  private static final ConvertFromTronBase58AddressNative convertFromTronBase58Address = new ConvertFromTronBase58AddressNative();
+//  private static final TransferAssetNative transferAsset = new TransferAssetNative();
+//  private static final GetTransferAssetNative getTransferAssetAmount =  new GetTransferAssetNative();
+
+  private static final ECKey addressCheckECKey = new ECKey();
+  private static final String addressCheckECKeyAddress = Wallet
+      .encode58Check(addressCheckECKey.getAddress());
 
 
   private static final DataWord ecRecoverAddr = new DataWord(
@@ -109,28 +121,28 @@ public class PrecompiledContracts {
       "0000000000000000000000000000000000000000000000000000000000000007");
   private static final DataWord altBN128PairingAddr = new DataWord(
       "0000000000000000000000000000000000000000000000000000000000000008");
-  private static final DataWord voteContractAddr = new DataWord(
-      "0000000000000000000000000000000000000000000000000000000000010001");
-  private static final DataWord freezeBalanceAddr = new DataWord(
-      "0000000000000000000000000000000000000000000000000000000000010002");
-  private static final DataWord unFreezeBalanceAddr = new DataWord(
-      "0000000000000000000000000000000000000000000000000000000000010003");
-  private static final DataWord withdrawBalanceAddr = new DataWord(
-      "0000000000000000000000000000000000000000000000000000000000010004");
-  private static final DataWord proposalApproveAddr = new DataWord(
-      "0000000000000000000000000000000000000000000000000000000000010005");
-  private static final DataWord proposalCreateAddr = new DataWord(
-      "0000000000000000000000000000000000000000000000000000000000010006");
-  private static final DataWord proposalDeleteAddr = new DataWord(
-      "0000000000000000000000000000000000000000000000000000000000010007");
-  private static final DataWord convertFromTronBytesAddressAddr = new DataWord(
-      "0000000000000000000000000000000000000000000000000000000000010008");
-  private static final DataWord convertFromTronBase58AddressAddr = new DataWord(
-      "0000000000000000000000000000000000000000000000000000000000010009");
-  private static final DataWord transferAssetAddr = new DataWord(
-      "000000000000000000000000000000000000000000000000000000000001000a");
-  private static final DataWord getTransferAssetAmountAddr = new DataWord(
-      "000000000000000000000000000000000000000000000000000000000001000b");
+//  private static final DataWord voteContractAddr = new DataWord(
+//      "0000000000000000000000000000000000000000000000000000000000010001");
+  //  private static final DataWord freezeBalanceAddr = new DataWord(
+//      "0000000000000000000000000000000000000000000000000000000000010002");
+//  private static final DataWord unFreezeBalanceAddr = new DataWord(
+//      "0000000000000000000000000000000000000000000000000000000000010003");
+//  private static final DataWord withdrawBalanceAddr = new DataWord(
+//      "0000000000000000000000000000000000000000000000000000000000010004");
+//  private static final DataWord proposalApproveAddr = new DataWord(
+//      "0000000000000000000000000000000000000000000000000000000000010005");
+//  private static final DataWord proposalCreateAddr = new DataWord(
+//      "0000000000000000000000000000000000000000000000000000000000010006");
+//  private static final DataWord proposalDeleteAddr = new DataWord(
+//      "0000000000000000000000000000000000000000000000000000000000010007");
+//  private static final DataWord convertFromTronBytesAddressAddr = new DataWord(
+//      "0000000000000000000000000000000000000000000000000000000000010008");
+//  private static final DataWord convertFromTronBase58AddressAddr = new DataWord(
+//      "0000000000000000000000000000000000000000000000000000000000010009");
+//  private static final DataWord transferAssetAddr = new DataWord(
+//      "000000000000000000000000000000000000000000000000000000000001000a");
+//  private static final DataWord getTransferAssetAmountAddr = new DataWord(
+//      "000000000000000000000000000000000000000000000000000000000001000b");
 
   public static PrecompiledContract getContractForAddress(DataWord address) {
 
@@ -149,48 +161,53 @@ public class PrecompiledContracts {
     if (address.equals(identityAddr)) {
       return identity;
     }
-    if (address.equals(voteContractAddr)) {
-      return voteContract;
-    }
-    if (address.equals(freezeBalanceAddr)) {
-      return freezeBalance;
-    }
-    if (address.equals(unFreezeBalanceAddr)) {
-      return unFreezeBalance;
-    }
-    if (address.equals(withdrawBalanceAddr)) {
-      return withdrawBalance;
-    }
-    if (address.equals(proposalApproveAddr)) {
-      return proposalApprove;
-    }
-    if (address.equals(proposalCreateAddr)) {
-      return proposalCreate;
-    }
-    if (address.equals(proposalDeleteAddr)) {
-      return proposalDelete;
-    }
-    if (address.equals(convertFromTronBytesAddressAddr)) {
-      return convertFromTronBytesAddress;
-    }
-    if (address.equals(convertFromTronBase58AddressAddr)) {
-      return convertFromTronBase58Address;
-    }
-    if (address.equals(transferAssetAddr)) {
-      return transferAsset;
-    }
-    if (address.equals(getTransferAssetAmountAddr)) {
-      return getTransferAssetAmount;
-    }
+//    if (address.equals(voteContractAddr)) {
+//      return voteContract;
+//    }
+//    if (address.equals(freezeBalanceAddr)) {
+//      return freezeBalance;
+//    }
+//    if (address.equals(unFreezeBalanceAddr)) {
+//      return unFreezeBalance;
+//    }
+//    if (address.equals(withdrawBalanceAddr)) {
+//      return withdrawBalance;
+//    }
+//    if (address.equals(proposalApproveAddr)) {
+//      return proposalApprove;
+//    }
+//    if (address.equals(proposalCreateAddr)) {
+//      return proposalCreate;
+//    }
+//    if (address.equals(proposalDeleteAddr)) {
+//      return proposalDelete;
+//    }
+//    if (address.equals(convertFromTronBytesAddressAddr)) {
+//      return convertFromTronBytesAddress;
+//    }
+//    if (address.equals(convertFromTronBase58AddressAddr)) {
+//      return convertFromTronBase58Address;
+//    }
+//    if (address.equals(transferAssetAddr)) {
+//      return transferAsset;
+//    }
+//    if (address.equals(getTransferAssetAmountAddr)) {
+//      return getTransferAssetAmount;
+//    }
 
-
-        /*
-        // Byzantium precompiles
-        if (address.equals(modExpAddr) && config.eip198()) return modExp;
-        if (address.equals(altBN128AddAddr) && config.eip213()) return altBN128Add;
-        if (address.equals(altBN128MulAddr) && config.eip213()) return altBN128Mul;
-        if (address.equals(altBN128PairingAddr) && config.eip212()) return altBN128Pairing;
-        */
+    // Byzantium precompiles
+    if (address.equals(modExpAddr)) {
+      return modExp;
+    }
+    if (address.equals(altBN128AddAddr)) {
+      return altBN128Add;
+    }
+    if (address.equals(altBN128MulAddr)) {
+      return altBN128Mul;
+    }
+    if (address.equals(altBN128PairingAddr)) {
+      return altBN128Pairing;
+    }
     return null;
   }
 
@@ -242,6 +259,18 @@ public class PrecompiledContracts {
     public ProgramResult getResult() {
       return result;
     }
+
+    public boolean isRootCallConstant() {
+      return isRootCallConstant;
+    }
+
+    public void setRootCallConstant(boolean rootCallConstant) {
+      isRootCallConstant = rootCallConstant;
+    }
+
+    private boolean isRootCallConstant;
+
+
   }
 
   public static class Identity extends PrecompiledContract {
@@ -308,14 +337,13 @@ public class PrecompiledContracts {
 
     @Override
     public Pair<Boolean, byte[]> execute(byte[] data) {
-            /*
-            byte[] result = null;
-            if (data == null) result = Hash.ripemd160(EMPTY_BYTE_ARRAY);
-            else result = Hash.ripemd160(data);
-
-            return Pair.of(true, new DataWord(result).getData());
-            */
-      return null;
+      byte[] target = new byte[20];
+      if (data == null) {
+        data = EMPTY_BYTE_ARRAY;
+      }
+      byte[] orig = Sha256Hash.hash(data);
+      System.arraycopy(orig, 0, target, 0, 20);
+      return Pair.of(true, Sha256Hash.hash(target));
     }
   }
 
@@ -405,7 +433,7 @@ public class PrecompiledContracts {
           .multiply(BigInteger.valueOf(Math.max(adjExpLen, 1)))
           .divide(GQUAD_DIVISOR);
 
-      return isLessThan(energy, BigInteger.valueOf(Long.MAX_VALUE)) ? energy.longValue()
+      return isLessThan(energy, BigInteger.valueOf(Long.MAX_VALUE)) ? energy.longValueExact()
           : Long.MAX_VALUE;
     }
 
@@ -683,9 +711,13 @@ public class PrecompiledContracts {
     @Override
     public Pair<Boolean, byte[]> execute(byte[] data) {
 
-      if (data == null) {
-        data = EMPTY_BYTE_ARRAY;
+      if (isRootCallConstant()) {
+        return Pair.of(true, new DataWord(0).getData());
       }
+      if (data == null || data.length != 2 * DataWord.DATAWORD_UNIT_SIZE) {
+        return Pair.of(false, new DataWord(0).getData());
+      }
+
       byte[] witnessAddress = new byte[32];
       System.arraycopy(data, 0, witnessAddress, 0, 32);
       byte[] value = new byte[8];
@@ -705,22 +737,35 @@ public class PrecompiledContracts {
 
       final List<Actuator> actuatorList = ActuatorFactory
           .createActuator(new TransactionCapsule(contract), getDeposit().getDbManager());
+      VoteWitnessActuator voteWitnessActuator;
       try {
-        actuatorList.get(0).validate();
-        actuatorList.get(0).execute(getResult().getRet());
-        getDeposit()
-            .syncCacheFromAccountStore(ByteString.copyFrom(getCallerAddress()).toByteArray());
-        getDeposit().syncCacheFromVotesStore(ByteString.copyFrom(getCallerAddress()).toByteArray());
+        if (Objects.isNull(actuatorList) || actuatorList.isEmpty()){
+          throw new ContractExeException("can't initiate VoteWitnessActuator for precompiled vm method");
+        }
+        else {
+          Optional voteOptional = actuatorList.stream().findFirst();
+          if (voteOptional.isPresent()){
+            voteWitnessActuator = (VoteWitnessActuator) voteOptional.get();
+          }
+          else{
+            throw new ContractExeException("can't initiate VoteWitnessActuator for precompiled vm method");
+          }
+        }
+        voteWitnessActuator.setDeposit(getDeposit());
+        voteWitnessActuator.validate();
+        voteWitnessActuator.execute(getResult().getRet());
       } catch (ContractExeException e) {
         logger.debug("ContractExeException when calling voteWitness in vm");
         logger.debug("ContractExeException: {}", e.getMessage());
-        return null;
+        this.getResult().setException(new Program.Exception().contractExecuteException(e));
+        return Pair.of(false, new DataWord(0).getData());
       } catch (ContractValidateException e) {
         logger.debug("ContractValidateException when calling voteWitness in vm");
         logger.debug("ContractValidateException: {}", e.getMessage());
-        return null;
+        this.getResult().setException(new Program.Exception().contractValidateException(e));
+        return Pair.of(false, new DataWord(0).getData());
       }
-      return Pair.of(true, new DataWord(count).getData());
+      return Pair.of(true, new DataWord(1).getData());
     }
   }
 
@@ -863,8 +908,8 @@ public class PrecompiledContracts {
     @Override
     public Pair<Boolean, byte[]> execute(byte[] data) {
 
-      if (data == null) {
-        data = EMPTY_BYTE_ARRAY;
+      if (isRootCallConstant()) {
+        return Pair.of(true, new DataWord(0).getData());
       }
 
       Contract.WithdrawBalanceContract.Builder builder = Contract.WithdrawBalanceContract
@@ -878,19 +923,34 @@ public class PrecompiledContracts {
 
       final List<Actuator> actuatorList = ActuatorFactory
           .createActuator(trx, getDeposit().getDbManager());
+      WithdrawBalanceActuator withdrawBalanceActuator;
       try {
-        actuatorList.get(0).validate();
-        actuatorList.get(0).execute(getResult().getRet());
-        getDeposit()
-            .syncCacheFromAccountStore(ByteString.copyFrom(getCallerAddress()).toByteArray());
+        if (Objects.isNull(actuatorList) || actuatorList.isEmpty()){
+          throw new ContractExeException("can't initiate WithdrawBalanceActuator for precompiled vm method");
+        }
+        else {
+          Optional withdrawOptional = actuatorList.stream().findFirst();
+          if (withdrawOptional.isPresent()) {
+            withdrawBalanceActuator = (WithdrawBalanceActuator) withdrawOptional.get();
+          } else {
+            throw new ContractExeException(
+                  "can't initiate WithdrawBalanceActuator for precompiled vm method");
+          }
+        }
+
+        withdrawBalanceActuator.setDeposit(getDeposit());
+        withdrawBalanceActuator.validate();
+        withdrawBalanceActuator.execute(getResult().getRet());
       } catch (ContractExeException e) {
         logger.debug("ContractExeException when calling withdrawBalanceNative in vm");
         logger.debug("ContractExeException: {}", e.getMessage());
-        return null;
+        this.getResult().setException(new Program.Exception().contractExecuteException(e));
+        return Pair.of(false, new DataWord(0).getData());
       } catch (ContractValidateException e) {
         logger.debug("ContractValidateException when calling withdrawBalanceNative in vm");
         logger.debug("ContractValidateException: {}", e.getMessage());
-        return null;
+        this.getResult().setException(new Program.Exception().contractValidateException(e));
+        return Pair.of(false, new DataWord(0).getData());
       }
       return Pair.of(true, new DataWord(1).getData());
     }
@@ -914,8 +974,12 @@ public class PrecompiledContracts {
     @Override
     public Pair<Boolean, byte[]> execute(byte[] data) {
 
-      if (data == null) {
-        data = EMPTY_BYTE_ARRAY;
+      if (isRootCallConstant()) {
+        return Pair.of(true, new DataWord(0).getData());
+      }
+
+      if (data == null || data.length != 2 * DataWord.DATAWORD_UNIT_SIZE) {
+        return Pair.of(false, new DataWord(0).getData());
       }
 
       byte[] proposalId = new byte[32];
@@ -936,19 +1000,32 @@ public class PrecompiledContracts {
 
       final List<Actuator> actuatorList = ActuatorFactory
           .createActuator(trx, getDeposit().getDbManager());
+      ProposalApproveActuator proposalApproveActuator;
       try {
-        actuatorList.get(0).validate();
-        actuatorList.get(0).execute(getResult().getRet());
-        getDeposit()
-            .syncCacheFromAccountStore(ByteString.copyFrom(getCallerAddress()).toByteArray());
+        if (Objects.isNull(actuatorList) || actuatorList.isEmpty()){
+          throw new ContractExeException("can't initiate ProposalApproveActuator for precompiled vm method");
+        }
+        else {
+          Optional proposalApproveOptional = actuatorList.stream().findFirst();
+          if (proposalApproveOptional.isPresent()) {
+            proposalApproveActuator = (ProposalApproveActuator) proposalApproveOptional.get();
+          } else {
+            throw new ContractExeException(
+                "can't initiate ProposalApproveActuator for precompiled vm method");
+          }
+        }
+        proposalApproveActuator.setDeposit(getDeposit());
+        proposalApproveActuator.validate();
+        proposalApproveActuator.execute(getResult().getRet());
       } catch (ContractExeException e) {
         logger.debug("ContractExeException when calling proposalApproveNative in vm");
         logger.debug("ContractExeException: {}", e.getMessage());
-        return null;
+        this.getResult().setException(new Program.Exception().contractExecuteException(e));
+        return Pair.of(false, new DataWord(0).getData());
       } catch (ContractValidateException e) {
         logger.debug("ContractValidateException when calling proposalApproveNative in vm");
         logger.debug("ContractValidateException: {}", e.getMessage());
-        return null;
+        return Pair.of(false, new DataWord(0).getData());
       }
       return Pair.of(true, new DataWord(1).getData());
     }
@@ -973,8 +1050,13 @@ public class PrecompiledContracts {
     @Override
     public Pair<Boolean, byte[]> execute(byte[] data) {
 
-      if (data == null) {
-        data = EMPTY_BYTE_ARRAY;
+      if (isRootCallConstant()) {
+        return Pair.of(true, new DataWord(0).getData());
+      }
+
+      if (data == null || data.length == 0 || (data.length % (2 * DataWord.DATAWORD_UNIT_SIZE)
+          != 0)) {
+        return Pair.of(false, new DataWord(0).getData());
       }
 
       HashMap<Long, Long> parametersMap = new HashMap<>();
@@ -1002,18 +1084,34 @@ public class PrecompiledContracts {
 
       final List<Actuator> actuatorList = ActuatorFactory
           .createActuator(trx, getDeposit().getDbManager());
+      ProposalCreateActuator proposalCreateActuator;
       try {
-        actuatorList.get(0).validate();
-        actuatorList.get(0).execute(getResult().getRet());
-        id = getDeposit().getDbManager().getDynamicPropertiesStore().getLatestProposalNum();
+        if (Objects.isNull(actuatorList) || actuatorList.isEmpty()){
+          throw new ContractExeException("can't initiate ProposalCreateActuator for precompiled vm method");
+        }
+        else {
+          Optional proposalCreateOptional = actuatorList.stream().findFirst();
+          if (proposalCreateOptional.isPresent()) {
+            proposalCreateActuator = (ProposalCreateActuator) proposalCreateOptional.get();
+          } else {
+            throw new ContractExeException(
+                "can't initiate ProposalCreateActuator for precompiled vm method");
+          }
+        }
+        proposalCreateActuator.setDeposit(getDeposit());
+        proposalCreateActuator.validate();
+        proposalCreateActuator.execute(getResult().getRet());
+        id = getDeposit().getLatestProposalNum();
       } catch (ContractExeException e) {
         logger.debug("ContractExeException when calling proposalCreateNative in vm");
         logger.debug("ContractExeException: {}", e.getMessage());
-        return null;
+        this.getResult().setException(new Program.Exception().contractExecuteException(e));
+        return Pair.of(false, new DataWord(0).getData());
       } catch (ContractValidateException e) {
         logger.debug("ContractValidateException when calling proposalCreateNative in vm");
         logger.debug("ContractValidateException: {}", e.getMessage());
-        return null;
+        this.getResult().setException(new Program.Exception().contractValidateException(e));
+        return Pair.of(false, new DataWord(0).getData());
       }
       return Pair.of(true, new DataWord(id).getData());
     }
@@ -1037,8 +1135,12 @@ public class PrecompiledContracts {
     @Override
     public Pair<Boolean, byte[]> execute(byte[] data) {
 
-      if (data == null) {
-        data = EMPTY_BYTE_ARRAY;
+      if (isRootCallConstant()) {
+        return Pair.of(true, new DataWord(0).getData());
+      }
+
+      if (data == null || data.length != DataWord.DATAWORD_UNIT_SIZE) {
+        return Pair.of(false, new DataWord(0).getData());
       }
       Contract.ProposalDeleteContract.Builder builder = Contract.ProposalDeleteContract
           .newBuilder();
@@ -1052,17 +1154,33 @@ public class PrecompiledContracts {
 
       final List<Actuator> actuatorList = ActuatorFactory
           .createActuator(trx, getDeposit().getDbManager());
+      ProposalDeleteActuator proposalDeleteActuator;
       try {
-        actuatorList.get(0).validate();
-        actuatorList.get(0).execute(getResult().getRet());
+        if (Objects.isNull(actuatorList) || actuatorList.isEmpty()){
+          throw new ContractExeException("can't initiate ProposalDeleteActuator for precompiled vm method");
+        }
+        else {
+          Optional proposalDeleteOptional = actuatorList.stream().findFirst();
+          if (proposalDeleteOptional.isPresent()) {
+            proposalDeleteActuator = (ProposalDeleteActuator) proposalDeleteOptional.get();
+          } else {
+            throw new ContractExeException(
+                "can't initiate ProposalDeleteActuator for precompiled vm method");
+          }
+        }
+        proposalDeleteActuator.setDeposit(getDeposit());
+        proposalDeleteActuator.validate();
+        proposalDeleteActuator.execute(getResult().getRet());
       } catch (ContractExeException e) {
         logger.debug("ContractExeException when calling proposalDeleteContract in vm");
         logger.debug("ContractExeException: {}", e.getMessage());
-        return null;
+        this.getResult().setException(new Program.Exception().contractExecuteException(e));
+        return Pair.of(false, new DataWord(0).getData());
       } catch (ContractValidateException e) {
         logger.debug("ContractValidateException when calling proposalDeleteContract in vm");
         logger.debug("ContractValidateException: {}", e.getMessage());
-        return null;
+        this.getResult().setException(new Program.Exception().contractValidateException(e));
+        return Pair.of(false, new DataWord(0).getData());
       }
       return Pair.of(true, new DataWord(1).getData());
     }
@@ -1087,8 +1205,8 @@ public class PrecompiledContracts {
     @Override
     public Pair<Boolean, byte[]> execute(byte[] data) {
 
-      if (data == null) {
-        data = EMPTY_BYTE_ARRAY;
+      if (data == null || data.length != DataWord.DATAWORD_UNIT_SIZE) {
+        return Pair.of(false, new DataWord(0).getData());
       }
       DataWord address = new DataWord(data);
       return Pair.of(true, new DataWord(address.getLast20Bytes()).getData());
@@ -1114,8 +1232,9 @@ public class PrecompiledContracts {
     @Override
     public Pair<Boolean, byte[]> execute(byte[] data) {
 
-      if (data == null) {
-        data = EMPTY_BYTE_ARRAY;
+      int checklength = addressCheckECKeyAddress.length();
+      if (data == null || data.length != checklength) {
+        return Pair.of(false, new DataWord(0).getData());
       }
 
       String addressBase58 = new String(data);
@@ -1127,8 +1246,7 @@ public class PrecompiledContracts {
   }
 
   /**
-   * Native function for transferring Asset to another account. <br/>
-   * <br/>
+   * Native function for transferring Asset to another account. <br/> <br/>
    *
    * Input data[]: <br/> toAddress, amount, assetName <br/>
    *
@@ -1144,58 +1262,62 @@ public class PrecompiledContracts {
     @Override
     public Pair<Boolean, byte[]> execute(byte[] data) {
 
-      if (data == null) {
-        data = EMPTY_BYTE_ARRAY;
-      }
-
-      byte[] toAddress = new byte[32];
-      System.arraycopy(data, 0, toAddress, 0, 32);
-      byte[] amount = new byte[32];
-      System.arraycopy(data, 32 + 16 + 8, amount, 0, 8);
-      // we already have a restrict for token name length, no more than 32 bytes. don't need to check again
-      byte[] name = new byte[32];
-      System.arraycopy(data, 64, name, 0, data.length-64);
-      int length =name.length;
-      while(length>0 && name[length -1] ==0){
-        length--;
-      }
-      name = ByteArray.subArray(name,0,length);
-      Contract.TransferAssetContract.Builder builder = Contract.TransferAssetContract
-          .newBuilder();
-      builder.setOwnerAddress(ByteString.copyFrom(getCallerAddress()));
-      builder.setToAddress(ByteString.copyFrom(convertToTronAddress(new DataWord(toAddress).getLast20Bytes())));
-      builder.setAmount(Longs.fromByteArray(amount));
-      builder.setAssetName(ByteString.copyFrom(name));
-
-
-      TransferAssetContract contract = builder.build();
-
-      TransactionCapsule trx = new TransactionCapsule(contract,
-          ContractType.TransferAssetContract);
-
-      final List<Actuator> actuatorList = ActuatorFactory
-          .createActuator(trx, getDeposit().getDbManager());
-      try {
-        actuatorList.get(0).validate();
-        actuatorList.get(0).execute(getResult().getRet());
-      } catch (ContractExeException e) {
-        logger.debug("ContractExeException when calling transferAssetContract in vm");
-        logger.debug("ContractExeException: {}", e.getMessage());
-        return null;
-      } catch (ContractValidateException e) {
-        logger.debug("ContractValidateException when calling transferAssetContract in vm");
-        logger.debug("ContractValidateException: {}", e.getMessage());
-        return null;
-      }
+//      if (isRootCallConstant()){
+//        return Pair.of(true, new DataWord(0).getData());
+//      }
+//
+//      if (data == null || (data.length <= DataWord.DATAWORD_UNIT_SIZE * 2 || data.length > DataWord.DATAWORD_UNIT_SIZE * 3)) {
+//        return Pair.of(false, new DataWord(0).getData());
+//      }
+//
+//      byte[] toAddress = new byte[32];
+//      System.arraycopy(data, 0, toAddress, 0, 32);
+//      byte[] amount = new byte[8];
+//      System.arraycopy(data, 32 + 16 + 8, amount, 0, 8);
+//      // we already have a restrict for token name length, no more than 32 bytes. don't need to check again
+//      byte[] name = new byte[32];
+//      System.arraycopy(data, 64, name, 0, data.length-64);
+//      int length =name.length;
+//      while(length>0 && name[length -1] ==0){
+//        length--;
+//      }
+//      name = ByteArray.subArray(name,0,length);
+//      Contract.TransferAssetContract.Builder builder = Contract.TransferAssetContract
+//          .newBuilder();
+//      builder.setOwnerAddress(ByteString.copyFrom(getCallerAddress()));
+//      builder.setToAddress(ByteString.copyFrom(convertToTronAddress(new DataWord(toAddress).getLast20Bytes())));
+//      builder.setAmount(Longs.fromByteArray(amount));
+//      builder.setAssetName(ByteString.copyFrom(name));
+//
+//
+//      TransferAssetContract contract = builder.build();
+//
+//      TransactionCapsule trx = new TransactionCapsule(contract,
+//          ContractType.TransferAssetContract);
+//
+//      final List<Actuator> actuatorList = ActuatorFactory
+//          .createActuator(trx, getDeposit().getDbManager());
+//      try {
+//        actuatorList.get(0).validate();
+//        actuatorList.get(0).execute(getResult().getRet());
+//      } catch (ContractExeException e) {
+//        logger.debug("ContractExeException when calling transferAssetContract in vm");
+//        logger.debug("ContractExeException: {}", e.getMessage());
+//        this.getResult().setException(new Program.Exception().contractExecuteException(e));
+//        return Pair.of(false, new DataWord(0).getData());
+//      } catch (ContractValidateException e) {
+//        logger.debug("ContractValidateException when calling transferAssetContract in vm");
+//        logger.debug("ContractValidateException: {}", e.getMessage());
+//        this.getResult().setException(new Program.Exception().contractValidateException(e));
+//        return Pair.of(false, new DataWord(0).getData());
+//      }
       return Pair.of(true, new DataWord(1).getData());
     }
   }
 
 
-
   /**
-   * Native function for check Asset balance basing on targetAddress and Asset name. <br/>
-   * <br/>
+   * Native function for check Asset balance basing on targetAddress and Asset name. <br/> <br/>
    *
    * Input data[]: <br/> address targetAddress, byte[] assetName <br/>
    *
@@ -1211,8 +1333,8 @@ public class PrecompiledContracts {
     @Override
     public Pair<Boolean, byte[]> execute(byte[] data) {
 
-      if (data == null) {
-        data = EMPTY_BYTE_ARRAY;
+      if (data == null || data.length != DataWord.DATAWORD_UNIT_SIZE * 2) {
+        return Pair.of(false, new DataWord(0).getData());
       }
 
       byte[] targetAddress = new byte[32];
@@ -1220,14 +1342,14 @@ public class PrecompiledContracts {
       // we already have a restrict for token name length, no more than 32 bytes. don't need to check again
       byte[] name = new byte[32];
       System.arraycopy(data, 32, name, 0, 32);
-      int length =name.length;
-      while(length>0 && name[length -1] ==0){
+      int length = name.length;
+      while (length > 0 && name[length - 1] == 0) {
         length--;
       }
-      name = ByteArray.subArray(name,0,length);
+      name = ByteArray.subArray(name, 0, length);
 
-      long assetBalance = this.getDeposit().getDbManager().getAccountStore().
-          get(convertToTronAddress(new DataWord(targetAddress).getLast20Bytes())).
+      long assetBalance = this.getDeposit().
+          getAccount(convertToTronAddress(new DataWord(targetAddress).getLast20Bytes())).
           getAssetMap().get(ByteArray.toStr(name));
 
       return Pair.of(true, new DataWord(Longs.toByteArray(assetBalance)).getData());

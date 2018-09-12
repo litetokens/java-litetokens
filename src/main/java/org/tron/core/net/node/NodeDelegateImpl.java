@@ -123,7 +123,7 @@ public class NodeDelegateImpl implements NodeDelegate {
       dbManager.getTransactionIdCache().put(trx.getTransactionId(), true);
     }
     try {
-      dbManager.pushTransaction(trx);
+      dbManager.pushTransaction(new TransactionCapsule(trx.getInstance().toBuilder().build()));
     } catch (ContractSizeNotEqualToOneException e) {
       logger.info("Contract validate failed" + e.getMessage());
       throw new BadTransactionException();

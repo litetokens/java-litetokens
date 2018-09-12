@@ -753,7 +753,9 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
     if (advObjWeRequested.containsKey(item)) {
       advObjWeRequested.remove(item);
       if (!syncFlag) {
+        long start = System.currentTimeMillis();
         processAdvBlock(peer, blkMsg.getBlockCapsule());
+        logger.info("Process Block cost {}ms}", blkMsg.getBlockId().getString(), (System.currentTimeMillis() - start));
         startFetchItem();
       }
     }

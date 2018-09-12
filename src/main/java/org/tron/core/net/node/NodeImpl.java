@@ -310,10 +310,10 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
       case BLOCK:
         BlockMessage blockMessage = (BlockMessage)msg;
         try{
-          BlockEventQueue.add(new BlockEvent(blockMessage, peer));
+          blockEventQueue.add(new BlockEvent(blockMessage, peer));
         }catch (Exception e){
           logger.info("Add block {} from {} failed, BlockEventQueue size={}",
-              blockMessage.getBlockId().getString(), peer.getInetAddress(), BlockEventQueue.size());
+              blockMessage.getBlockId().getString(), peer.getInetAddress(), blockEventQueue.size());
         }
         break;
       case TRX:

@@ -11,7 +11,6 @@ import org.tron.core.net.message.TronMessage;
 
 @Component
 @Scope("prototype")
-@Slf4j
 public class TronHandler extends SimpleChannelInboundHandler<TronMessage> {
 
   protected PeerConnection peer;
@@ -26,9 +25,6 @@ public class TronHandler extends SimpleChannelInboundHandler<TronMessage> {
 
   @Override
   public void channelRead0(final ChannelHandlerContext ctx, TronMessage msg) {
-    if (peer.isDisconnect()){
-      logger.error("Receive {} from disconnect peer {}", msg.getType(), peer.getInetAddress());
-    }
     msgQueue.receivedMessage(msg);
     peerDel.onMessage(peer, msg);
   }

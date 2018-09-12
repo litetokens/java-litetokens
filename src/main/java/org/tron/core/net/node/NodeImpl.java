@@ -95,13 +95,13 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
     }
   }
 
-  private LinkedBlockingQueue<BlockEvent> BlockEventQueue = new LinkedBlockingQueue<>(1000);
+  private LinkedBlockingQueue<BlockEvent> blockEventQueue = new LinkedBlockingQueue<>(1000);
 
   Thread advBlockHandler = new Thread(()->{
     while (true){
       BlockEvent blockEvent = null;
       try{
-        blockEvent = BlockEventQueue.take();
+        blockEvent = blockEventQueue.take();
         onHandleBlockMessage(blockEvent.getPeerConnection(), blockEvent.getBlockMessage());
       }catch (Exception e){
         logger.error("handle block {} failed, peer {}", blockEvent.getBlockMessage().getBlockId().getString(),
@@ -724,6 +724,10 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
   }
 
   private void onHandleBlockMessage(PeerConnection peer, BlockMessage blkMsg) {
+    if (peer.isDisconnect()){
+      logger.warn("Discard adv block {} from peer {}", blkMsg.getBlockId().getString(), peer.getInetAddress());
+      return;
+    }
     Map<Item, Long> advObjWeRequested = peer.getAdvObjWeRequested();
     Map<BlockId, Long> syncBlockRequested = peer.getSyncBlockRequested();
     BlockId blockId = blkMsg.getBlockId();
@@ -755,7 +759,8 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
       if (!syncFlag) {
         long start = System.currentTimeMillis();
         processAdvBlock(peer, blkMsg.getBlockCapsule());
-        logger.info("Process Block {} cost {}ms}", blkMsg.getBlockId().getString(), (System.currentTimeMillis() - start));
+        logger.info("Process Block {} cost {} ms, queueSize = {}",
+            blkMsg.getBlockId().getString(), (System.currentTimeMillis() - start), blockEventQueue.size());
         startFetchItem();
       }
     }

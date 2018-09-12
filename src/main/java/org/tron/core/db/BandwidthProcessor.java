@@ -342,6 +342,7 @@ public class BandwidthProcessor extends ResourceProcessor {
       return false;
     }
 
+    //todo：need version control for adaptiveResourceLimit
     long publicNetLimit = dbManager.getDynamicPropertiesStore().getPublicNetCurrentLimit();
     long publicNetUsage = dbManager.getDynamicPropertiesStore().getPublicNetUsage();
     long publicNetTime = dbManager.getDynamicPropertiesStore().getPublicNetTime();

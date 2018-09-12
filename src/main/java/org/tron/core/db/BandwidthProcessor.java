@@ -342,7 +342,6 @@ public class BandwidthProcessor extends ResourceProcessor {
       return false;
     }
 
-    //todo：need version control for adaptiveResourceLimit
     long publicNetLimit = dbManager.getDynamicPropertiesStore().getPublicNetCurrentLimit();
     long publicNetUsage = dbManager.getDynamicPropertiesStore().getPublicNetUsage();
     long publicNetTime = dbManager.getDynamicPropertiesStore().getPublicNetTime();
@@ -367,6 +366,7 @@ public class BandwidthProcessor extends ResourceProcessor {
     dbManager.getDynamicPropertiesStore().savePublicNetTime(publicNetTime);
     dbManager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
 
+    //todo：need version control and config for adaptiveResourceLimit
     updateAdaptiveFreeBandwidthLimit(now,false);
     return true;
   }

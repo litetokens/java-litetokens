@@ -60,10 +60,6 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   private static final byte[] WITNESS_STANDBY_ALLOWANCE = "WITNESS_STANDBY_ALLOWANCE".getBytes();
 
-  private static final byte[] TOTAL_ENERGY_WEIGHT = "TOTAL_ENERGY_WEIGHT".getBytes();
-
-  private static final byte[] TOTAL_ENERGY_LIMIT = "TOTAL_ENERGY_LIMIT".getBytes();
-
   private static final byte[] ENERGY_FEE = "ENERGY_FEE".getBytes();
 
   private static final byte[] MAX_CPU_TIME_OF_ONE_TX = "MAX_CPU_TIME_OF_ONE_TX".getBytes();
@@ -145,6 +141,10 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     private static final byte[] TOTAL_NET_AVERAGE_USAGE = "TOTAL_NET_AVERAGE_USAGE".getBytes();
 
     private static final byte[] TOTAL_NET_AVERAGE_TIME = "TOTAL_NET_AVERAGE_TIME".getBytes();
+
+    private static final byte[] TOTAL_ENERGY_WEIGHT = "TOTAL_ENERGY_WEIGHT".getBytes();
+
+    private static final byte[] TOTAL_ENERGY_LIMIT = "TOTAL_ENERGY_LIMIT".getBytes();
   }
 
   @Autowired
@@ -772,12 +772,12 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public void saveTotalEnergyWeight(long totalEnergyWeight) {
-    this.put(TOTAL_ENERGY_WEIGHT,
+    this.put(DynamicResourceProperties.TOTAL_ENERGY_WEIGHT,
         new BytesCapsule(ByteArray.fromLong(totalEnergyWeight)));
   }
 
   public long getTotalEnergyWeight() {
-    return Optional.ofNullable(getUnchecked(TOTAL_ENERGY_WEIGHT))
+    return Optional.ofNullable(getUnchecked(DynamicResourceProperties.TOTAL_ENERGY_WEIGHT))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
@@ -839,12 +839,12 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
 
   public void saveTotalEnergyLimit(long totalEnergyLimit) {
-    this.put(TOTAL_ENERGY_LIMIT,
+    this.put(DynamicResourceProperties.TOTAL_ENERGY_LIMIT,
         new BytesCapsule(ByteArray.fromLong(totalEnergyLimit)));
   }
 
   public long getTotalEnergyLimit() {
-    return Optional.ofNullable(getUnchecked(TOTAL_ENERGY_LIMIT))
+    return Optional.ofNullable(getUnchecked(DynamicResourceProperties.TOTAL_ENERGY_LIMIT))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(

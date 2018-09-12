@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
@@ -70,6 +71,7 @@ import org.tron.core.net.message.TronMessage;
 import org.tron.core.net.peer.PeerConnection;
 import org.tron.core.net.peer.PeerConnectionDelegate;
 import org.tron.protos.Protocol;
+import org.tron.protos.Protocol.Block;
 import org.tron.protos.Protocol.Inventory.InventoryType;
 import org.tron.protos.Protocol.ReasonCode;
 import org.tron.protos.Protocol.Transaction;
@@ -80,6 +82,33 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
 
   @Autowired
   private SyncPool pool;
+
+  @Getter
+  class BlockEvent {
+
+    BlockMessage blockMessage;
+    PeerConnection peerConnection;
+
+    public BlockEvent(BlockMessage blockMessage, PeerConnection peerConnection){
+      this.blockMessage = blockMessage;
+      this.peerConnection = peerConnection;
+    }
+  }
+
+  private LinkedBlockingQueue<BlockEvent> BlockEventQueue = new LinkedBlockingQueue<>(1000);
+
+  Thread advBlockHandler = new Thread(()->{
+    while (true){
+      BlockEvent blockEvent = null;
+      try{
+        blockEvent = BlockEventQueue.take();
+        onHandleBlockMessage(blockEvent.getPeerConnection(), blockEvent.getBlockMessage());
+      }catch (Exception e){
+        logger.error("handle block {} failed, peer {}", blockEvent.getBlockMessage().getBlockId().getString(),
+            blockEvent.getPeerConnection().getInetAddress());
+      }
+    }
+  });
 
   private MessageCount trxCount = new MessageCount();
 
@@ -97,6 +126,8 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
   private int maxTrxsSize = 1_000_000;
 
   private int maxTrxsCnt = 100;
+
+
 
   @Getter
   class PriorItem implements java.lang.Comparable<PriorItem> {
@@ -195,7 +226,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
   private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
 
   private ExecutorService trxsHandlePool = Executors
-      .newFixedThreadPool(Args.getInstance().getValidateSignThreadNum(),
+      .newFixedThreadPool(Args.getInstance().getValidateSignThreadNum() / 2 + 1,
           new ThreadFactoryBuilder()
               .setNameFormat("TrxsHandlePool-%d").build());
 
@@ -277,7 +308,13 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
   public void onMessage(PeerConnection peer, TronMessage msg) {
     switch (msg.getType()) {
       case BLOCK:
-        onHandleBlockMessage(peer, (BlockMessage) msg);
+        BlockMessage blockMessage = (BlockMessage)msg;
+        try{
+          BlockEventQueue.add(new BlockEvent(blockMessage, peer));
+        }catch (Exception e){
+          logger.info("Add block {} from {} failed, BlockEventQueue size={}",
+              blockMessage.getBlockId().getString(), peer.getInetAddress(), BlockEventQueue.size());
+        }
         break;
       case TRX:
         onHandleTransactionMessage(peer, (TransactionMessage) msg);
@@ -350,6 +387,10 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
   }
 
   private void activeTronPump() {
+
+    advBlockHandler.setPriority(10);
+    advBlockHandler.start();
+
     loopAdvertiseInv = new ExecutorLoop<>(2, 10, b -> {
       for (PeerConnection peer : getActivePeer()) {
         if (!peer.isNeedSyncFromUs()) {

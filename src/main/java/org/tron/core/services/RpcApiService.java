@@ -128,7 +128,7 @@ public class RpcApiService implements Service {
 
       if (args.getRpcThreadNum() > 0) {
         serverBuilder = serverBuilder
-            .executor(Executors.newFixedThreadPool(args.getRpcThreadNum()));
+            .executor(Executors.newFixedThreadPool(4));
       }
 
       if (args.isSolidityNode()) {

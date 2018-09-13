@@ -226,7 +226,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
   private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
 
   private ExecutorService trxsHandlePool = Executors
-      .newFixedThreadPool(Args.getInstance().getValidateSignThreadNum() / 2 + 1,
+      .newFixedThreadPool(4,
           new ThreadFactoryBuilder()
               .setNameFormat("TrxsHandlePool-%d").build());
 
@@ -759,8 +759,9 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
       if (!syncFlag) {
         long start = System.currentTimeMillis();
         processAdvBlock(peer, blkMsg.getBlockCapsule());
-        logger.info("Process Block {} cost {} ms, queueSize = {}",
-            blkMsg.getBlockId().getString(), (System.currentTimeMillis() - start), blockEventQueue.size());
+        logger.info("Process BlockNum={} trxSize={} queueSize = {} cost {}",
+            blkMsg.getBlockId().getNum(), blkMsg.getBlockCapsule().getTransactions().size(),
+            blockEventQueue.size(), (System.currentTimeMillis() - start));
         startFetchItem();
       }
     }

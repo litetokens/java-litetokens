@@ -52,10 +52,6 @@ import org.tron.common.crypto.Hash;
 import org.tron.common.overlay.discover.node.NodeHandler;
 import org.tron.common.overlay.discover.node.NodeManager;
 import org.tron.common.overlay.message.Message;
-import org.tron.common.runtime.Runtime;
-import org.tron.common.runtime.vm.program.ProgramResult;
-import org.tron.common.runtime.vm.program.invoke.ProgramInvokeFactoryImpl;
-import org.tron.common.storage.DepositImpl;
 import org.tron.common.utils.Base58;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Sha256Hash;
@@ -69,7 +65,6 @@ import org.tron.core.capsule.ContractCapsule;
 import org.tron.core.capsule.ExchangeCapsule;
 import org.tron.core.capsule.ProposalCapsule;
 import org.tron.core.capsule.TransactionCapsule;
-import org.tron.core.capsule.TransactionResultCapsule;
 import org.tron.core.capsule.WitnessCapsule;
 import org.tron.core.config.Parameter.ChainConstant;
 import org.tron.core.config.Parameter.ChainParameters;
@@ -77,23 +72,15 @@ import org.tron.core.config.args.Args;
 import org.tron.core.db.AccountIdIndexStore;
 import org.tron.core.db.AccountStore;
 import org.tron.core.db.BandwidthProcessor;
-import org.tron.core.db.ContractStore;
 import org.tron.core.db.DynamicPropertiesStore;
 import org.tron.core.db.EnergyProcessor;
 import org.tron.core.db.Manager;
 import org.tron.core.db.PendingManager;
-import org.tron.core.exception.AccountResourceInsufficientException;
-import org.tron.core.exception.BadTransactionException;
 import org.tron.core.exception.ContractExeException;
 import org.tron.core.exception.ContractValidateException;
-import org.tron.core.exception.DupTransactionException;
 import org.tron.core.exception.HeaderNotFound;
 import org.tron.core.exception.StoreException;
-import org.tron.core.exception.TaposException;
-import org.tron.core.exception.TooBigTransactionException;
-import org.tron.core.exception.TransactionExpirationException;
 import org.tron.core.exception.VMIllegalException;
-import org.tron.core.exception.ValidateSignatureException;
 import org.tron.core.net.message.TransactionMessage;
 import org.tron.core.net.node.NodeImpl;
 import org.tron.protos.Contract.AssetIssueContract;
@@ -110,7 +97,6 @@ import org.tron.protos.Protocol.SmartContract.ABI;
 import org.tron.protos.Protocol.SmartContract.ABI.Entry.StateMutabilityType;
 import org.tron.protos.Protocol.Transaction;
 import org.tron.protos.Protocol.Transaction.Contract.ContractType;
-import org.tron.protos.Protocol.Transaction.Result.code;
 import org.tron.protos.Protocol.TransactionSign;
 
 @Slf4j
@@ -412,50 +398,51 @@ public class Wallet {
       if (dbManager.getDynamicPropertiesStore().supportVM()) {
         trx.resetResult();
       }
-      dbManager.pushTransaction(trx);
+      // dbManager.pushTransaction(trx);
       p2pNode.broadcast(message);
 
       return builder.setResult(true).setCode(response_code.SUCCESS).build();
-    } catch (ValidateSignatureException e) {
-      logger.info(e.getMessage());
-      return builder.setResult(false).setCode(response_code.SIGERROR)
-          .setMessage(ByteString.copyFromUtf8("validate signature error"))
-          .build();
-    } catch (ContractValidateException e) {
-      logger.info(e.getMessage());
-      return builder.setResult(false).setCode(response_code.CONTRACT_VALIDATE_ERROR)
-          .setMessage(ByteString.copyFromUtf8("contract validate error : " + e.getMessage()))
-          .build();
-    } catch (ContractExeException e) {
-      logger.info(e.getMessage());
-      return builder.setResult(false).setCode(response_code.CONTRACT_EXE_ERROR)
-          .setMessage(ByteString.copyFromUtf8("contract execute error : " + e.getMessage()))
-          .build();
-    } catch (AccountResourceInsufficientException e) {
-      logger.info(e.getMessage());
-      return builder.setResult(false).setCode(response_code.BANDWITH_ERROR)
-          .setMessage(ByteString.copyFromUtf8("AccountResourceInsufficient error"))
-          .build();
-    } catch (DupTransactionException e) {
-      logger.info("dup trans" + e.getMessage());
-      return builder.setResult(false).setCode(response_code.DUP_TRANSACTION_ERROR)
-          .setMessage(ByteString.copyFromUtf8("dup transaction"))
-          .build();
-    } catch (TaposException e) {
-      logger.info("tapos error" + e.getMessage());
-      return builder.setResult(false).setCode(response_code.TAPOS_ERROR)
-          .setMessage(ByteString.copyFromUtf8("Tapos check error"))
-          .build();
-    } catch (TooBigTransactionException e) {
-      logger.info("transaction error" + e.getMessage());
-      return builder.setResult(false).setCode(response_code.TOO_BIG_TRANSACTION_ERROR)
-          .setMessage(ByteString.copyFromUtf8("transaction size is too big"))
-          .build();
-    } catch (TransactionExpirationException e) {
-      logger.info("transaction expired" + e.getMessage());
-      return builder.setResult(false).setCode(response_code.TRANSACTION_EXPIRATION_ERROR)
-          .setMessage(ByteString.copyFromUtf8("transaction expired"))
-          .build();
+      // }
+      // catch (ValidateSignatureException e) {
+      //   logger.info(e.getMessage());
+      //   return builder.setResult(false).setCode(response_code.SIGERROR)
+      //       .setMessage(ByteString.copyFromUtf8("validate signature error"))
+      //       .build();
+      // } catch (ContractValidateException e) {
+      //   logger.info(e.getMessage());
+      //   return builder.setResult(false).setCode(response_code.CONTRACT_VALIDATE_ERROR)
+      //       .setMessage(ByteString.copyFromUtf8("contract validate error : " + e.getMessage()))
+      //       .build();
+      // } catch (ContractExeException e) {
+      //   logger.info(e.getMessage());
+      //   return builder.setResult(false).setCode(response_code.CONTRACT_EXE_ERROR)
+      //       .setMessage(ByteString.copyFromUtf8("contract execute error : " + e.getMessage()))
+      //       .build();
+      // } catch (AccountResourceInsufficientException e) {
+      //   logger.info(e.getMessage());
+      //   return builder.setResult(false).setCode(response_code.BANDWITH_ERROR)
+      //       .setMessage(ByteString.copyFromUtf8("AccountResourceInsufficient error"))
+      //       .build();
+      // } catch (DupTransactionException e) {
+      //   logger.info("dup trans" + e.getMessage());
+      //   return builder.setResult(false).setCode(response_code.DUP_TRANSACTION_ERROR)
+      //       .setMessage(ByteString.copyFromUtf8("dup transaction"))
+      //       .build();
+      // } catch (TaposException e) {
+      //   logger.info("tapos error" + e.getMessage());
+      //   return builder.setResult(false).setCode(response_code.TAPOS_ERROR)
+      //       .setMessage(ByteString.copyFromUtf8("Tapos check error"))
+      //       .build();
+      // } catch (TooBigTransactionException e) {
+      //   logger.info("transaction error" + e.getMessage());
+      //   return builder.setResult(false).setCode(response_code.TOO_BIG_TRANSACTION_ERROR)
+      //       .setMessage(ByteString.copyFromUtf8("transaction size is too big"))
+      //       .build();
+      // } catch (TransactionExpirationException e) {
+      //   logger.info("transaction expired" + e.getMessage());
+      //   return builder.setResult(false).setCode(response_code.TRANSACTION_EXPIRATION_ERROR)
+      //       .setMessage(ByteString.copyFromUtf8("transaction expired"))
+      //       .build();
     } catch (Exception e) {
       logger.info("exception caught" + e.getMessage());
       return builder.setResult(false).setCode(response_code.OTHER_ERROR)
@@ -864,56 +851,56 @@ public class Wallet {
       TransactionCapsule trxCap, Builder builder,
       Return.Builder retBuilder)
       throws ContractValidateException, ContractExeException, HeaderNotFound, VMIllegalException {
+    //
+    // ContractStore contractStore = dbManager.getContractStore();
+    // byte[] contractAddress = triggerSmartContract.getContractAddress().toByteArray();
+    // SmartContract.ABI abi = contractStore.getABI(contractAddress);
+    // if (abi == null) {
+    //   throw new ContractValidateException("No contract or not a smart contract");
+    // }
+    //
+    // byte[] selector = getSelector(triggerSmartContract.getData().toByteArray());
 
-    ContractStore contractStore = dbManager.getContractStore();
-    byte[] contractAddress = triggerSmartContract.getContractAddress().toByteArray();
-    SmartContract.ABI abi = contractStore.getABI(contractAddress);
-    if (abi == null) {
-      throw new ContractValidateException("No contract or not a smart contract");
-    }
-
-    byte[] selector = getSelector(triggerSmartContract.getData().toByteArray());
-
-    if (!isConstant(abi, selector)) {
-      return trxCap.getInstance();
-    } else {
-      if (!Args.getInstance().isSupportConstant()) {
-        throw new ContractValidateException("this node don't support constant");
-      }
-      DepositImpl deposit = DepositImpl.createRoot(dbManager);
-
-      Block headBlock;
-      List<BlockCapsule> blockCapsuleList = dbManager.getBlockStore().getBlockByLatestNum(1);
-      if (CollectionUtils.isEmpty(blockCapsuleList)) {
-        throw new HeaderNotFound("latest block not found");
-      } else {
-        headBlock = blockCapsuleList.get(0).getInstance();
-      }
-
-      Runtime runtime = new Runtime(trxCap.getInstance(), new BlockCapsule(headBlock), deposit,
-          new ProgramInvokeFactoryImpl(), true);
-      runtime.execute();
-      runtime.go();
-      runtime.finalization();
-      // TODO exception
-      if (runtime.getResult().getException() != null) {
-        RuntimeException e = runtime.getResult().getException();
-        logger.warn("Constant call has error {}", e.getMessage());
-        throw e;
-      }
-
-      ProgramResult result = runtime.getResult();
-      TransactionResultCapsule ret = new TransactionResultCapsule();
-
-      builder.addConstantResult(ByteString.copyFrom(result.getHReturn()));
-      ret.setStatus(0, code.SUCESS);
-      if (StringUtils.isNoneEmpty(runtime.getRuntimeError())) {
-        ret.setStatus(0, code.FAILED);
-        retBuilder.setMessage(ByteString.copyFromUtf8(runtime.getRuntimeError())).build();
-      }
-      trxCap.setResult(ret);
-      return trxCap.getInstance();
-    }
+    // if (!isConstant(abi, selector)) {
+    return trxCap.getInstance();
+    // } else {
+    //   if (!Args.getInstance().isSupportConstant()) {
+    //     throw new ContractValidateException("this node don't support constant");
+    //   }
+    //   DepositImpl deposit = DepositImpl.createRoot(dbManager);
+    //
+    //   Block headBlock;
+    //   List<BlockCapsule> blockCapsuleList = dbManager.getBlockStore().getBlockByLatestNum(1);
+    //   if (CollectionUtils.isEmpty(blockCapsuleList)) {
+    //     throw new HeaderNotFound("latest block not found");
+    //   } else {
+    //     headBlock = blockCapsuleList.get(0).getInstance();
+    //   }
+    //
+    //   Runtime runtime = new Runtime(trxCap.getInstance(), new BlockCapsule(headBlock), deposit,
+    //       new ProgramInvokeFactoryImpl(), true);
+    //   runtime.execute();
+    //   runtime.go();
+    //   runtime.finalization();
+    //   // TODO exception
+    //   if (runtime.getResult().getException() != null) {
+    //     RuntimeException e = runtime.getResult().getException();
+    //     logger.warn("Constant call has error {}", e.getMessage());
+    //     throw e;
+    //   }
+    //
+    //   ProgramResult result = runtime.getResult();
+    //   TransactionResultCapsule ret = new TransactionResultCapsule();
+    //
+    //   builder.addConstantResult(ByteString.copyFrom(result.getHReturn()));
+    //   ret.setStatus(0, code.SUCESS);
+    //   if (StringUtils.isNoneEmpty(runtime.getRuntimeError())) {
+    //     ret.setStatus(0, code.FAILED);
+    //     retBuilder.setMessage(ByteString.copyFromUtf8(runtime.getRuntimeError())).build();
+    //   }
+    //   trxCap.setResult(ret);
+    //   return trxCap.getInstance();
+    // }
   }
 
   public SmartContract getContract(GrpcAPI.BytesMessage bytesMessage) {

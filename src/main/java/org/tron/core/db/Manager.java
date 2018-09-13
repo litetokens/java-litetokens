@@ -961,9 +961,9 @@ public class Manager {
 
     DepositImpl deposit = DepositImpl.createRoot(this);
     Runtime runtime = new Runtime(trace, blockCap, deposit, new ProgramInvokeFactoryImpl());
-    if (runtime.isCallConstant()) {
-      throw new VMIllegalException("cannot call constant method ");
-    }
+    // if (runtime.isCallConstant()) {
+    //   throw new VMIllegalException("cannot call constant method ");
+    // }
 
     trace.init();
     trace.exec(runtime);

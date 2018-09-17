@@ -26,7 +26,8 @@ apply plugin: 'maven-publish'
 
 sourceCompatibility = 1.8
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
-mainClassName = 'org.tron.program.FullNode'
+// mainClassName = 'org.tron.program.FullNode'
+mainClassName = 'org.tron.program.RecommendProperties'
 
 publishing {
     publications {

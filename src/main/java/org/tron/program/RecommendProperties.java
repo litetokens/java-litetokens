@@ -2,7 +2,6 @@ package org.tron.program;
 
 import java.io.File;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 import org.tron.common.application.Application;
 import org.tron.common.application.ApplicationFactory;
@@ -25,15 +24,15 @@ import org.tron.protos.Protocol.AccountType;
 
 public class RecommendProperties {
 
-  private Manager dbManager;
-  private TronApplicationContext context;
-  private DepositImpl deposit;
-  private String dbPath = "output_TimeBenchmarkTest";
-  private String OWNER_ADDRESS;
-  private Application AppT;
-  private long totalBalance = 30_000_000_000_000L;
+  private static Manager dbManager;
+  private static TronApplicationContext context;
+  private static DepositImpl deposit;
+  private static String dbPath = "output_TimeBenchmarkTest";
+  private static String OWNER_ADDRESS;
+  private static Application AppT;
+  private static long totalBalance = 30_000_000_000_000L;
 
-  public void initData() {
+  public static void initData() {
     Args.setParam(
         new String[]{"--output-directory", dbPath, "--debug",},
         "config-localtest.conf");
@@ -95,7 +94,7 @@ public class RecommendProperties {
   //   }
   // }
 
-  public TimeBenchmarkResult timeBenchmark()
+  public static TimeBenchmarkResult timeBenchmark()
       throws ContractExeException, ContractValidateException, ReceiptCheckErrException, VMIllegalException, InterruptedException {
     long value = 0;
     long feeLimit = 200_000_000L; // sun
@@ -137,7 +136,7 @@ public class RecommendProperties {
 
   }
 
-  public long triggerContractAndReturnDuration(byte[] contractAddress, long feeLimit)
+  public static long triggerContractAndReturnDuration(byte[] contractAddress, long feeLimit)
       throws ContractExeException, ReceiptCheckErrException, VMIllegalException, ContractValidateException {
     /* ====================================================================== */
     String params = "0000000000000000000000000000000000000000000000000000000000001770" +
@@ -152,7 +151,7 @@ public class RecommendProperties {
     return result.getDuration();
   }
 
-  public TimeBenchmarkResult getTimeRatio()
+  public static TimeBenchmarkResult getTimeRatio()
       throws ContractExeException, ReceiptCheckErrException, VMIllegalException, ContractValidateException, InterruptedException {
 
     TimeBenchmarkResult result = timeBenchmark();
@@ -160,7 +159,7 @@ public class RecommendProperties {
     return result;
   }
 
-  public long getMem() {
+  public static long getMem() {
 
     com.sun.management.OperatingSystemMXBean os = (com.sun.management.OperatingSystemMXBean)
         java.lang.management.ManagementFactory.getOperatingSystemMXBean();
@@ -169,7 +168,7 @@ public class RecommendProperties {
     return (long) (physicalMemorySize / 1024 / 1024 * 0.8);
   }
 
-  public boolean checkJavaVersion() {
+  public static boolean checkJavaVersion() {
     String name = System.getProperty("java.runtime.name").toLowerCase();
     if (name.indexOf("openjdk") != -1) {
       return false;
@@ -184,9 +183,7 @@ public class RecommendProperties {
     }
   }
 
-  @Test
-  public void systemProperty()
-      throws ContractExeException, ReceiptCheckErrException, VMIllegalException, ContractValidateException, InterruptedException {
+  public static void main(String[] args) {
 
     boolean checkVersion = checkJavaVersion();
 
@@ -201,7 +198,20 @@ public class RecommendProperties {
 
     initData();
 
-    TimeBenchmarkResult timeResult = getTimeRatio();
+    TimeBenchmarkResult timeResult = null;
+    try {
+      timeResult = getTimeRatio();
+    } catch (ContractExeException e) {
+      e.printStackTrace();
+    } catch (ReceiptCheckErrException e) {
+      e.printStackTrace();
+    } catch (VMIllegalException e) {
+      e.printStackTrace();
+    } catch (ContractValidateException e) {
+      e.printStackTrace();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
     System.out
         .println(String.format("recommend minTimeRatio: %.2f, recommend maxTimeRatio: %.2f",
             timeResult.minTimeRatio, timeResult.maxTimeRatio));
@@ -210,19 +220,19 @@ public class RecommendProperties {
 
   }
 
-  public void destroyData() {
+  public static void destroyData() {
     Args.clearParam();
     AppT.shutdownServices();
     AppT.shutdown();
     context.destroy();
     if (FileUtil.deleteDir(new File(dbPath))) {
-      // logger.info("Release resources successful.");
+      logger.info("Release resources successful.");
     } else {
-      // logger.info("Release resources failure.");
+      logger.info("Release resources failure.");
     }
   }
 
-  class TimeBenchmarkResult {
+  public static class TimeBenchmarkResult {
 
     private double minTimeRatio;
     private double maxTimeRatio;

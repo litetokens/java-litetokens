@@ -218,6 +218,8 @@ public class RecommendProperties {
 
     destroyData();
 
+    System.exit(0);
+
   }
 
   public static void destroyData() {

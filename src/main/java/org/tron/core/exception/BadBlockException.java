@@ -9,4 +9,9 @@ public class BadBlockException extends TronException {
   public BadBlockException(String message) {
     super(message);
   }
+
+  public BadBlockException(DupTransactionException e) {
+    super(e.getMessage());
+  }
+
 }

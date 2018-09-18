@@ -261,37 +261,67 @@ public class BlockCapsule implements ProtoCapsule<Block> {
         this.block.getBlockHeader().toBuilder().setRawData(blockHeaderRaw)).build();
   }
 
+  /**
+   * Calculate account state Merkle root hash of this block.
+   */
   public Sha256Hash calcAccountStateMerkleRoot(Manager manager) {
-    Map<byte[], Boolean> accountsAddress = new HashMap<>();
+    logger.trace("Start calculate account state merkle root");
+    long start = Time.getCurrentMillis();
+    Map<ByteString, Boolean> accountsAddress = new HashMap<>();
 
     List<Transaction> transactionsList = this.block.getTransactionsList();
 
     if (CollectionUtils.isEmpty(transactionsList)) {
+      logger.trace(
+          "End calculate account state merkle root, "
+              + "account count: {}, "
+              + "time consuming: {}ms, "
+              + "root hash: {}",
+          accountsAddress.size(),
+          Time.getCurrentMillis() - start,
+          Sha256Hash.ZERO_HASH.toString());
       return Sha256Hash.ZERO_HASH;
     }
 
     for (Transaction transaction : transactionsList) {
       for (Contract contract : transaction.getRawData().getContractList()) {
-        accountsAddress.put(TransactionCapsule.getOwner(contract), true);
-        accountsAddress.put(TransactionCapsule.getToAddress(contract), true);
+        accountsAddress.put(ByteString.copyFrom(TransactionCapsule.getOwner(contract)), true);
+        accountsAddress.put(ByteString.copyFrom(TransactionCapsule.getToAddress(contract)), true);
       }
     }
 
     AccountStore accountStore = manager.getAccountStore();
-    Set<Entry<byte[], Boolean>> accountsAddressEntries = accountsAddress.entrySet();
+    Set<Entry<ByteString, Boolean>> accountsAddressEntries = accountsAddress.entrySet();
     List<Sha256Hash> hashes = new ArrayList<>();
-    for (Entry<byte[], Boolean> accountsAddressEntry : accountsAddressEntries) {
-      AccountCapsule accountCapsule = accountStore.get(accountsAddressEntry.getKey());
+    for (Entry<ByteString, Boolean> accountsAddressEntry : accountsAddressEntries) {
+      AccountCapsule accountCapsule = accountStore.get(accountsAddressEntry.getKey().toByteArray());
       if (null != accountCapsule) {
         hashes.add(accountCapsule.getMerkleHash());
       }
     }
 
-    return MerkleTree.getInstance().createTree(hashes).getRoot().getHash();
+    Sha256Hash rootHash = MerkleTree.getInstance().createTree(hashes).getRoot().getHash();
+    logger.trace(
+        "End calculate account state merkle root, "
+            + "account count: {}, "
+            + "time consuming: {}ms, "
+            + "root hash: {}",
+        accountsAddress.size(),
+        Time.getCurrentMillis() - start,
+        rootHash.toString());
+    return rootHash;
   }
 
-  public void setAccountStateMerkleRoot() {
+  /**
+   * Set account state Merkle root hash of this block.
+   */
+  public void setAccountStateMerkleRoot(Manager manager) {
+    BlockHeader.raw blockHeaderRaw =
+        this.block.getBlockHeader().getRawData().toBuilder()
+            .setAccountTrieRoot(calcAccountStateMerkleRoot(manager).getByteString()).build();
 
+    this.block = this.block.toBuilder().setBlockHeader(
+        this.block.getBlockHeader().toBuilder().setRawData(blockHeaderRaw)).build();
   }
 
   /* only for genisis */
@@ -306,6 +336,10 @@ public class BlockCapsule implements ProtoCapsule<Block> {
 
   public Sha256Hash getMerkleRoot() {
     return Sha256Hash.wrap(this.block.getBlockHeader().getRawData().getTxTrieRoot());
+  }
+
+  public Sha256Hash getAccountStateMerkleRoot() {
+    return Sha256Hash.wrap(this.block.getBlockHeader().getRawData().getAccountTrieRoot());
   }
 
   public ByteString getWitnessAddress() {

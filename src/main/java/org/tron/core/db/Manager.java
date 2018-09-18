@@ -738,6 +738,17 @@ public class Manager {
                   + block.getMerkleRoot());
           throw new BadBlockException("The merkle hash is not validated");
         }
+
+        Sha256Hash accountStateMerkleRoot = block.calcAccountStateMerkleRoot(this);
+
+        if (!accountStateMerkleRoot.equals(block.getAccountStateMerkleRoot())) {
+          logger.warn(
+              "The account state merkle root doesn't match, Cacl result is "
+                  + accountStateMerkleRoot
+                  + " , the headers is "
+                  + block.getAccountStateMerkleRoot());
+          throw  new BadBlockException("The account state merkle hash is not validated");
+        }
       }
 
       BlockCapsule newBlock = this.khaosDb.push(block);
@@ -1118,6 +1129,7 @@ public class Manager {
         "postponedTrxCount[" + postponedTrxCount + "],TrxLeft[" + pendingTransactions.size()
             + "],repushTrxCount[" + repushTransactions.size() + "]");
     blockCapsule.setMerkleRoot();
+    blockCapsule.setAccountStateMerkleRoot(this);
     blockCapsule.sign(privateKey);
 
     try {

@@ -21,7 +21,11 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import java.security.SignatureException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -29,16 +33,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.tron.common.crypto.ECKey;
 import org.tron.common.crypto.ECKey.ECDSASignature;
+import org.tron.common.runtime.vm.PrecompiledContracts.Sha256;
 import org.tron.common.utils.ByteUtil;
 import org.tron.common.utils.Sha256Hash;
 import org.tron.common.utils.Time;
 import org.tron.core.capsule.utils.MerkleTree;
 import org.tron.core.config.Parameter.ChainConstant;
+import org.tron.core.db.AccountStore;
+import org.tron.core.db.Manager;
 import org.tron.core.exception.BadItemException;
 import org.tron.core.exception.ValidateSignatureException;
 import org.tron.protos.Protocol.Block;
 import org.tron.protos.Protocol.BlockHeader;
 import org.tron.protos.Protocol.Transaction;
+import org.tron.protos.Protocol.Transaction.Contract;
 
 @Slf4j
 public class BlockCapsule implements ProtoCapsule<Block> {
@@ -252,6 +260,40 @@ public class BlockCapsule implements ProtoCapsule<Block> {
     this.block = this.block.toBuilder().setBlockHeader(
         this.block.getBlockHeader().toBuilder().setRawData(blockHeaderRaw)).build();
   }
+
+  public Sha256Hash calcAccountStateMerkleRoot(Manager manager) {
+    Map<byte[], Boolean> accountsAddress = new HashMap<>();
+
+    List<Transaction> transactionsList = this.block.getTransactionsList();
+
+    if (CollectionUtils.isEmpty(transactionsList)) {
+      return Sha256Hash.ZERO_HASH;
+    }
+
+    for (Transaction transaction : transactionsList) {
+      for (Contract contract : transaction.getRawData().getContractList()) {
+        accountsAddress.put(TransactionCapsule.getOwner(contract), true);
+        accountsAddress.put(TransactionCapsule.getToAddress(contract), true);
+      }
+    }
+
+    AccountStore accountStore = manager.getAccountStore();
+    Set<Entry<byte[], Boolean>> accountsAddressEntries = accountsAddress.entrySet();
+    List<Sha256Hash> hashes = new ArrayList<>();
+    for (Entry<byte[], Boolean> accountsAddressEntry : accountsAddressEntries) {
+      AccountCapsule accountCapsule = accountStore.get(accountsAddressEntry.getKey());
+      if (null != accountCapsule) {
+        hashes.add(accountCapsule.getMerkleHash());
+      }
+    }
+
+    return MerkleTree.getInstance().createTree(hashes).getRoot().getHash();
+  }
+
+  public void setAccountStateMerkleRoot() {
+
+  }
+
   /* only for genisis */
   public void  setWitness(String witness) {
     BlockHeader.raw blockHeaderRaw =

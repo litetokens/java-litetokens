@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.tron.common.utils.ByteArray;
+import org.tron.common.utils.Sha256Hash;
 import org.tron.protos.Contract.AccountCreateContract;
 import org.tron.protos.Contract.AccountUpdateContract;
 import org.tron.protos.Protocol.Account;
@@ -564,5 +565,10 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     this.account = this.account.toBuilder()
         .setAccountResource(accountResource)
         .build();
+  }
+
+  public Sha256Hash getMerkleHash() {
+    byte[] bytes = this.account.toByteArray();
+    return Sha256Hash.of(bytes);
   }
 }

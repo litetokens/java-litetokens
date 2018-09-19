@@ -603,10 +603,24 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
           .filter(time -> time < Time.getCurrentMillis() - NetConstants.ADV_TIME_OUT)
           .findFirst().ifPresent(time -> isDisconnected[0] = true);
 
+      logger.info("tmp: adv obj we requested: ");
+      peer.getAdvObjWeRequested().entrySet().stream().forEach(v -> {
+        logger.info("hash: {}, type: {}, value: {}",
+            v.getKey().getHash().toString(),
+            v.getKey().getType().getNumber(),
+            v.getValue());
+      });
+
       if (!isDisconnected[0]) {
         peer.getSyncBlockRequested().values().stream()
             .filter(time -> time < Time.getCurrentMillis() - NetConstants.SYNC_TIME_OUT)
             .findFirst().ifPresent(time -> isDisconnected[0] = true);
+
+        logger.info("tmp: sync block requested: ");
+        peer.getSyncBlockRequested().entrySet().stream().forEach(v -> {
+          logger.info("block: {}",
+              v.getKey().getString());
+        });
       }
 
       if (isDisconnected[0]) {

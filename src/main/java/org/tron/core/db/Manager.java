@@ -1123,7 +1123,9 @@ public class Manager {
         "postponedTrxCount[" + postponedTrxCount + "],TrxLeft[" + pendingTransactions.size()
             + "],repushTrxCount[" + repushTransactions.size() + "]");
     blockCapsule.setMerkleRoot();
+    logger.info("tmp, before: {}", blockCapsule.getBlockId().toString());
     blockCapsule.setAccountStateMerkleRoot(this);
+    logger.info("tmp, after: {}", blockCapsule.getBlockId().toString());
     blockCapsule.sign(privateKey);
 
     try {

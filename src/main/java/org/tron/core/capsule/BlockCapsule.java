@@ -21,6 +21,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import java.security.SignatureException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -301,6 +302,8 @@ public class BlockCapsule implements ProtoCapsule<Block> {
         hashes.add(accountCapsule.getMerkleHash());
       }
     }
+
+    hashes.sort(Comparator.comparingInt(Sha256Hash::hashCode));
 
     Sha256Hash rootHash = MerkleTree.getInstance().createTree(hashes).getRoot().getHash();
     logger.trace(

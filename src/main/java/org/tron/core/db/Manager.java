@@ -1113,6 +1113,7 @@ public class Manager {
       }
     }
 
+    blockCapsule.setAccountStateMerkleRoot(this);
     session.reset();
 
     if (postponedTrxCount > 0) {
@@ -1191,9 +1192,7 @@ public class Manager {
       processTransaction(transactionCapsule, block);
     }
 
-    if (block.generatedByMyself) {
-      block.setAccountStateMerkleRoot(this);
-    } else {
+    if (!block.generatedByMyself) {
       Sha256Hash accountStateMerkleRoot = block.calcAccountStateMerkleRoot(this);
 
       if (!accountStateMerkleRoot.equals(block.getAccountStateMerkleRoot())) {

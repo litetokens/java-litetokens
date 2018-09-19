@@ -266,14 +266,14 @@ public class BlockCapsule implements ProtoCapsule<Block> {
    * Calculate account state Merkle root hash of this block.
    */
   public Sha256Hash calcAccountStateMerkleRoot(Manager manager) {
-    logger.trace("Start calculate account state merkle root, block: {}", getBlockId().getString());
+    logger.info("Start calculate account state merkle root, block: {}", getBlockId().getString());
     long start = Time.getCurrentMillis();
     Map<ByteString, Boolean> accountsAddress = new HashMap<>();
 
     List<Transaction> transactionsList = this.block.getTransactionsList();
 
     if (CollectionUtils.isEmpty(transactionsList)) {
-      logger.trace(
+      logger.info(
           "End calculate account state merkle root, "
               + "block: {}, "
               + "account count: {}, "
@@ -306,7 +306,7 @@ public class BlockCapsule implements ProtoCapsule<Block> {
     hashes.sort(Comparator.comparingInt(Sha256Hash::hashCode));
 
     Sha256Hash rootHash = MerkleTree.getInstance().createTree(hashes).getRoot().getHash();
-    logger.trace(
+    logger.info(
         "End calculate account state merkle root, "
             + "block: {}, "
             + "account count: {}, "

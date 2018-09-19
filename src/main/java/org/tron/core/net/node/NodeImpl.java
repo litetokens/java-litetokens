@@ -610,19 +610,6 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
       }
 
       if (isDisconnected[0]) {
-        logger.info("tmp: adv obj we requested, size: {}", peer.getAdvObjWeRequested().size());
-        peer.getAdvObjWeRequested().entrySet().stream().forEach(v -> {
-          logger.info("hash: {}, type: {}, value: {}",
-              v.getKey().getHash().toString(),
-              v.getKey().getType().getNumber(),
-              v.getValue());
-        });
-
-        logger.info("tmp: sync block requested, size: {}", peer.getSyncBlockRequested().size());
-        peer.getSyncBlockRequested().entrySet().stream().forEach(v -> {
-          logger.info("block: {}",
-              v.getKey().getString());
-        });
         disconnectPeer(peer, ReasonCode.TIME_OUT);
       }
     });

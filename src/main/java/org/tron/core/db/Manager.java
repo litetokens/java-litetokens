@@ -613,7 +613,7 @@ public class Manager {
       ContractExeException, ValidateSignatureException, AccountResourceInsufficientException,
       TransactionExpirationException, TooBigTransactionException, DupTransactionException,
       TaposException, ValidateScheduleException, ReceiptCheckErrException,
-      VMIllegalException, TooBigTransactionResultException {
+      VMIllegalException, TooBigTransactionResultException, BadBlockException {
     processBlock(block);
     this.blockStore.put(block.getBlockId().getBytes(), block);
     this.blockIndexStore.put(block.getBlockId());
@@ -625,7 +625,7 @@ public class Manager {
       ValidateScheduleException, AccountResourceInsufficientException, TaposException,
       TooBigTransactionException, TooBigTransactionResultException, DupTransactionException, TransactionExpirationException,
       NonCommonBlockException, ReceiptCheckErrException,
-      VMIllegalException {
+      VMIllegalException, BadBlockException {
     Pair<LinkedList<KhaosBlock>, LinkedList<KhaosBlock>> binaryTree;
     try {
       binaryTree =
@@ -738,17 +738,6 @@ public class Manager {
                   + " , the headers is "
                   + block.getMerkleRoot());
           throw new BadBlockException("The merkle hash is not validated");
-        }
-
-        Sha256Hash accountStateMerkleRoot = block.calcAccountStateMerkleRoot(this);
-
-        if (!accountStateMerkleRoot.equals(block.getAccountStateMerkleRoot())) {
-          logger.warn(
-              "The account state merkle root doesn't match, Cacl result is "
-                  + accountStateMerkleRoot
-                  + " , the headers is "
-                  + block.getAccountStateMerkleRoot());
-          throw  new BadBlockException("The account state merkle hash is not validated");
         }
       }
 
@@ -1188,7 +1177,7 @@ public class Manager {
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
       AccountResourceInsufficientException, TaposException, TooBigTransactionException,
       DupTransactionException, TransactionExpirationException, ValidateScheduleException,
-      ReceiptCheckErrException, VMIllegalException, TooBigTransactionResultException {
+      ReceiptCheckErrException, VMIllegalException, TooBigTransactionResultException, BadBlockException {
     // todo set revoking db max size.
 
     // checkWitness
@@ -1201,6 +1190,19 @@ public class Manager {
         transactionCapsule.setVerified(true);
       }
       processTransaction(transactionCapsule, block);
+    }
+
+    if (!block.generatedByMyself) {
+      Sha256Hash accountStateMerkleRoot = block.calcAccountStateMerkleRoot(this);
+
+      if (!accountStateMerkleRoot.equals(block.getAccountStateMerkleRoot())) {
+        logger.warn(
+            "The account state merkle root doesn't match, Cacl result is "
+                + accountStateMerkleRoot
+                + " , the headers is "
+                + block.getAccountStateMerkleRoot());
+        throw  new BadBlockException("The account state merkle hash is not validated");
+      }
     }
 
     boolean needMaint = needMaintenance(block.getTimeStamp());

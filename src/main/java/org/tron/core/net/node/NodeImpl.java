@@ -1178,7 +1178,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
       //we try update our both known block but this block is null
       //because when we try to switch to this block's fork then fail.
       //The reason only is we get a bad block which peer broadcast to us.
-      logger.error("{}", e.getMessage());
+      logger.error(e.getMessage());
       banTraitorPeer(peer, ReasonCode.BAD_BLOCK);
     }
   }

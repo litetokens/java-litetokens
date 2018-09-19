@@ -1123,7 +1123,6 @@ public class Manager {
         "postponedTrxCount[" + postponedTrxCount + "],TrxLeft[" + pendingTransactions.size()
             + "],repushTrxCount[" + repushTransactions.size() + "]");
     blockCapsule.setMerkleRoot();
-    blockCapsule.setAccountStateMerkleRoot(this);
     blockCapsule.sign(privateKey);
 
     try {
@@ -1192,7 +1191,9 @@ public class Manager {
       processTransaction(transactionCapsule, block);
     }
 
-    if (!block.generatedByMyself) {
+    if (block.generatedByMyself) {
+      block.setAccountStateMerkleRoot(this);
+    } else {
       Sha256Hash accountStateMerkleRoot = block.calcAccountStateMerkleRoot(this);
 
       if (!accountStateMerkleRoot.equals(block.getAccountStateMerkleRoot())) {

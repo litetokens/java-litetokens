@@ -4,6 +4,7 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.*;
+import org.tron.common.application.ApplicationFactory;
 import org.tron.common.application.TronApplicationContext;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.FileUtil;
@@ -97,6 +98,7 @@ public class UpdateAssetActuatorTest {
     @AfterClass
     public static void destroy() {
         Args.clearParam();
+        ApplicationFactory.create(context).shutdown();
         if (FileUtil.deleteDir(new File(dbPath))) {
             logger.info("Release resources successful.");
         } else {

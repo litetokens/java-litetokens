@@ -48,6 +48,7 @@ public class SolidityNodeTest {
   @AfterClass
   public static void removeDb() {
     Args.clearParam();
+    ApplicationFactory.create(context).shutdown();
     rpcApiService.stop();
     context.destroy();
     File dbFolder = new File(dbPath);

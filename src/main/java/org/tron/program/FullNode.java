@@ -58,17 +58,28 @@ public class FullNode {
     context.register(DefaultConfig.class);
     context.refresh();
     Application appT = ApplicationFactory.create(context);
-    byte[] address = Wallet.decodeFromBase58Check("TAbzgkG8p3yF5aywKVgq9AaAu6hvF2JrVC");
-    AccountCapsule account = new AccountCapsule(ByteString.copyFrom(address), AccountType.Normal);
-    account.setBalance(1000000000000000000L);
-    context.getBean(Manager.class).getAccountStore().put(address, account);
-
-
+//
     Manager manager = context.getBean(Manager.class);
     manager.getWitnessStore().getAllWitnesses().forEach(witnessCapsule -> {
       manager.getWitnessStore().delete(witnessCapsule.getAddress().toByteArray());
     });
-    manager.insertWitness(address, 0);
+    String[] newAccount = {
+        "TAbzgkG8p3yF5aywKVgq9AaAu6hvF2JrVC",
+        "TRx2rc1v91HjUFdeBBgNSiqirctq94sAfA",
+        "TRxETQim3Jn5TYqLeAnpyF5XdQeg7NUcSJ",
+         "TRxUu1ZhEYsZw9AHyg8gXBmRSmUzaZPWaw",
+         "TRxgBU7HFTQvU6zPheLHphqpwhDKNxB6Rk",
+         "TRxscEvPTPFaCxBMuFVmzEybzZWJZM9eAB",
+         "TRx32uh7TQjdnLFKyWVPKJBfEn1XWjJtcm"};
+
+    int idx = 0;
+    for (String acc: newAccount) {
+      byte[] address = Wallet.decodeFromBase58Check(acc);
+      AccountCapsule account = new AccountCapsule(ByteString.copyFrom(address), AccountType.Normal);
+      account.setBalance(1000000000000000000L);
+      context.getBean(Manager.class).getAccountStore().put(address, account);
+      manager.insertWitness(address, idx++);
+    }
     manager.getWitnessController().initWits();
 
     shutdown(appT);

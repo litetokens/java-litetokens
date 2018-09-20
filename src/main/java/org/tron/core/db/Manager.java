@@ -1193,16 +1193,7 @@ public class Manager {
     }
 
     if (!block.generatedByMyself) {
-      Sha256Hash accountStateMerkleRoot = block.calcAccountStateMerkleRoot(this);
-
-      if (!accountStateMerkleRoot.equals(block.getAccountStateMerkleRoot())) {
-        logger.warn(
-            "The account state merkle root doesn't match, Cacl result is "
-                + accountStateMerkleRoot
-                + " , the headers is "
-                + block.getAccountStateMerkleRoot());
-        throw  new ValidateScheduleException("The account state merkle hash is not validated");
-      }
+      validateAccountState(block);
     }
 
     boolean needMaint = needMaintenance(block.getTimeStamp());
@@ -1220,6 +1211,19 @@ public class Manager {
     updateMaintenanceState(needMaint);
     updateRecentBlock(block);
 
+  }
+
+  private void validateAccountState(BlockCapsule block) throws ValidateScheduleException {
+    Sha256Hash accountStateMerkleRoot = block.calcAccountStateMerkleRoot(this);
+
+    if (!accountStateMerkleRoot.equals(block.getAccountStateMerkleRoot())) {
+      logger.warn(
+          "The account state merkle root doesn't match, Cacl result is "
+              + accountStateMerkleRoot
+              + " , the headers is "
+              + block.getAccountStateMerkleRoot());
+      throw  new ValidateScheduleException("The account state merkle hash is not validated");
+    }
   }
 
   private void updateTransHashCache(BlockCapsule block) {

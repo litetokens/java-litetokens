@@ -59,6 +59,29 @@ public class FullNode {
     context.refresh();
     Application appT = ApplicationFactory.create(context);
 //
+//    mockWitness(context);
+
+    shutdown(appT);
+
+    // grpc api server
+    RpcApiService rpcApiService = context.getBean(RpcApiService.class);
+    appT.addService(rpcApiService);
+    if (cfgArgs.isWitness()) {
+      appT.addService(new WitnessService(appT, context));
+    }
+
+    // http api server
+    FullNodeHttpApiService httpApiService = context.getBean(FullNodeHttpApiService.class);
+    appT.addService(httpApiService);
+
+    appT.initServices(cfgArgs);
+    appT.startServices();
+    appT.startup();
+
+    rpcApiService.blockUntilShutdown();
+  }
+
+  private static void mockWitness(TronApplicationContext context) {
     Manager manager = context.getBean(Manager.class);
     manager.getWitnessStore().getAllWitnesses().forEach(witnessCapsule -> {
       manager.getWitnessStore().delete(witnessCapsule.getAddress().toByteArray());
@@ -81,25 +104,6 @@ public class FullNode {
       manager.insertWitness(address, idx++);
     }
     manager.getWitnessController().initWits();
-
-    shutdown(appT);
-
-    // grpc api server
-    RpcApiService rpcApiService = context.getBean(RpcApiService.class);
-    appT.addService(rpcApiService);
-    if (cfgArgs.isWitness()) {
-      appT.addService(new WitnessService(appT, context));
-    }
-
-    // http api server
-    FullNodeHttpApiService httpApiService = context.getBean(FullNodeHttpApiService.class);
-    appT.addService(httpApiService);
-
-    appT.initServices(cfgArgs);
-    appT.startServices();
-    appT.startup();
-
-    rpcApiService.blockUntilShutdown();
   }
 
   public static void shutdown(final Application app) {

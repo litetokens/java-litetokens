@@ -247,7 +247,7 @@ public class Benchmark {
       System.out.println("2. CPU CORE:\nsatisfied");
     } else {
       System.out.println("2. CPU CORE:\ndo not update new verson java-tron, because of too few CPU cores, "
-          + "it needs at least " + minCpuCore + " cores");
+          + "it needs at least " + minCpuCore + " cores, currently your CPU core is " + cpuCore);
       systemExit = 1;
     }
 
@@ -268,7 +268,7 @@ public class Benchmark {
                 + newFileName);
       } else {
         System.out.println("3. MEMORY:\ndo not update new verson java-tron, because of too few memory, "
-        + "it needs at least " + minMem / 1024 + "GB memory");
+        + "it needs at least " + minMem / 1024 + "GB memory, currently your memory is " + mem / 1024 + "GB");
         systemExit = 1;
       }
 
@@ -322,6 +322,7 @@ public class Benchmark {
     }
     benchmark.destroyData();
 
+    System.out.println("result: " + systemExit);
     System.exit(systemExit);
   }
 

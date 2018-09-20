@@ -59,7 +59,7 @@ public class FullNode {
     context.refresh();
     Application appT = ApplicationFactory.create(context);
 //
-//    mockWitness(context);
+    mockWitness(context);
 
     shutdown(appT);
 
@@ -104,6 +104,8 @@ public class FullNode {
       manager.insertWitness(address, idx++);
     }
     manager.getWitnessController().initWits();
+
+    manager.getDynamicPropertiesStore().saveMaintenanceTimeInterval(600000);
   }
 
   public static void shutdown(final Application app) {

@@ -150,7 +150,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
       this.getLatestBlockHeaderHash();
     } catch (IllegalArgumentException e) {
       this.saveLatestBlockHeaderHash(ByteString.copyFrom(ByteArray.fromHexString("00")));
-    }
+  }
 
     try {
       this.getStateFlag();
@@ -232,6 +232,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
     try {
       this.getMaintenanceTimeInterval();
+      this.saveMaintenanceTimeInterval(Args.getInstance().getMaintenanceTimeInterval() / 6 / 6);
     } catch (IllegalArgumentException e) {
       this.saveMaintenanceTimeInterval(Args.getInstance().getMaintenanceTimeInterval()); // 6 hours
     }

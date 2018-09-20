@@ -11,8 +11,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.FileUtil;
+import org.tron.common.utils.Sha256Hash;
 import org.tron.core.Constant;
 import org.tron.core.config.args.Args;
+import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.AccountType;
 import org.tron.protos.Protocol.Vote;
 
@@ -109,5 +111,13 @@ public class AccountCapsuleTest {
     byte[] result = new byte[length];
     new Random().nextBytes(result);
     return result;
+  }
+
+  @Test
+  public void testGetMerkleHash() {
+    Sha256Hash merkleHash = new AccountCapsule(Account.newBuilder().build()).getMerkleHash();
+    Assert.assertEquals(
+        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        merkleHash.toString());
   }
 }

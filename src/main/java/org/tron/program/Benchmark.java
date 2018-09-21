@@ -246,12 +246,13 @@ public class Benchmark {
     if (cpuCore >= minCpuCore) {
       System.out.println("2. CPU CORE:\nsatisfied");
     } else {
-      System.out.println("2. CPU CORE:\ndo not update new verson java-tron, because of too few CPU cores, "
-          + "it needs at least " + minCpuCore + " cores, currently your CPU core is " + cpuCore);
+      System.out.println("2. CPU CORE:\nnew verson of java-tron "
+          + "needs at least " + minCpuCore + " cores, currently your CPU core is " + cpuCore
+          + ", please improve your machine performance");
       systemExit = 1;
     }
 
-    long minMem = 30 * 1024; // 30G
+    long minMem = 25 * 1024; // 25G
     try {
       long mem = benchmark.getMem();
       if (mem >= minMem) {
@@ -267,8 +268,9 @@ public class Benchmark {
             "3. MEMORY:\nsatisfied\nwhen setup java, recommend to use: java -Xmx" + recommendMem + "m\ncan see also "
                 + newFileName);
       } else {
-        System.out.println("3. MEMORY:\ndo not update new verson java-tron, because of too few memory, "
-        + "it needs at least " + minMem / 1024 + "GB memory, currently your memory is " + mem / 1024 + "GB");
+        System.out.println("3. MEMORY:\nnew verson of java-tron "
+        + "needs at least " + minMem / 1024 + "GB memory, currently your memory is " + mem / 1024 + "GB"
+            + ", please improve your machine performance");
         systemExit = 1;
       }
 
@@ -311,8 +313,8 @@ public class Benchmark {
             System.out.println(str);
           }
         } else {
-          System.out.println("4. VMCONFIG:\ndo not update new verson java-tron, because of too slow time_benchmark, "
-              + "it can not beyond 1 second");
+          System.out.println("4. VMCONFIG:\nthe time benchmark for new verson of java-tron is "
+              + "beyond 1 second, please improve your machine performance");
           systemExit = 1;
         }
       } catch (Exception e) {

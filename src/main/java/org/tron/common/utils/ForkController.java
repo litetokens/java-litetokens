@@ -30,6 +30,8 @@ public class ForkController {
   }
 
   public synchronized boolean shouldBeForked() {
+    logger.info("*****shouldBeForked:" + forked);
+
     if (forked) {
       if (logger.isDebugEnabled()) {
         logger.debug("*****shouldBeForked:" + true);

@@ -72,6 +72,7 @@ public class ForkController {
   }
 
   public synchronized void update(BlockCapsule blockCapsule) {
+    logger.info("begin update hard fork:{}", forked);
     if (forked) {
       return;
     }
@@ -84,6 +85,7 @@ public class ForkController {
     ByteString witness = blockCapsule.getWitnessAddress();
     int slot = witnesses.indexOf(witness);
     if (slot < 0) {
+      logger.info("slot < 0({})", slot);
       return;
     }
 

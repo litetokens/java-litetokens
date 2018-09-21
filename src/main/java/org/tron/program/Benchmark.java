@@ -252,7 +252,7 @@ public class Benchmark {
       systemExit = 1;
     }
 
-    long minMem = 25 * 1024; // 25G
+    long minMem = 20 * 1024; // 20G
     try {
       long mem = benchmark.getMem();
       if (mem >= minMem) {

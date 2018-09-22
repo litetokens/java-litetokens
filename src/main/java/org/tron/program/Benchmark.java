@@ -184,7 +184,8 @@ public class Benchmark {
     com.sun.management.OperatingSystemMXBean os = (com.sun.management.OperatingSystemMXBean)
         java.lang.management.ManagementFactory.getOperatingSystemMXBean();
     long physicalMemorySize = os.getTotalPhysicalMemorySize();
-    BigDecimal bg = new BigDecimal(physicalMemorySize * 1.0 / 1024 / 1024 / 1024).setScale(0, RoundingMode.UP);
+    BigDecimal bg = new BigDecimal(physicalMemorySize * 1.0 / 1024 / 1024 / 1024)
+        .setScale(0, RoundingMode.UP);
     return bg.longValue();
   }
 
@@ -210,9 +211,10 @@ public class Benchmark {
 
   public String readFile(String fileName) {
 
-    try (BufferedReader br = new BufferedReader(new InputStreamReader(Benchmark.class.getResourceAsStream(fileName)))) {
+    try (BufferedReader br = new BufferedReader(
+        new InputStreamReader(Benchmark.class.getResourceAsStream(fileName)))) {
       return br.lines().collect(Collectors.joining(System.lineSeparator()));
-    } catch(IOException e) {
+    } catch (IOException e) {
       logger.info(e.getMessage());
       return null;
     }
@@ -222,7 +224,7 @@ public class Benchmark {
   public void writeFile(String content, String fileName) {
 
     File file = new File(fileName);
-    try (Writer writer = new FileWriter(file)){
+    try (Writer writer = new FileWriter(file)) {
       writer.write(content);
     } catch (IOException e) {
       logger.info(e.getMessage());
@@ -238,7 +240,8 @@ public class Benchmark {
     if (checkVersion) {
       System.out.println("1. JAVA VERSION:\nsatisfied");
     } else {
-      System.out.println("1. JAVA VERSION:\nbefore run java-tron, java MUST be oracle jdk, and version >= 1.8");
+      System.out.println(
+          "1. JAVA VERSION:\nbefore run java-tron, java MUST be oracle jdk, and version >= 1.8");
       systemExit = 1;
     }
 
@@ -257,7 +260,8 @@ public class Benchmark {
     try {
       long mem = benchmark.getMem();
       if (mem >= minMem) {
-        long recommendMem = new BigDecimal(mem * 0.8).setScale(0, RoundingMode.UP).longValue();
+        long recommendMem = new BigDecimal(mem * 1024 * 0.8).setScale(0, RoundingMode.UP)
+            .longValue();
         String content = "#!/bin/bash\n"
             + "kill -9 `cat /home/tron/pid.txt`\n"
             + "nohup  java -jar /home/tron/java-tron/java-tron.jar -p $LOCAL_WITNESS_PRIVATE_KEY "
@@ -266,11 +270,12 @@ public class Benchmark {
         String newFileName = "start-recommend.sh";
         benchmark.writeFile(newContent, newFileName);
         System.out.println(
-            "3. MEMORY:\nsatisfied\nwhen setup java, recommend to use: java -Xmx" + recommendMem + "m\ncan see also "
+            "3. MEMORY:\nsatisfied\nwhen setup java, recommend to use: java -Xmx" + recommendMem
+                + "m\ncan see also "
                 + newFileName);
       } else {
         System.out.println("3. MEMORY:\nnew verson of java-tron "
-        + "needs at least " + minMem + "GB memory, currently your memory is " + mem + "GB"
+            + "needs at least " + minMem + "GB memory, currently your memory is " + mem + "GB"
             + ", please improve your machine performance");
         systemExit = 1;
       }

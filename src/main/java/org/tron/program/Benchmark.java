@@ -6,6 +6,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Writer;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.spongycastle.util.encoders.Hex;
@@ -179,12 +181,11 @@ public class Benchmark {
   }
 
   public long getMem() {
-
     com.sun.management.OperatingSystemMXBean os = (com.sun.management.OperatingSystemMXBean)
         java.lang.management.ManagementFactory.getOperatingSystemMXBean();
     long physicalMemorySize = os.getTotalPhysicalMemorySize();
-
-    return (long)(physicalMemorySize * 1.0 / 1024 / 1024);
+    BigDecimal bg = new BigDecimal(physicalMemorySize * 1.0 / 1024 / 1024 / 1024).setScale(0, RoundingMode.UP);
+    return bg.longValue();
   }
 
   public boolean checkJavaVersion() {
@@ -252,11 +253,11 @@ public class Benchmark {
       systemExit = 1;
     }
 
-    long minMem = 20 * 1024; // 20G
+    long minMem = 20; // 20G
     try {
       long mem = benchmark.getMem();
       if (mem >= minMem) {
-        long recommendMem = (long)(mem * 0.8);
+        long recommendMem = new BigDecimal(mem * 0.8).setScale(0, RoundingMode.UP).longValue();
         String content = "#!/bin/bash\n"
             + "kill -9 `cat /home/tron/pid.txt`\n"
             + "nohup  java -jar /home/tron/java-tron/java-tron.jar -p $LOCAL_WITNESS_PRIVATE_KEY "
@@ -269,7 +270,7 @@ public class Benchmark {
                 + newFileName);
       } else {
         System.out.println("3. MEMORY:\nnew verson of java-tron "
-        + "needs at least " + minMem / 1024 + "GB memory, currently your memory is " + mem / 1024 + "GB"
+        + "needs at least " + minMem + "GB memory, currently your memory is " + mem + "GB"
             + ", please improve your machine performance");
         systemExit = 1;
       }

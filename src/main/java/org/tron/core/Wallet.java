@@ -606,6 +606,36 @@ public class Wallet {
             dynamicPropertiesStore.getMaxCpuTimeOfOneTX())
         .build());
 
+    builder.addChainParameter(builder1
+        .setKey(ChainParameters.ALLOW_UPDATE_ACCOUNT_NAME.name())
+        .setValue(
+            dynamicPropertiesStore.getAllowUpdateAccountName())
+        .build());
+
+    builder.addChainParameter(builder1
+        .setKey(ChainParameters.ALLOW_SAME_TOKEN_NAME.name())
+        .setValue(
+            dynamicPropertiesStore.getAllowSameTokenName())
+        .build());
+
+    builder.addChainParameter(builder1
+        .setKey("TOTAL_NET_CURRENT_LIMIT")
+        .setValue(
+            dynamicPropertiesStore.getTotalNetCurrentLimit())
+        .build());
+
+    builder.addChainParameter(builder1
+        .setKey("TOTAL_NET_TARGET_LIMIT")
+        .setValue(
+            dynamicPropertiesStore.getTotalNetTargetLimit())
+        .build());
+
+    builder.addChainParameter(builder1
+        .setKey("TOTAL_NET_AVERAGE_USAGE")
+        .setValue(
+            dynamicPropertiesStore.getTotalNetAverageUsage())
+        .build());
+
     return builder.build();
   }
 

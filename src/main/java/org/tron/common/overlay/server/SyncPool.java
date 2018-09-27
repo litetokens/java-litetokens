@@ -121,7 +121,6 @@ public class SyncPool {
     final Set<String> nodesInUse = new HashSet<>();
     channelManager.getActivePeers().forEach(channel -> nodesInUse.add(channel.getPeerId()));
     nodesInUse.add(nodeManager.getPublicHomeNode().getHexId());
-
     List<NodeHandler> newNodes = nodeManager.getNodes(new NodeSelector(nodesInUse), lackSize);
     newNodes.forEach(n -> {
       peerClient.connectAsync(n, false);
@@ -189,6 +188,7 @@ public class SyncPool {
 
   public synchronized void onDisconnect(Channel peer) {
     if (activePeers.contains(peer)) {
+      logger.info("activePeers.contains(peer): true");
       if (!peer.isActive()) {
         passivePeersCount.decrementAndGet();
       } else {

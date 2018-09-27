@@ -11,7 +11,6 @@ import org.tron.common.runtime.Runtime;
 import org.tron.common.runtime.vm.LogInfo;
 import org.tron.common.runtime.vm.program.ProgramResult;
 import org.tron.core.exception.BadItemException;
-import org.tron.protos.Protocol.Block;
 import org.tron.protos.Protocol.TransactionInfo;
 import org.tron.protos.Protocol.TransactionInfo.Log;
 import org.tron.protos.Protocol.TransactionInfo.code;
@@ -141,7 +140,7 @@ public class TransactionInfoCapsule implements ProtoCapsule<TransactionInfo> {
     return this.transactionInfo;
   }
 
-  public static TransactionInfoCapsule buildInstance(TransactionCapsule trxCap, Block block,
+  public static TransactionInfoCapsule buildInstance(TransactionCapsule trxCap, BlockCapsule block,
       Runtime runtime, ReceiptCapsule traceReceipt) {
 
     TransactionInfo.Builder builder = TransactionInfo.newBuilder();
@@ -155,7 +154,8 @@ public class TransactionInfoCapsule implements ProtoCapsule<TransactionInfo> {
     builder.setId(ByteString.copyFrom(trxCap.getTransactionId().getBytes()));
 
     ProgramResult programResult = runtime.getResult();
-    long fee = programResult.getRet().getFee() + traceReceipt.getEnergyFee();
+    long fee =
+        programResult.getRet().getFee() + traceReceipt.getEnergyFee() + traceReceipt.getNetFee();
     ByteString contractResult = ByteString.copyFrom(programResult.getHReturn());
     ByteString ContractAddress = ByteString.copyFrom(programResult.getContractAddress());
 
@@ -174,8 +174,8 @@ public class TransactionInfoCapsule implements ProtoCapsule<TransactionInfo> {
     builder.addAllLog(logList);
 
     if (Objects.nonNull(block)) {
-      builder.setBlockNumber(block.getBlockHeader().getRawData().getNumber());
-      builder.setBlockTimeStamp(block.getBlockHeader().getRawData().getTimestamp());
+      builder.setBlockNumber(block.getInstance().getBlockHeader().getRawData().getNumber());
+      builder.setBlockTimeStamp(block.getInstance().getBlockHeader().getRawData().getTimestamp());
     }
 
     builder.setReceipt(traceReceipt.getReceipt());

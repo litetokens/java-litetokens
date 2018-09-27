@@ -130,7 +130,6 @@ public class StoreAPITest {
     AppT.shutdown();
     context.destroy();
     FileUtil.deleteDir(new File(dbPath));
-    context.destroy();
   }
 
   /**

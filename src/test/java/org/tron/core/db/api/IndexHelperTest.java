@@ -105,7 +105,6 @@ public class IndexHelperTest {
     AppT.shutdown();
     context.destroy();
     FileUtil.deleteDir(new File(dbPath));
-    context.destroy();
   }
 
   @Ignore

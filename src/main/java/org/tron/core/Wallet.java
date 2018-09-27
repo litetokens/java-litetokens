@@ -17,7 +17,15 @@
  */
 
 package org.tron.core;
+ 
+import static org.tron.core.config.Parameter.DatabaseConstants.EXCHANGE_COUNT_LIMIT_MAX;
+import static org.tron.core.config.Parameter.DatabaseConstants.PROPOSAL_COUNT_LIMIT_MAX;
 
+import com.google.common.collect.ContiguousSet;
+import com.google.common.collect.DiscreteDomain;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Range; 
+import com.google.common.base.CaseFormat; 
 import com.google.common.primitives.Longs;
 import com.google.protobuf.ByteString;
 import java.util.Arrays;
@@ -73,6 +81,7 @@ import org.tron.core.capsule.TransactionResultCapsule;
 import org.tron.core.capsule.WitnessCapsule;
 import org.tron.core.config.Parameter.ChainConstant;
 import org.tron.core.config.Parameter.ChainParameters;
+import org.tron.core.config.args.Args;
 import org.tron.core.db.AccountIdIndexStore;
 import org.tron.core.db.AccountStore;
 import org.tron.core.db.BandwidthProcessor;
@@ -90,6 +99,7 @@ import org.tron.core.exception.StoreException;
 import org.tron.core.exception.TaposException;
 import org.tron.core.exception.TooBigTransactionException;
 import org.tron.core.exception.TransactionExpirationException;
+import org.tron.core.exception.VMIllegalException;
 import org.tron.core.exception.ValidateSignatureException;
 import org.tron.core.net.message.TransactionMessage;
 import org.tron.core.net.node.NodeImpl;
@@ -140,9 +150,18 @@ public class Wallet {
     logger.info("wallet address: {}", ByteArray.toHexString(this.ecKey.getAddress()));
   }
 
-  public static boolean isConstant(ABI abi, TriggerSmartContract triggerSmartContract) {
+  public static boolean isConstant(ABI abi, TriggerSmartContract triggerSmartContract)
+      throws ContractValidateException {
     try {
-      return isConstant(abi, getSelector(triggerSmartContract.getData().toByteArray()));
+      boolean constant = isConstant(abi, getSelector(triggerSmartContract.getData().toByteArray()));
+      if (constant) {
+        if (!Args.getInstance().isSupportConstant()) {
+          throw new ContractValidateException("this node don't support constant");
+        }
+      }
+      return constant;
+    } catch (ContractValidateException e) {
+      throw e;
     } catch (Exception e) {
       return false;
     }
@@ -397,7 +416,9 @@ public class Wallet {
       } else {
         dbManager.getTransactionIdCache().put(trx.getTransactionId(), true);
       }
-
+      if (dbManager.getDynamicPropertiesStore().supportVM()) {
+        trx.resetResult();
+      }
       dbManager.pushTransaction(trx);
       p2pNode.broadcast(message);
 
@@ -511,64 +532,27 @@ public class Wallet {
 
   public Protocol.ChainParameters getChainParameters() {
     Protocol.ChainParameters.Builder builder = Protocol.ChainParameters.newBuilder();
-    DynamicPropertiesStore dynamicPropertiesStore = dbManager.getDynamicPropertiesStore();
 
-    Protocol.ChainParameters.ChainParameter.Builder builder1
-        = Protocol.ChainParameters.ChainParameter.newBuilder();
+    Arrays.stream(ChainParameters.values()).forEach(parameters -> {
+      try {
+        String methodName = Wallet.makeUpperCamelMethod(parameters.name());
+        builder.addChainParameter(Protocol.ChainParameters.ChainParameter.newBuilder()
+            .setKey(methodName)
+            .setValue((Long) DynamicPropertiesStore.class.getDeclaredMethod(methodName)
+                .invoke(dbManager.getDynamicPropertiesStore()))
+            .build());
+      } catch (Exception ex) {
+        logger.error("get chainParameter error,", ex);
+      }
 
-    builder.addChainParameter(builder1
-        .setKey(ChainParameters.MAINTENANCE_TIME_INTERVAL.name())
-        .setValue(
-            dynamicPropertiesStore.getMaintenanceTimeInterval())
-        .build());
-    builder.addChainParameter(builder1
-        .setKey(ChainParameters.ACCOUNT_UPGRADE_COST.name())
-        .setValue(
-            dynamicPropertiesStore.getAccountUpgradeCost())
-        .build());
-    builder.addChainParameter(builder1
-        .setKey(ChainParameters.CREATE_ACCOUNT_FEE.name())
-        .setValue(
-            dynamicPropertiesStore.getCreateAccountFee())
-        .build());
-    builder.addChainParameter(builder1
-        .setKey(ChainParameters.TRANSACTION_FEE.name())
-        .setValue(
-            dynamicPropertiesStore.getTransactionFee())
-        .build());
-    builder.addChainParameter(builder1
-        .setKey(ChainParameters.ASSET_ISSUE_FEE.name())
-        .setValue(
-            dynamicPropertiesStore.getAssetIssueFee())
-        .build());
-    builder.addChainParameter(builder1
-        .setKey(ChainParameters.WITNESS_PAY_PER_BLOCK.name())
-        .setValue(
-            dynamicPropertiesStore.getWitnessPayPerBlock())
-        .build());
-    builder.addChainParameter(builder1
-        .setKey(ChainParameters.WITNESS_STANDBY_ALLOWANCE.name())
-        .setValue(
-            dynamicPropertiesStore.getWitnessStandbyAllowance())
-        .build());
-    builder.addChainParameter(builder1
-        .setKey(ChainParameters.CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT.name())
-        .setValue(
-            dynamicPropertiesStore.getCreateNewAccountFeeInSystemContract())
-        .build());
-    builder.addChainParameter(builder1
-        .setKey(ChainParameters.CREATE_NEW_ACCOUNT_BANDWIDTH_RATE.name())
-        .setValue(
-            dynamicPropertiesStore.getCreateNewAccountBandwidthRate())
-        .build());
-
-    builder.addChainParameter(builder1
-        .setKey(ChainParameters.ALLOW_CREATION_OF_CONTRACTS.name())
-        .setValue(
-            dynamicPropertiesStore.getAllowCreationOfContracts())
-        .build());
+    });
 
     return builder.build();
+  }
+
+  public static String makeUpperCamelMethod(String originName) {
+    return "get" + CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, originName)
+        .replace("_", "");
   }
 
   public AssetIssueList getAssetIssueList() {
@@ -824,7 +808,8 @@ public class Wallet {
 
   public Transaction triggerContract(TriggerSmartContract triggerSmartContract,
       TransactionCapsule trxCap, Builder builder,
-      Return.Builder retBuilder) throws ContractValidateException {
+      Return.Builder retBuilder)
+      throws ContractValidateException, ContractExeException, HeaderNotFound, VMIllegalException {
 
     ContractStore contractStore = dbManager.getContractStore();
     byte[] contractAddress = triggerSmartContract.getContractAddress().toByteArray();
@@ -833,53 +818,47 @@ public class Wallet {
       throw new ContractValidateException("No contract or not a smart contract");
     }
 
-    try {
-      byte[] selector = getSelector(triggerSmartContract.getData().toByteArray());
-      if (selector == null) {
-        // FIXME should trigger fallback method
-        return null;
-      }
+    byte[] selector = getSelector(triggerSmartContract.getData().toByteArray());
 
-      if (!isConstant(abi, selector)) {
-        return trxCap.getInstance();
+    if (!isConstant(abi, selector)) {
+      return trxCap.getInstance();
+    } else {
+      if (!Args.getInstance().isSupportConstant()) {
+        throw new ContractValidateException("this node don't support constant");
+      }
+      DepositImpl deposit = DepositImpl.createRoot(dbManager);
+
+      Block headBlock;
+      List<BlockCapsule> blockCapsuleList = dbManager.getBlockStore().getBlockByLatestNum(1);
+      if (CollectionUtils.isEmpty(blockCapsuleList)) {
+        throw new HeaderNotFound("latest block not found");
       } else {
-        DepositImpl deposit = DepositImpl.createRoot(dbManager);
-
-        Block headBlock;
-        List<BlockCapsule> blockCapsuleList = dbManager.getBlockStore().getBlockByLatestNum(1);
-        if (CollectionUtils.isEmpty(blockCapsuleList)) {
-          throw new HeaderNotFound("latest block not found");
-        } else {
-          headBlock = blockCapsuleList.get(0).getInstance();
-        }
-
-        Runtime runtime = new Runtime(trxCap.getInstance(), headBlock, deposit,
-            new ProgramInvokeFactoryImpl());
-        runtime.init();
-        runtime.execute();
-        runtime.go();
-        runtime.finalization();
-        // TODO exception
-        if (runtime.getResult().getException() != null) {
-//          runtime.getResult().getException().printStackTrace();
-          throw new RuntimeException("Runtime exe failed!");
-        }
-
-        ProgramResult result = runtime.getResult();
-        TransactionResultCapsule ret = new TransactionResultCapsule();
-
-        builder.addConstantResult(ByteString.copyFrom(result.getHReturn()));
-        ret.setStatus(0, code.SUCESS);
-        if (StringUtils.isNoneEmpty(runtime.getRuntimeError())) {
-          ret.setStatus(0, code.FAILED);
-          retBuilder.setMessage(ByteString.copyFromUtf8(runtime.getRuntimeError())).build();
-        }
-        trxCap.setResult(ret);
-        return trxCap.getInstance();
+        headBlock = blockCapsuleList.get(0).getInstance();
       }
-    } catch (Exception e) {
-      logger.error(e.getMessage());
-      return null;
+
+      Runtime runtime = new Runtime(trxCap.getInstance(), new BlockCapsule(headBlock), deposit,
+          new ProgramInvokeFactoryImpl(), true);
+      runtime.execute();
+      runtime.go();
+      runtime.finalization();
+      // TODO exception
+      if (runtime.getResult().getException() != null) {
+        RuntimeException e = runtime.getResult().getException();
+        logger.warn("Constant call has error {}", e.getMessage());
+        throw e;
+      }
+
+      ProgramResult result = runtime.getResult();
+      TransactionResultCapsule ret = new TransactionResultCapsule();
+
+      builder.addConstantResult(ByteString.copyFrom(result.getHReturn()));
+      ret.setStatus(0, code.SUCESS);
+      if (StringUtils.isNoneEmpty(runtime.getRuntimeError())) {
+        ret.setStatus(0, code.FAILED);
+        retBuilder.setMessage(ByteString.copyFromUtf8(runtime.getRuntimeError())).build();
+      }
+      trxCap.setResult(ret);
+      return trxCap.getInstance();
     }
   }
 
@@ -911,13 +890,10 @@ public class Wallet {
     return ret;
   }
 
-  private static boolean isConstant(SmartContract.ABI abi, byte[] selector) throws Exception {
+  private static boolean isConstant(SmartContract.ABI abi, byte[] selector) {
 
-    if (abi.getEntrysList().size() == 0) {
+    if (selector == null || selector.length != 4 || abi.getEntrysList().size() == 0) {
       return false;
-    }
-    if (selector == null || selector.length != 4) {
-      throw new Exception("Selector's length or selector itself is invalid");
     }
 
     for (int i = 0; i < abi.getEntrysCount(); i++) {
@@ -951,7 +927,71 @@ public class Wallet {
       }
     }
 
-    throw new Exception("There is no the selector!");
+    return false;
   }
+
+  /*
+  input
+  offset:100,limit:10
+  return
+  id: 101~110
+   */
+  public ProposalList getPaginatedProposalList(long offset, long limit) {
+
+    if (limit < 0 || offset < 0) {
+      return null;
+    }
+
+    long latestProposalNum = dbManager.getDynamicPropertiesStore().getLatestProposalNum();
+    if (latestProposalNum <= offset) {
+      return null;
+    }
+    limit = limit > PROPOSAL_COUNT_LIMIT_MAX ? PROPOSAL_COUNT_LIMIT_MAX : limit;
+    long end = offset + limit;
+    end = end > latestProposalNum ? latestProposalNum : end;
+    ProposalList.Builder builder = ProposalList.newBuilder();
+
+    ImmutableList<Long> rangeList = ContiguousSet
+        .create(Range.openClosed(offset, end), DiscreteDomain.longs()).asList();
+    rangeList.stream().map(ProposalCapsule::calculateDbKey).map(key -> {
+      try {
+        return dbManager.getProposalStore().get(key);
+      } catch (Exception ex) {
+        return null;
+      }
+    }).filter(Objects::nonNull)
+        .forEach(proposalCapsule -> builder.addProposals(proposalCapsule.getInstance()));
+    return builder.build();
+  }
+
+  public ExchangeList getPaginatedExchangeList(long offset, long limit) {
+
+    if (limit < 0 || offset < 0) {
+      return null;
+    }
+
+    long latestExchangeNum = dbManager.getDynamicPropertiesStore().getLatestExchangeNum();
+    if (latestExchangeNum <= offset) {
+      return null;
+    }
+    limit = limit > EXCHANGE_COUNT_LIMIT_MAX ? EXCHANGE_COUNT_LIMIT_MAX : limit;
+    long end = offset + limit;
+    end = end > latestExchangeNum ? latestExchangeNum : end;
+
+    ExchangeList.Builder builder = ExchangeList.newBuilder();
+    ImmutableList<Long> rangeList = ContiguousSet
+        .create(Range.openClosed(offset, end), DiscreteDomain.longs()).asList();
+    rangeList.stream().map(ExchangeCapsule::calculateDbKey).map(key -> {
+      try {
+        return dbManager.getExchangeStore().get(key);
+      } catch (Exception ex) {
+        return null;
+      }
+    }).filter(Objects::nonNull)
+        .forEach(exchangeCapsule -> builder.addExchanges(exchangeCapsule.getInstance()));
+    return builder.build();
+
+  }
+
 
 }

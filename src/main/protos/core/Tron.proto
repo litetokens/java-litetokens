@@ -73,6 +73,7 @@ message Account {
     int64 frozen_balance = 1; // the frozen trx balance
     int64 expire_time = 2; // the expire time
   }
+  // account nick name
   bytes account_name = 1;
   AccountType type = 2;
   // the create address
@@ -83,7 +84,6 @@ message Account {
   repeated Vote votes = 5;
   // the other asset owned by this account
   map<string, int64> asset = 6;
-  // latest asset operation time
 
   // the frozen balance
   repeated Frozen frozen = 7;
@@ -113,6 +113,7 @@ message Account {
   int64 latest_consume_time = 21;
   int64 latest_consume_free_time = 22;
 
+  // the identity of this account, case insensitive
   bytes account_id = 23;
 
   message AccountResource {
@@ -183,16 +184,13 @@ message TXOutputs {
 }
 
 message ResourceReceipt {
-  enum code {
-    SUCCESS = 0;
-    FAILED = 1;
-  }
   int64 energy_usage = 1;
   int64 energy_fee = 2;
   int64 origin_energy_usage = 3;
   int64 energy_usage_total = 4;
   int64 net_usage = 5;
   int64 net_fee = 6;
+  Transaction.Result.contractResult result = 7;
 }
 
 message Transaction {
@@ -234,7 +232,6 @@ message Transaction {
     google.protobuf.Any parameter = 2;
     bytes provider = 3;
     bytes ContractName = 4;
-
   }
 
   message Result {
@@ -242,8 +239,25 @@ message Transaction {
       SUCESS = 0;
       FAILED = 1;
     }
+    enum contractResult {
+      DEFAULT = 0;
+      SUCCESS = 1;
+      REVERT = 2;
+      BAD_JUMP_DESTINATION = 3;
+      OUT_OF_MEMORY = 4;
+      PRECOMPILED_CONTRACT = 5;
+      STACK_TOO_SMALL = 6;
+      STACK_TOO_LARGE = 7;
+      ILLEGAL_OPERATION = 8;
+      STACK_OVERFLOW = 9;
+      OUT_OF_ENERGY = 10;
+      OUT_OF_TIME = 11;
+      JVM_STACK_OVER_FLOW = 12;
+      UNKNOWN = 13;
+    }
     int64 fee = 1;
     code ret = 2;
+    contractResult contractRet = 3;
 
     int64 withdraw_amount = 15;
     int64 unfreeze_amount = 16;

@@ -19,17 +19,11 @@ package org.tron.common.runtime.vm.program;
 
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
-import static org.tron.common.utils.ByteUtil.toHexString;
+import static org.tron.common.utils.ByteUtil.EMPTY_BYTE_ARRAY;
 
 import com.google.common.primitives.Longs;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.Arrays;
-import org.tron.common.crypto.ECKey;
-import org.tron.common.crypto.ECKey.ECDSASignature;
 import org.tron.common.crypto.Hash;
-import org.tron.common.runtime.vm.DataWord;
-import org.tron.common.utils.ByteUtil;
 import org.tron.core.capsule.TransactionCapsule;
 import org.tron.protos.Protocol.Transaction;
 
@@ -49,13 +43,13 @@ public class InternalTransaction {
    * input [data] of the message call or
    * Initialization code for a new contract */
   private byte[] data;
+  private long nonce;
 
   protected byte[] sendAddress;
   private int deep;
   private int index;
   private boolean rejected = false;
   private String note;
-  private boolean parsed;
   private byte[] protoEncoded;
 
 
@@ -79,8 +73,10 @@ public class InternalTransaction {
    */
   public InternalTransaction(Transaction trx) {
     this.transaction = trx;
-    this.protoEncoded = new TransactionCapsule(trx).getData();
-    this.parsed = false;
+    TransactionCapsule trxCap = new TransactionCapsule(trx);
+    this.protoEncoded = trxCap.getData();
+    this.nonce = 0;
+    this.hash = trxCap.getTransactionId().getBytes();
   }
 
   /**
@@ -88,8 +84,7 @@ public class InternalTransaction {
    */
 
   public InternalTransaction(byte[] parentHash, int deep, int index,
-      byte[] sendAddress, byte[] receiveAddress, long value, byte[] data, String note) {
-
+      byte[] sendAddress, byte[] receiveAddress, long value, byte[] data, String note, long nonce) {
     this.parentHash = parentHash;
     this.deep = deep;
     this.index = index;
@@ -98,7 +93,8 @@ public class InternalTransaction {
     this.receiveAddress = nullToEmpty(receiveAddress);
     this.value = value;
     this.data = nullToEmpty(data);
-    this.parsed = true;
+    this.nonce = nonce;
+    this.hash = getHash();
   }
 
   public Transaction getTransaction() {
@@ -115,65 +111,61 @@ public class InternalTransaction {
 
 
   public int getDeep() {
-    protoParse();
     return deep;
   }
 
   public int getIndex() {
-    protoParse();
     return index;
   }
 
   public boolean isRejected() {
-    protoParse();
     return rejected;
   }
 
   public String getNote() {
-    protoParse();
+    if (note == null) {
+      return "";
+    }
     return note;
   }
 
   public byte[] getSender() {
-    protoParse();
+    if (sendAddress == null) {
+      return EMPTY_BYTE_ARRAY;
+    }
     return sendAddress;
   }
 
   public byte[] getParentHash() {
-    protoParse();
+    if (parentHash == null) {
+      return EMPTY_BYTE_ARRAY;
+    }
     return parentHash;
   }
 
   public long getValue() {
-    protoParse();
+    if (data == null) {
+      return 0;
+    }
     return value;
   }
 
   public byte[] getData() {
-    protoParse();
+    if (data == null) {
+      return EMPTY_BYTE_ARRAY;
+    }
     return data.clone();
   }
 
   protected void setValue(long value) {
     this.value = value;
-    parsed = true;
   }
 
   public byte[] getReceiveAddress() {
-    protoParse();
+    if (receiveAddress == null) {
+      return EMPTY_BYTE_ARRAY;
+    }
     return receiveAddress.clone();
-  }
-
-  private void protoParse() {
-    if (parsed) {
-      return;
-    }
-    try {
-      this.hash = Hash.sha3(protoEncoded);
-      this.parsed = true;
-    } catch (Exception e) {
-      throw new RuntimeException("Error on parsing proto", e);
-    }
   }
 
   public byte[] getHash() {
@@ -181,45 +173,38 @@ public class InternalTransaction {
       return Arrays.copyOf(hash, hash.length);
     }
 
-    protoParse();
     byte[] plainMsg = this.getEncoded();
-    return Hash.sha3(plainMsg);
+    byte[] nonceByte;
+    nonceByte = Longs.toByteArray(nonce);
+    byte[] forHash = new byte[plainMsg.length + nonceByte.length];
+    System.arraycopy(plainMsg, 0, forHash, 0, plainMsg.length);
+    System.arraycopy(nonceByte, 0, forHash, plainMsg.length, nonceByte.length);
+    this.hash = Hash.sha3(forHash);
+    return Arrays.copyOf(hash, hash.length);
   }
 
+  public long getNonce() {
+    return nonce;
+  }
 
   public byte[] getEncoded() {
-
     if (protoEncoded != null) {
-      if (null == this.hash) {
-        this.hash = Hash.sha3(protoEncoded);
-      }
       return protoEncoded.clone();
     }
+    byte[] parentHashArray = parentHash.clone();
 
+    if (parentHashArray == null){
+      parentHashArray = EMPTY_BYTE_ARRAY;
+    }
     byte[] valueByte = Longs.toByteArray(this.value);
-    byte[] raw = new byte[this.receiveAddress.length + this.data.length + valueByte.length];
-    System.arraycopy(this.receiveAddress, 0, raw, 0, this.receiveAddress.length);
-    System.arraycopy(this.data, 0, raw, this.receiveAddress.length, this.data.length);
-    System.arraycopy(valueByte, 0, raw, this.data.length, valueByte.length);
+    byte[] raw = new byte[parentHashArray.length + this.receiveAddress.length + this.data.length + valueByte.length];
+    System.arraycopy(parentHashArray, 0, raw, 0, parentHashArray.length);
+    System.arraycopy(this.receiveAddress, 0, raw, parentHashArray.length, this.receiveAddress.length);
+    System.arraycopy(this.data, 0, raw, parentHashArray.length + this.receiveAddress.length, this.data.length);
+    System.arraycopy(valueByte, 0, raw, parentHashArray.length + this.receiveAddress.length + this.data.length,
+        valueByte.length);
     this.protoEncoded = raw;
-    this.hash = Hash.sha3(protoEncoded);
-
     return protoEncoded.clone();
   }
 
-  @Override
-  public String toString() {
-    return "TransactionData [" +
-        "  parentHash=" + toHexString(getParentHash()) +
-        ", hash=" + toHexString(getHash()) +
-        ", sendAddress=" + toHexString(getSender()) +
-        ", receiveAddress=" + toHexString(getReceiveAddress()) +
-        ", value=" + getValue() +
-        ", data=" + toHexString(getData()) +
-        ", note=" + getNote() +
-        ", deep=" + getDeep() +
-        ", index=" + getIndex() +
-        ", rejected=" + isRejected() +
-        "]";
-  }
 }

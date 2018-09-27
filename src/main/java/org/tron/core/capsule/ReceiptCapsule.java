@@ -1,10 +1,13 @@
 package org.tron.core.capsule;
 
 import org.tron.common.utils.Sha256Hash;
+import org.tron.common.utils.StringUtil;
 import org.tron.core.Constant;
 import org.tron.core.db.EnergyProcessor;
 import org.tron.core.db.Manager;
+import org.tron.core.exception.BalanceInsufficientException;
 import org.tron.protos.Protocol.ResourceReceipt;
+import org.tron.protos.Protocol.Transaction.Result.contractResult;
 
 public class ReceiptCapsule {
 
@@ -86,8 +89,8 @@ public class ReceiptCapsule {
    * payEnergyBill pay receipt energy bill by energy processor.
    */
   public void payEnergyBill(Manager manager, AccountCapsule origin, AccountCapsule caller,
-      long percent, EnergyProcessor energyProcessor, long now) {
-    if (0 == receipt.getEnergyUsageTotal()) {
+      long percent, EnergyProcessor energyProcessor, long now) throws BalanceInsufficientException {
+    if (receipt.getEnergyUsageTotal() <= 0) {
       return;
     }
 
@@ -109,7 +112,7 @@ public class ReceiptCapsule {
       AccountCapsule account,
       long usage,
       EnergyProcessor energyProcessor,
-      long now) {
+      long now) throws BalanceInsufficientException {
     long accountEnergyLeft = energyProcessor.getAccountLeftEnergyFromFreeze(account);
     if (accountEnergyLeft >= usage) {
       energyProcessor.useEnergy(account, usage, now);
@@ -123,7 +126,15 @@ public class ReceiptCapsule {
           (usage - accountEnergyLeft) * SUN_PER_ENERGY;
       this.setEnergyUsage(accountEnergyLeft);
       this.setEnergyFee(energyFee);
-      account.setBalance(account.getBalance() - energyFee);
+      long balance = account.getBalance();
+      if (balance < energyFee) {
+        throw new BalanceInsufficientException(
+            StringUtil.createReadableString(account.createDbKey()) + " insufficient balance");
+      }
+      account.setBalance(balance - energyFee);
+
+      manager.adjustBalance(manager.getAccountStore().getBlackhole().getAddress().toByteArray(),
+          energyFee);//send to blackhole
     }
 
     manager.getAccountStore().put(account.getAddress().toByteArray(), account);
@@ -131,5 +142,13 @@ public class ReceiptCapsule {
 
   public static ResourceReceipt copyReceipt(ReceiptCapsule origin) {
     return origin.getReceipt().toBuilder().build();
+  }
+
+  public void setResult(contractResult success) {
+    this.receipt = receipt.toBuilder().setResult(success).build();
+  }
+
+  public contractResult getResult() {
+    return this.receipt.getResult();
   }
 }

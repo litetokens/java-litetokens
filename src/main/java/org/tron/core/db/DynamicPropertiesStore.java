@@ -81,11 +81,13 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   private static final byte[] ENERGY_FEE = "ENERGY_FEE".getBytes();
 
+  private static final byte[] MAX_CPU_TIME_OF_ONE_TX = "MAX_CPU_TIME_OF_ONE_TX".getBytes();
+
   //abandon
   private static final byte[] CREATE_ACCOUNT_FEE = "CREATE_ACCOUNT_FEE".getBytes();
 
-  private static final byte[] CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT = "CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT"
-      .getBytes();
+  private static final byte[] CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT
+      = "CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT".getBytes();
 
   private static final byte[] CREATE_NEW_ACCOUNT_BANDWIDTH_RATE = "CREATE_NEW_ACCOUNT_BANDWIDTH_RATE"
       .getBytes();
@@ -116,6 +118,12 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   //This value is only allowed to be 0, 1, -1
   private static final byte[] REMOVE_THE_POWER_OF_THE_GR = "REMOVE_THE_POWER_OF_THE_GR".getBytes();
+
+  //This value is only allowed to be 0, 1, -1
+  private static final byte[] ALLOW_UPDATE_ACCOUNT_NAME = "ALLOW_UPDATE_ACCOUNT_NAME".getBytes();
+
+  //This value is only allowed to be 0, 1, -1
+  private static final byte[] ALLOW_SAME_TOKEN_NAME = " ALLOW_SAME_TOKEN_NAME".getBytes();
 
   //If the parameter is larger than 0, the contract is allowed to be created.
   private static final byte[] ALLOW_CREATION_OF_CONTRACTS = "ALLOW_CREATION_OF_CONTRACTS"
@@ -295,6 +303,12 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     }
 
     try {
+      this.getMaxCpuTimeOfOneTx();
+    } catch (IllegalArgumentException e) {
+      this.saveMaxCpuTimeOfOneTx(50L);
+    }
+
+    try {
       this.getCreateAccountFee();
     } catch (IllegalArgumentException e) {
       this.saveCreateAccountFee(100_000L); // 0.1TRX
@@ -382,6 +396,18 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
       this.getRemoveThePowerOfTheGr();
     } catch (IllegalArgumentException e) {
       this.saveRemoveThePowerOfTheGr(0);
+    }
+
+    try {
+      this.getAllowSameTokenName();
+    } catch (IllegalArgumentException e) {
+      this.saveAllowSameTokenName(0);
+    }
+
+    try {
+      this.getAllowUpdateAccountName();
+    } catch (IllegalArgumentException e) {
+      this.saveAllowUpdateAccountName(0);
     }
 
     try {
@@ -710,6 +736,19 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
             () -> new IllegalArgumentException("not found ENERGY_FEE"));
   }
 
+  public void saveMaxCpuTimeOfOneTx(long time) {
+    this.put(MAX_CPU_TIME_OF_ONE_TX,
+        new BytesCapsule(ByteArray.fromLong(time)));
+  }
+
+  public long getMaxCpuTimeOfOneTx() {
+    return Optional.ofNullable(getUnchecked(MAX_CPU_TIME_OF_ONE_TX))
+        .map(BytesCapsule::getData)
+        .map(ByteArray::toLong)
+        .orElseThrow(
+            () -> new IllegalArgumentException("not found MAX_CPU_TIME_OF_ONE_TX"));
+  }
+
   public void saveCreateAccountFee(long fee) {
     this.put(CREATE_ACCOUNT_FEE,
         new BytesCapsule(ByteArray.fromLong(fee)));
@@ -906,7 +945,31 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
             () -> new IllegalArgumentException("not found REMOVE_THE_POWER_OF_THE_GR"));
   }
 
+  public void saveAllowUpdateAccountName(long rate) {
+    this.put(ALLOW_UPDATE_ACCOUNT_NAME,
+        new BytesCapsule(ByteArray.fromLong(rate)));
+  }
 
+  public long getAllowUpdateAccountName() {
+    return Optional.ofNullable(getUnchecked(ALLOW_UPDATE_ACCOUNT_NAME))
+        .map(BytesCapsule::getData)
+        .map(ByteArray::toLong)
+        .orElseThrow(
+            () -> new IllegalArgumentException("not found ALLOW_UPDATE_ACCOUNT_NAME"));
+  }
+
+  public void saveAllowSameTokenName(long rate) {
+    this.put(ALLOW_SAME_TOKEN_NAME,
+        new BytesCapsule(ByteArray.fromLong(rate)));
+  }
+
+  public long getAllowSameTokenName() {
+    return Optional.ofNullable(getUnchecked(ALLOW_SAME_TOKEN_NAME))
+        .map(BytesCapsule::getData)
+        .map(ByteArray::toLong)
+        .orElseThrow(
+            () -> new IllegalArgumentException("not found ALLOW_SAME_TOKEN_NAME"));
+  }
 
   public void saveAllowCreationOfContracts(long allowCreationOfContracts) {
     this.put(DynamicPropertiesStore.ALLOW_CREATION_OF_CONTRACTS,
@@ -1101,14 +1164,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void addTotalNetWeight(long amount) {
     long totalNetWeight = getTotalNetWeight();
     totalNetWeight += amount;
-    saveTotalNetWeight(totalNetWeight);
+    saveTotalNetWeight( totalNetWeight );
   }
 
   //The unit is trx
   public void addTotalEnergyWeight(long amount) {
     long totalEnergyWeight = getTotalEnergyWeight();
     totalEnergyWeight += amount;
-    saveTotalEnergyWeight(totalEnergyWeight);
+    saveTotalEnergyWeight( totalEnergyWeight );
   }
 
   public void addTotalCreateAccountCost(long fee) {

@@ -143,7 +143,7 @@ public class WalletTestAssetIssue017 {
     }
   }
 
-  @Test(enabled = false)
+  @Test(enabled = true)
   public void btestGetPaginatedAssetIssueListException() {
     //offset is 0, limit is 0.
     Integer offset = 0;
@@ -194,7 +194,7 @@ public class WalletTestAssetIssue017 {
     Assert.assertTrue(assetIssueListPaginated.get().getAssetIssueCount() >= 1);
   }
 
-  @Test(enabled = false)
+  @Test(enabled = true)
   public void ctestGetPaginatedAssetIssueListOnSolidityNode() {
 
     Integer offset = 0;
@@ -216,7 +216,7 @@ public class WalletTestAssetIssue017 {
     }
   }
 
-  @Test(enabled = false)
+  @Test(enabled = true)
   public void dtestGetPaginatedAssetIssueListExceptionOnSolidityNode() {
     //offset is 0, limit is 0.
     Integer offset = 0;

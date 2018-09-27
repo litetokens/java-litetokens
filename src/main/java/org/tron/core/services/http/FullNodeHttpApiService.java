@@ -78,6 +78,10 @@ public class FullNodeHttpApiService implements Service {
   @Autowired
   private GetPaginatedAssetIssueListServlet getPaginatedAssetIssueListServlet;
   @Autowired
+  private GetPaginatedProposalListServlet getPaginatedProposalListServlet;
+  @Autowired
+  private GetPaginatedExchangeListServlet getPaginatedExchangeListServlet;
+  @Autowired
   private TotalTransactionServlet totalTransactionServlet;
   @Autowired
   private GetNextMaintenanceTimeServlet getNextMaintenanceTimeServlet;
@@ -97,6 +101,32 @@ public class FullNodeHttpApiService implements Service {
   private TriggerSmartContractServlet triggerSmartContractServlet;
   @Autowired
   private GetContractServlet getContractServlet;
+  @Autowired
+  private ProposalCreateServlet proposalCreateServlet;
+  @Autowired
+  private ProposalApproveServlet proposalApproveServlet;
+  @Autowired
+  private ProposalDeleteServlet proposalDeleteServlet;
+  @Autowired
+  private ListProposalsServlet listProposalsServlet;
+  @Autowired
+  private GetProposalByIdServlet getProposalByIdServlet;
+  @Autowired
+  private ExchangeCreateServlet exchangeCreateServlet;
+  @Autowired
+  private ExchangeInjectServlet exchangeInjectServlet;
+  @Autowired
+  private ExchangeTransactionServlet exchangeTransactionServlet;
+  @Autowired
+  private ExchangeWithdrawServlet exchangeWithdrawServlet;
+  @Autowired
+  private GetExchangeByIdServlet getExchangeByIdServlet;
+  @Autowired
+  private ListExchangesServlet listExchangesServlet;
+  @Autowired
+  private GetChainParametersServlet getChainParametersServlet;
+  @Autowired
+  private GetAccountResourceServlet getAccountResourceServlet;
 
   @Override
   public void init() {
@@ -147,6 +177,10 @@ public class FullNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(getAssetIssueListServlet), "/getassetissuelist");
       context.addServlet(new ServletHolder(getPaginatedAssetIssueListServlet),
           "/getpaginatedassetissuelist");
+      context.addServlet(new ServletHolder(getPaginatedProposalListServlet),
+          "/getpaginatedproposalist");
+      context.addServlet(new ServletHolder(getPaginatedExchangeListServlet),
+          "/getpaginatedexchangelist");
       context.addServlet(new ServletHolder(totalTransactionServlet), "/totaltransaction");
       context
           .addServlet(new ServletHolder(getNextMaintenanceTimeServlet), "/getnextmaintenancetime");
@@ -158,6 +192,19 @@ public class FullNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(deployContractServlet), "/deploycontract");
       context.addServlet(new ServletHolder(triggerSmartContractServlet), "/triggersmartcontract");
       context.addServlet(new ServletHolder(getContractServlet), "/getcontract");
+      context.addServlet(new ServletHolder(proposalCreateServlet), "/proposalcreate");
+      context.addServlet(new ServletHolder(proposalApproveServlet), "/proposalapprove");
+      context.addServlet(new ServletHolder(proposalDeleteServlet), "/proposaldelete");
+      context.addServlet(new ServletHolder(listProposalsServlet), "/listproposals");
+      context.addServlet(new ServletHolder(getProposalByIdServlet), "/getproposalbyid");
+      context.addServlet(new ServletHolder(exchangeCreateServlet), "/exchangecreate");
+      context.addServlet(new ServletHolder(exchangeInjectServlet), "/exchangeinject");
+      context.addServlet(new ServletHolder(exchangeTransactionServlet), "/exchangetransaction");
+      context.addServlet(new ServletHolder(exchangeWithdrawServlet), "/exchangewithdraw");
+      context.addServlet(new ServletHolder(getExchangeByIdServlet), "/getexchangebyid");
+      context.addServlet(new ServletHolder(listExchangesServlet), "/listexchanges");
+      context.addServlet(new ServletHolder(getChainParametersServlet), "/getchainparameters");
+      context.addServlet(new ServletHolder(getAccountResourceServlet), "/getaccountresource");
       server.start();
     } catch (Exception e) {
       logger.debug("IOException: {}", e.getMessage());

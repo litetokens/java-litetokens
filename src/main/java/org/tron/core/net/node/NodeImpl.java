@@ -10,9 +10,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
@@ -1299,20 +1297,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
   @Override
   public void onDisconnectPeer(PeerConnection peer) {
 
-    logger.info("peer.getSyncBlockRequested().isEmpty():" + peer.getSyncBlockRequested().isEmpty());
     if (!peer.getSyncBlockRequested().isEmpty()) {
-      ArrayList<String> arrayList = new ArrayList<>();
-      for(BlockId blockId: peer.getSyncBlockRequested().keySet()) {
-        arrayList.add(String.valueOf(blockId.getNum()));
-      }
-      Collections.sort(arrayList, new Comparator<String>() {
-        @Override
-        public int compare(String o1, String o2) {
-          return Integer.valueOf(o1) > Integer.valueOf(o2)?1:Integer.valueOf(o1)==Integer.valueOf(o2)?0:-1;
-        }
-      });
-      logger.info("peer.getSyncBlockRequested().keySet():" + String.join(",",arrayList.toArray(new String[0])));
-
       peer.getSyncBlockRequested().keySet()
           .forEach(blockId -> syncBlockIdWeRequested.invalidate(blockId));
       isFetchSyncActive = true;

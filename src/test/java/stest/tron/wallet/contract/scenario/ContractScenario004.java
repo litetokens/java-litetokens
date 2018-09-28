@@ -60,6 +60,7 @@ public class ContractScenario004 {
 
   @Test(enabled = true)
   public void deployErc20TronToken() {
+    PublicMethed.waitProduceNextBlock(blockingStubFull);
     Assert.assertTrue(PublicMethed.freezeBalanceGetEnergy(contract004Address, 100000000L,
         3,1,contract004Key,blockingStubFull));
     AccountResourceMessage accountResource = PublicMethed.getAccountResource(contract004Address,

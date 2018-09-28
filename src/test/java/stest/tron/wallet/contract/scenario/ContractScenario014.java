@@ -105,6 +105,7 @@ public class ContractScenario014 {
     txid = PublicMethed.deployContractWithConstantParame(contractName,abi,code,
         "constructor(address)",parame,"", maxFeeLimit,0L,100,null,
         contract014Key,contract014Address,blockingStubFull);
+    PublicMethed.waitProduceNextBlock(blockingStubFull);
     infoById = PublicMethed.getTransactionInfoById(txid, blockingStubFull);
     Assert.assertTrue(infoById.get().getResultValue() == 0);
     contractAddress3 = infoById.get().getContractAddress().toByteArray();
@@ -125,11 +126,14 @@ public class ContractScenario014 {
     Long receiverBeforeBalance = receiverAccountInfo.getBalance();
     Account contract1AccountInfo = PublicMethed.queryAccount(contractAddress1,blockingStubFull);
     Long contract1BeforeBalance = contract1AccountInfo.getBalance();
-    logger.info("contract1 balance is " + Long.toString(contract1BeforeBalance));
+    logger.info("before contract1 balance is " + Long.toString(contract1BeforeBalance));
+    logger.info("before receiver balance is " + Long.toString(receiverBeforeBalance));
     String receiveAddress = "\"" +  Base58.encode58Check(receiverAddress) + "\"";
     txid = PublicMethed.triggerContract(contractAddress2,
         "triggerContract1(address)", receiveAddress, false,
         0, 10000000L, contract014Address, contract014Key, blockingStubFull);
+
+    PublicMethed.waitProduceNextBlock(blockingStubFull);
     infoById = PublicMethed.getTransactionInfoById(txid, blockingStubFull);
     Assert.assertTrue(infoById.get().getResultValue() == 0);
     contract2AccountInfo = PublicMethed.queryAccount(contractAddress2,blockingStubFull);
@@ -138,7 +142,7 @@ public class ContractScenario014 {
     Long receiverAfterBalance = receiverAccountInfo.getBalance();
     contract1AccountInfo = PublicMethed.queryAccount(contractAddress1,blockingStubFull);
     Long contract1AfterBalance = contract1AccountInfo.getBalance();
-    logger.info("contract1 balance is " + Long.toString(contract1AfterBalance));
+    logger.info("after contract1 balance is " + Long.toString(contract1AfterBalance));
     Assert.assertTrue(receiverAfterBalance - receiverBeforeBalance == 5);
     Assert.assertTrue(contract2BeforeBalance - contract2AfterBalance == 0);
     Assert.assertTrue(contract1BeforeBalance - contract1AfterBalance == 5);
@@ -158,6 +162,7 @@ public class ContractScenario014 {
     contract1AfterBalance = contract1AccountInfo.getBalance();
     receiverAccountInfo = PublicMethed.queryAccount(receiverAddress,blockingStubFull);
     receiverAfterBalance = receiverAccountInfo.getBalance();
+    logger.info("after receiver balance is " + Long.toString(receiverAfterBalance));
     Assert.assertTrue(receiverAfterBalance - receiverBeforeBalance == 0);
     Assert.assertTrue(contract1BeforeBalance - contract1AfterBalance == 0);
 
@@ -168,16 +173,21 @@ public class ContractScenario014 {
     Long contract3BeforeBalance = contract3AccountInfo.getBalance();
     receiverAccountInfo = PublicMethed.queryAccount(receiverAddress,blockingStubFull);
     receiverBeforeBalance = receiverAccountInfo.getBalance();
+    logger.info("before receiver balance is " + Long.toString(receiverBeforeBalance));
+    logger.info("before contract3 balance is " + Long.toString(contract3BeforeBalance));
     receiveAddress = "\"" +  Base58.encode58Check(receiverAddress) + "\"";
     txid = PublicMethed.triggerContract(contractAddress3,
         "triggerContract2(address)", receiveAddress, false,
         0, 10000000L, contract014Address, contract014Key, blockingStubFull);
+    PublicMethed.waitProduceNextBlock(blockingStubFull);
     infoById = PublicMethed.getTransactionInfoById(txid, blockingStubFull);
     Assert.assertTrue(infoById.get().getResultValue() == 0);
     contract3AccountInfo = PublicMethed.queryAccount(contractAddress3,blockingStubFull);
     Long contract3AfterBalance = contract3AccountInfo.getBalance();
     receiverAccountInfo = PublicMethed.queryAccount(receiverAddress,blockingStubFull);
     receiverAfterBalance = receiverAccountInfo.getBalance();
+    logger.info("after receiver balance is " + Long.toString(receiverAfterBalance));
+    logger.info("after contract3 balance is " + Long.toString(contract3AfterBalance));
     contract1AccountInfo = PublicMethed.queryAccount(contractAddress1,blockingStubFull);
     contract1AfterBalance = contract1AccountInfo.getBalance();
 

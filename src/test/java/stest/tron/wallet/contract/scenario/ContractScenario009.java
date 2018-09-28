@@ -59,6 +59,7 @@ public class ContractScenario009 {
 
   @Test(enabled = true)
   public void deployContainLibraryContract() {
+    PublicMethed.waitProduceNextBlock(blockingStubFull);
     Assert.assertTrue(PublicMethed.freezeBalanceGetEnergy(contract009Address, 1000000L,
         3,1,contract009Key,blockingStubFull));
     AccountResourceMessage accountResource = PublicMethed.getAccountResource(contract009Address,
@@ -73,6 +74,9 @@ public class ContractScenario009 {
     String abi = "[{\"constant\":false,\"inputs\":[{\"name\":\"self\",\"type\":\"Set.Data storage\"},{\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"remove\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"self\",\"type\":\"Set.Data storage\"},{\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"contains\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"self\",\"type\":\"Set.Data storage\"},{\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"insert\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]";
     byte[] libraryAddress = PublicMethed.deployContract(contractName,abi,code,"",maxFeeLimit,
         0L, 100,null,contract009Key,contract009Address,blockingStubFull);
+
+    PublicMethed.waitProduceNextBlock(blockingStubFull);
+
     SmartContract smartContract = PublicMethed.getContract(libraryAddress,blockingStubFull);
 
     Assert.assertFalse(smartContract.getAbi().toString().isEmpty());

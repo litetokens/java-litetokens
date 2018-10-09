@@ -1208,19 +1208,6 @@ public class Manager {
 
   }
 
-  private void validateAccountState(BlockCapsule block) throws ValidateScheduleException {
-    Sha256Hash accountStateMerkleRoot = block.calcAccountStateMerkleRoot(this);
-
-    if (!accountStateMerkleRoot.equals(block.getAccountStateMerkleRoot())) {
-      logger.warn(
-          "The account state merkle root doesn't match, Cacl result is "
-              + accountStateMerkleRoot
-              + " , the headers is "
-              + block.getAccountStateMerkleRoot());
-      throw  new ValidateScheduleException("The account state merkle hash is not validated");
-    }
-  }
-
   private void updateTransHashCache(BlockCapsule block) {
     for (TransactionCapsule transactionCapsule : block.getTransactions()) {
       this.transactionIdCache.put(transactionCapsule.getTransactionId(), true);

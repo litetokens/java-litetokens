@@ -314,18 +314,6 @@ public class BlockCapsule implements ProtoCapsule<Block> {
     return rootHash;
   }
 
-  /**
-   * Set account state Merkle root hash of this block.
-   */
-  public void setAccountStateMerkleRoot(Manager manager) {
-    BlockHeader.raw blockHeaderRaw =
-        this.block.getBlockHeader().getRawData().toBuilder()
-            .setAccountTrieRoot(calcAccountStateMerkleRoot(manager).getByteString()).build();
-
-    this.block = this.block.toBuilder().setBlockHeader(
-        this.block.getBlockHeader().toBuilder().setRawData(blockHeaderRaw)).build();
-  }
-
   /* only for genisis */
   public void  setWitness(String witness) {
     BlockHeader.raw blockHeaderRaw =
@@ -338,10 +326,6 @@ public class BlockCapsule implements ProtoCapsule<Block> {
 
   public Sha256Hash getMerkleRoot() {
     return Sha256Hash.wrap(this.block.getBlockHeader().getRawData().getTxTrieRoot());
-  }
-
-  public Sha256Hash getAccountStateMerkleRoot() {
-    return Sha256Hash.wrap(this.block.getBlockHeader().getRawData().getAccountTrieRoot());
   }
 
   public ByteString getWitnessAddress() {

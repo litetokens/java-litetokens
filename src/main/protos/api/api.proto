@@ -731,6 +731,12 @@ service Database {
   rpc GetBlockByNum (NumberMessage) returns (Block) {
 
   }
+  rpc GetAccountStateByNum (NumberMessage) returns (BytesMessage) {
+
+  }
+  rpc GetAccountStateById (BytesMessage) returns (BytesMessage) {
+
+  }
 };
 
 message Return {

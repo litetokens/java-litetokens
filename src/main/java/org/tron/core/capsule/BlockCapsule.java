@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -285,8 +286,10 @@ public class BlockCapsule implements ProtoCapsule<Block> {
 
     for (Transaction transaction : transactionsList) {
       for (Contract contract : transaction.getRawData().getContractList()) {
-        accountsAddress.put(ByteString.copyFrom(TransactionCapsule.getOwner(contract)), true);
-        accountsAddress.put(ByteString.copyFrom(TransactionCapsule.getToAddress(contract)), true);
+        accountsAddress.put(ByteString.copyFrom(
+            Objects.requireNonNull(TransactionCapsule.getOwner(contract))), true);
+        accountsAddress.put(ByteString.copyFrom(
+            Objects.requireNonNull(TransactionCapsule.getToAddress(contract))), true);
       }
     }
 

@@ -128,6 +128,9 @@ public class Manager {
   @Autowired
   @Getter
   private StorageRowStore storageRowStore;
+  @Autowired
+  @Getter
+  private AccountStateStore accountStateStore;
 
   // for network
   @Autowired
@@ -1205,7 +1208,7 @@ public class Manager {
     this.updateTransHashCache(block);
     updateMaintenanceState(needMaint);
     updateRecentBlock(block);
-
+    updateAccountState(block);
   }
 
   private void updateTransHashCache(BlockCapsule block) {
@@ -1218,6 +1221,15 @@ public class Manager {
     this.recentBlockStore.put(ByteArray.subArray(
         ByteArray.fromLong(block.getNum()), 6, 8),
         new BytesCapsule(ByteArray.subArray(block.getBlockId().getBytes(), 8, 16)));
+  }
+
+  private void updateAccountState(BlockCapsule block) {
+    this.accountStateStore.put(
+        block.getBlockId().getBytes(),
+        new BytesCapsule(
+            block.calcAccountStateMerkleRoot(this).getBytes()
+        )
+    );
   }
 
   /**
@@ -1397,6 +1409,7 @@ public class Manager {
     closeOneStore(codeStore);
     closeOneStore(contractStore);
     closeOneStore(storageRowStore);
+    closeOneStore(accountStateStore);
     closeOneStore(exchangeStore);
     closeOneStore(peersStore);
     closeOneStore(proposalStore);

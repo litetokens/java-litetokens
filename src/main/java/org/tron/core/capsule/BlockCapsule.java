@@ -26,16 +26,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.tron.common.crypto.ECKey;
 import org.tron.common.crypto.ECKey.ECDSASignature;
-import org.tron.common.runtime.vm.PrecompiledContracts.Sha256;
 import org.tron.common.utils.ByteUtil;
 import org.tron.common.utils.Sha256Hash;
 import org.tron.common.utils.Time;
@@ -286,10 +285,16 @@ public class BlockCapsule implements ProtoCapsule<Block> {
 
     for (Transaction transaction : transactionsList) {
       for (Contract contract : transaction.getRawData().getContractList()) {
-        accountsAddress.put(ByteString.copyFrom(
-            Objects.requireNonNull(TransactionCapsule.getOwner(contract))), true);
-        accountsAddress.put(ByteString.copyFrom(
-            Objects.requireNonNull(TransactionCapsule.getToAddress(contract))), true);
+        byte[] owner = TransactionCapsule.getOwner(contract);
+        byte[] toAddress = TransactionCapsule.getToAddress(contract);
+
+        if (!ArrayUtils.isEmpty(owner)) {
+          accountsAddress.put(ByteString.copyFrom(owner), true);
+        }
+
+        if (!ArrayUtils.isEmpty(toAddress)) {
+          accountsAddress.put(ByteString.copyFrom(toAddress), true);
+        }
       }
     }
 

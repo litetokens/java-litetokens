@@ -1113,7 +1113,6 @@ public class Manager {
       }
     }
 
-    blockCapsule.setAccountStateMerkleRoot(this);
     session.reset();
 
     if (postponedTrxCount > 0) {
@@ -1190,10 +1189,6 @@ public class Manager {
         transactionCapsule.setVerified(true);
       }
       processTransaction(transactionCapsule, block);
-    }
-
-    if (!block.generatedByMyself) {
-      validateAccountState(block);
     }
 
     boolean needMaint = needMaintenance(block.getTimeStamp());

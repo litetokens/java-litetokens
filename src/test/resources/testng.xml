@@ -22,8 +22,8 @@
   <test name="Stest block,node,witness">
 
     <packages>
-      <!--<package name="stest.tron.wallet.contract.exceptionfee">-->
-      <!--</package>-->
+      <package name="stest.tron.wallet.contract.exceptionfee">
+      </package>
       <package name="stest.tron.wallet.node">
       </package>
       <package name="stest.tron.wallet.witness">

@@ -514,10 +514,6 @@ public class AssertException {
     contractAddress = PublicMethed.deployContract(contractName, abi, code, "", maxFeeLimit,
         0L, 100, null, testKeyForAssetIssue016,
         asset016Address, blockingStubFull);
-    Assert.assertTrue(PublicMethed.freezeBalanceGetEnergy(asset016Address, 10000000L,
-        3, 1, testKeyForAssetIssue016, blockingStubFull));
-    Assert.assertTrue(PublicMethed.freezeBalanceGetEnergy(asset016Address, 10000000L,
-        3, 0, testKeyForAssetIssue016, blockingStubFull));
     Account info;
     AccountResourceMessage resourceInfo = PublicMethed.getAccountResource(asset016Address,
         blockingStubFull);

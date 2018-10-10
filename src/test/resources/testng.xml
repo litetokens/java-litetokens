@@ -22,8 +22,7 @@
   <test name="Stest block,node,witness">
 
     <packages>
-      <package name="stest.tron.wallet.contract.exceptionfee">
-      </package>
+
       <package name="stest.tron.wallet.node">
       </package>
       <package name="stest.tron.wallet.witness">
@@ -39,6 +38,8 @@
       <package name="stest.tron.wallet.exchange">
       </package>
       <package name="stest.tron.wallet.committee">
+      </package>
+      <package name="stest.tron.wallet.contract.exceptionfee">
       </package>
     </packages>
     <!--      <classes>

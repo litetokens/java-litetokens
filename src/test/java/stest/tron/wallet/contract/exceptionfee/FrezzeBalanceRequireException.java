@@ -583,6 +583,25 @@ public class FrezzeBalanceRequireException {
     contractAddress = PublicMethed.deployContract(contractName, abi, code, "", maxFeeLimit,
         0L, 100, null, testKeyForAssetIssue016,
         asset016Address, blockingStubFull);
+
+    Assert.assertTrue(PublicMethed.freezeBalanceGetEnergy(asset016Address, 10000000L,
+        3, 1, testKeyForAssetIssue016, blockingStubFull));
+    Assert.assertTrue(PublicMethed.freezeBalanceGetEnergy(asset016Address, 10000000L,
+        3, 0, testKeyForAssetIssue016, blockingStubFull));
+    Account info;
+    AccountResourceMessage resourceInfo = PublicMethed.getAccountResource(asset016Address,
+        blockingStubFull);
+    info = PublicMethed.queryAccount(testKeyForAssetIssue016, blockingStubFull);
+    Long beforeBalance = info.getBalance();
+    Long beforeEnergyUsed = resourceInfo.getEnergyUsed();
+    Long beforeNetUsed = resourceInfo.getNetUsed();
+    Long beforeFreeNetUsed = resourceInfo.getFreeNetUsed();
+
+    logger.info("beforeBalance:" + beforeBalance);
+    logger.info("beforeEnergyUsed:" + beforeEnergyUsed);
+    logger.info("beforeNetUsed:" + beforeNetUsed);
+    logger.info("beforeFreeNetUsed:" + beforeFreeNetUsed);
+
     String txid = "";
     String contractName1 = "ContractGasNoenough";
     String code1 = "608060405234801561001057600080fd5b50610182806100206000396000f30060806040526004"
@@ -602,23 +621,6 @@ public class FrezzeBalanceRequireException {
         .deployContract(contractName1, abi1, code1, "", maxFeeLimit,
             0L, 100, null,
             testKeyForAssetIssue016, asset016Address, blockingStubFull);
-    Assert.assertTrue(PublicMethed.freezeBalanceGetEnergy(asset016Address, 10000000L,
-        3, 1, testKeyForAssetIssue016, blockingStubFull));
-    Assert.assertTrue(PublicMethed.freezeBalanceGetEnergy(asset016Address, 10000000L,
-        3, 0, testKeyForAssetIssue016, blockingStubFull));
-    Account info;
-    AccountResourceMessage resourceInfo = PublicMethed.getAccountResource(asset016Address,
-        blockingStubFull);
-    info = PublicMethed.queryAccount(testKeyForAssetIssue016, blockingStubFull);
-    Long beforeBalance = info.getBalance();
-    Long beforeEnergyUsed = resourceInfo.getEnergyUsed();
-    Long beforeNetUsed = resourceInfo.getNetUsed();
-    Long beforeFreeNetUsed = resourceInfo.getFreeNetUsed();
-
-    logger.info("beforeBalance:" + beforeBalance);
-    logger.info("beforeEnergyUsed:" + beforeEnergyUsed);
-    logger.info("beforeNetUsed:" + beforeNetUsed);
-    logger.info("beforeFreeNetUsed:" + beforeFreeNetUsed);
     txid = PublicMethed.triggerContract(contractAddress1,
         "newAccount()", "#", false,
         0, 5226000, asset016Address, testKeyForAssetIssue016, blockingStubFull);
@@ -667,26 +669,6 @@ public class FrezzeBalanceRequireException {
     contractAddress = PublicMethed.deployContract(contractName, abi, code, "", maxFeeLimit,
         0L, 100, null, testKeyForAssetIssue016,
         asset016Address, blockingStubFull);
-
-    String saleContractString = "\"" + Base58.encode58Check(contractAddress) + "\"";
-    String txid = "";
-    String contractName1 = "MessageUseContract";
-    String code1 = "608060405234801561001057600080fd5b50610149806100206000396000f30060806040526004"
-        + "36106100405763ffffffff7c010000000000000000000000000000000000000000000000000000000060003"
-        + "5041663ff04eb898114610045575b600080fd5b34801561005157600080fd5b5061007373ffffffffffffff"
-        + "ffffffffffffffffffffffffff60043516610085565b60408051918252519081900360200190f35b600081"
-        + "73ffffffffffffffffffffffffffffffffffffffff16639138fd4c6040518163ffffffff167c0100000000"
-        + "000000000000000000000000000000000000000000000000028152600401602060405180830381600087803"
-        + "b1580156100eb57600080fd5b505af11580156100ff573d6000803e3d6000fd5b505050506040513d602081"
-        + "101561011557600080fd5b5051929150505600a165627a7a72305820733f086bcd980c277618750fe75cdd8"
-        + "c6faf8f0b01de9521ac9531e8ec3589030029";
-    String abi1 = "[{\"constant\":false,\"inputs\":[{\"name\":\"addr\",\"type\":\"address\"}]"
-        + ",\"name\":\"MathedUse\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable"
-        + "\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]";
-    byte[] contractAddress1 = PublicMethed
-        .deployContract(contractName1, abi1, code1, "", maxFeeLimit,
-            0L, 100, null,
-            testKeyForAssetIssue016, asset016Address, blockingStubFull);
     Account info;
     AccountResourceMessage resourceInfo = PublicMethed.getAccountResource(asset016Address,
         blockingStubFull);
@@ -700,6 +682,27 @@ public class FrezzeBalanceRequireException {
     logger.info("beforeEnergyUsed:" + beforeEnergyUsed);
     logger.info("beforeNetUsed:" + beforeNetUsed);
     logger.info("beforeFreeNetUsed:" + beforeFreeNetUsed);
+    String saleContractString = "\"" + Base58.encode58Check(contractAddress) + "\"";
+    String txid = "";
+    String code1 = "608060405234801561001057600080fd5b50610149806100206000396000f30060806040526004"
+        + "36106100405763ffffffff7c010000000000000000000000000000000000000000000000000000000060003"
+        + "5041663ff04eb898114610045575b600080fd5b34801561005157600080fd5b5061007373ffffffffffffff"
+        + "ffffffffffffffffffffffffff60043516610085565b60408051918252519081900360200190f35b600081"
+        + "73ffffffffffffffffffffffffffffffffffffffff16639138fd4c6040518163ffffffff167c0100000000"
+        + "000000000000000000000000000000000000000000000000028152600401602060405180830381600087803"
+        + "b1580156100eb57600080fd5b505af11580156100ff573d6000803e3d6000fd5b505050506040513d602081"
+        + "101561011557600080fd5b5051929150505600a165627a7a72305820733f086bcd980c277618750fe75cdd8"
+        + "c6faf8f0b01de9521ac9531e8ec3589030029";
+    String abi1 = "[{\"constant\":false,\"inputs\":[{\"name\":\"addr\",\"type\":\"address\"}]"
+        + ",\"name\":\"MathedUse\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable"
+        + "\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]";
+    String contractName1 = "MessageUseContract";
+
+    byte[] contractAddress1 = PublicMethed
+        .deployContract(contractName1, abi1, code1, "", maxFeeLimit,
+            0L, 100, null,
+            testKeyForAssetIssue016, asset016Address, blockingStubFull);
+
     txid = PublicMethed.triggerContract(contractAddress1,
         "messageUse(address)", saleContractString, false,
         0, maxFeeLimit, asset016Address, testKeyForAssetIssue016, blockingStubFull);
@@ -748,26 +751,6 @@ public class FrezzeBalanceRequireException {
         0L, 100, null, testKeyForAssetIssue016,
         asset016Address, blockingStubFull);
 
-    String txid = "";
-    String saleContractString = "\"" + Base58.encode58Check(contractAddress) + "\"";
-    String code1 = "608060405234801561001057600080fd5b5061013f806100206000396000f3006080604052600"
-        + "436106100405763ffffffff7c0100000000000000000000000000000000000000000000000000000000600"
-        + "0350416637b77267a8114610045575b600080fd5b61006673fffffffffffffffffffffffffffffffffffff"
-        + "fff60043516610078565b60408051918252519081900360200190f35b60008173fffffffffffffffffffff"
-        + "fffffffffffffffffff166319e1aef960016040518263ffffffff167c01000000000000000000000000000"
-        + "00000000000000000000000000000028152600401602060405180830381600088803b1580156100e057600"
-        + "080fd5b5087f11580156100f4573d6000803e3d6000fd5b50505050506040513d602081101561010b57600"
-        + "080fd5b5051929150505600a165627a7a723058207dcdb1b3c42bfc00674f226c36b1bbf2ee54a6a6ae6f"
-        + "2eeace876b0370d83f5b0029";
-    String abi1 = "[{\"constant\":false,\"inputs\":[{\"name\":\"addr\",\"type\":\"address\"}],"
-        + "\"name\":\"messageUse\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable"
-        + "\":true,\"stateMutability\":\"payable\",\"type\":\"function\"}]";
-    String contractName1 = "FunctionUseContract";
-    byte[] contractAddress1 = PublicMethed
-        .deployContract(contractName1, abi1, code1, "", maxFeeLimit, 0L,
-            100, null, testKeyForAssetIssue016,
-            asset016Address, blockingStubFull);
-
     Assert.assertTrue(PublicMethed.freezeBalanceGetEnergy(asset016Address, 10000000L,
         3, 1, testKeyForAssetIssue016, blockingStubFull));
     Assert.assertTrue(PublicMethed.freezeBalanceGetEnergy(asset016Address, 10000000L,
@@ -786,11 +769,33 @@ public class FrezzeBalanceRequireException {
     logger.info("beforeEnergyUsed:" + beforeEnergyUsed);
     logger.info("beforeNetUsed:" + beforeNetUsed);
     logger.info("beforeFreeNetUsed:" + beforeFreeNetUsed);
+    String txid = "";
+    String saleContractString = "\"" + Base58.encode58Check(contractAddress) + "\"";
+    String contractName1 = "FunctionUseContract";
+    String code1 = "608060405234801561001057600080fd5b5061013f806100206000396000f3006080604052600"
+        + "436106100405763ffffffff7c0100000000000000000000000000000000000000000000000000000000600"
+        + "0350416637b77267a8114610045575b600080fd5b61006673fffffffffffffffffffffffffffffffffffff"
+        + "fff60043516610078565b60408051918252519081900360200190f35b60008173fffffffffffffffffffff"
+        + "fffffffffffffffffff166319e1aef960016040518263ffffffff167c01000000000000000000000000000"
+        + "00000000000000000000000000000028152600401602060405180830381600088803b1580156100e057600"
+        + "080fd5b5087f11580156100f4573d6000803e3d6000fd5b50505050506040513d602081101561010b57600"
+        + "080fd5b5051929150505600a165627a7a723058207dcdb1b3c42bfc00674f226c36b1bbf2ee54a6a6ae6f"
+        + "2eeace876b0370d83f5b0029";
+    String abi1 = "[{\"constant\":false,\"inputs\":[{\"name\":\"addr\",\"type\":\"address\"}],"
+        + "\"name\":\"messageUse\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable"
+        + "\":true,\"stateMutability\":\"payable\",\"type\":\"function\"}]";
+
+    byte[] contractAddress1 = PublicMethed
+        .deployContract(contractName1, abi1, code1, "", maxFeeLimit, 0L,
+            100, null, testKeyForAssetIssue016,
+            asset016Address, blockingStubFull);
+
     txid = PublicMethed.triggerContract(contractAddress1,
         "messageUse(address)", saleContractString, false,
         0, maxFeeLimit, asset016Address, testKeyForAssetIssue016, blockingStubFull);
     PublicMethed.waitProduceNextBlock(blockingStubFull);
     Optional<TransactionInfo> infoById = null;
+
     infoById = PublicMethed.getTransactionInfoById(txid, blockingStubFull);
     Long fee = infoById.get().getFee();
     Long netUsed = infoById.get().getReceipt().getNetUsage();

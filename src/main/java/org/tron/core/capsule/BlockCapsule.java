@@ -25,8 +25,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -47,7 +45,6 @@ import org.tron.core.exception.ValidateSignatureException;
 import org.tron.protos.Protocol.Block;
 import org.tron.protos.Protocol.BlockHeader;
 import org.tron.protos.Protocol.Transaction;
-import org.tron.protos.Protocol.Transaction.Contract;
 
 @Slf4j
 public class BlockCapsule implements ProtoCapsule<Block> {
@@ -283,30 +280,27 @@ public class BlockCapsule implements ProtoCapsule<Block> {
       return Sha256Hash.ZERO_HASH;
     }
 
-    for (Transaction transaction : transactionsList) {
-      for (Contract contract : transaction.getRawData().getContractList()) {
-        byte[] owner = TransactionCapsule.getOwner(contract);
-        byte[] toAddress = TransactionCapsule.getToAddress(contract);
+    transactionsList.forEach(t -> t.getRawData().getContractList().forEach(c -> {
+      byte[] owner = TransactionCapsule.getOwner(c);
+      byte[] toAddress = TransactionCapsule.getToAddress(c);
 
-        if (!ArrayUtils.isEmpty(owner)) {
-          accountsAddress.put(ByteString.copyFrom(owner), true);
-        }
-
-        if (!ArrayUtils.isEmpty(toAddress)) {
-          accountsAddress.put(ByteString.copyFrom(toAddress), true);
-        }
+      if (!ArrayUtils.isEmpty(owner)) {
+        accountsAddress.put(ByteString.copyFrom(owner), true);
       }
-    }
+
+      if (!ArrayUtils.isEmpty(toAddress)) {
+        accountsAddress.put(ByteString.copyFrom(toAddress), true);
+      }
+    }));
 
     AccountStore accountStore = manager.getAccountStore();
-    Set<Entry<ByteString, Boolean>> accountsAddressEntries = accountsAddress.entrySet();
     List<Sha256Hash> hashes = new ArrayList<>();
-    for (Entry<ByteString, Boolean> accountsAddressEntry : accountsAddressEntries) {
-      AccountCapsule accountCapsule = accountStore.get(accountsAddressEntry.getKey().toByteArray());
+    accountsAddress.forEach((key, value) -> {
+      AccountCapsule accountCapsule = accountStore.get(key.toByteArray());
       if (null != accountCapsule) {
         hashes.add(accountCapsule.getMerkleHash());
       }
-    }
+    });
 
     hashes.sort(Comparator.comparingInt(Sha256Hash::hashCode));
 

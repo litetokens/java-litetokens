@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
@@ -1000,29 +1001,26 @@ public class Wallet {
    * Get account state by block num.
    */
   public byte[] getAccountStateByNum(long num) {
+    byte[] accountStateHash = new byte[0];
     try {
       BlockId blockId = dbManager.getBlockIdByNum(num);
 
       ByteString id = blockId.getByteString();
-      return getAccountStateById(id);
+      accountStateHash = getAccountStateById(id);
     } catch (ItemNotFoundException e) {
-      return null;
+      return accountStateHash;
     }
+
+    return accountStateHash;
   }
 
   /**
    * Get account state by block id, if not exists then return null.
    */
   public byte[] getAccountStateById(ByteString id) {
-    if (null != id) {
-      BytesCapsule byId = dbManager.getAccountStateStore().getById(id);
-
-      if (null == byId) {
-        return null;
-      }
-      return byId.getData();
-    }
-
-    return null;
+    return Optional.ofNullable(id)
+        .map(i -> dbManager.getAccountStateStore().getById(i))
+        .map(BytesCapsule::getData)
+        .orElse(null);
   }
 }

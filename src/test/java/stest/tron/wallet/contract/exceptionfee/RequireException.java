@@ -23,7 +23,7 @@ import stest.tron.wallet.common.client.utils.Base58;
 import stest.tron.wallet.common.client.utils.PublicMethed;
 
 @Slf4j
-public class UseTrxRequireException {
+public class RequireException {
 
   //testng001、testng002、testng003、testng004
   private final String testNetAccountKey =

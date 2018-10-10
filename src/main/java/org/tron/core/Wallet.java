@@ -73,6 +73,8 @@ import org.tron.core.actuator.ActuatorFactory;
 import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.AssetIssueCapsule;
 import org.tron.core.capsule.BlockCapsule;
+import org.tron.core.capsule.BlockCapsule.BlockId;
+import org.tron.core.capsule.BytesCapsule;
 import org.tron.core.capsule.ContractCapsule;
 import org.tron.core.capsule.ExchangeCapsule;
 import org.tron.core.capsule.ProposalCapsule;
@@ -95,6 +97,7 @@ import org.tron.core.exception.ContractExeException;
 import org.tron.core.exception.ContractValidateException;
 import org.tron.core.exception.DupTransactionException;
 import org.tron.core.exception.HeaderNotFound;
+import org.tron.core.exception.ItemNotFoundException;
 import org.tron.core.exception.StoreException;
 import org.tron.core.exception.TaposException;
 import org.tron.core.exception.TooBigTransactionException;
@@ -993,5 +996,33 @@ public class Wallet {
 
   }
 
+  /**
+   * Get account state by block num.
+   */
+  public byte[] getAccountStateByNum(long num) {
+    try {
+      BlockId blockId = dbManager.getBlockIdByNum(num);
 
+      ByteString id = blockId.getByteString();
+      return getAccountStateById(id);
+    } catch (ItemNotFoundException e) {
+      return null;
+    }
+  }
+
+  /**
+   * Get account state by block id, if not exists then return null.
+   */
+  public byte[] getAccountStateById(ByteString id) {
+    if (null != id) {
+      BytesCapsule byId = dbManager.getAccountStateStore().getById(id);
+
+      if (null == byId) {
+        return null;
+      }
+      return byId.getData();
+    }
+
+    return null;
+  }
 }

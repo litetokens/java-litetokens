@@ -393,6 +393,7 @@ public class Manager {
         this.witnessController.initWits();
         this.khaosDb.start(genesisBlock);
         this.updateRecentBlock(genesisBlock);
+        this.updateAccountState(genesisBlock);
       }
     }
   }

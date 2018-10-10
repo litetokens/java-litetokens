@@ -2,6 +2,7 @@ package org.tron.core.services;
 
 import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
@@ -243,6 +244,30 @@ public class RpcApiService implements Service {
           dbManager.getDynamicPropertiesStore().getLatestSolidifiedBlockNum());
       DynamicProperties dynamicProperties = builder.build();
       responseObserver.onNext(dynamicProperties);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getAccountStateByNum(NumberMessage request,
+        StreamObserver<BytesMessage> responseObserver) {
+      long num = request.getNum();
+      try {
+        responseObserver.onNext(BytesMessage.parseFrom(wallet.getAccountStateByNum(num)));
+      } catch (InvalidProtocolBufferException e) {
+        responseObserver.onNext(null);
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getAccountStateById(BytesMessage request,
+        StreamObserver<BytesMessage> responseObserver) {
+      ByteString id = request.getValue();
+      try {
+        responseObserver.onNext(BytesMessage.parseFrom(wallet.getAccountStateById(id)));
+      } catch (InvalidProtocolBufferException e) {
+        responseObserver.onNext(null);
+      }
       responseObserver.onCompleted();
     }
   }

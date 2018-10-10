@@ -1,5 +1,6 @@
 package org.tron.core.db;
 
+import com.google.protobuf.ByteString;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,5 +19,9 @@ public class AccountStateStore extends TronStoreWithRevoking<BytesCapsule> {
   public BytesCapsule get(byte[] key) {
     byte[] value = revokingDB.getUnchecked(key);
     return ArrayUtils.isEmpty(value) ? null : new BytesCapsule(value);
+  }
+
+  public BytesCapsule getById(ByteString id) {
+    return get(id.toByteArray());
   }
 }

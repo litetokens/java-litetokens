@@ -54,6 +54,17 @@ public class Util {
     return jsonObject.toJSONString();
   }
 
+  /**
+   * Print hash message.
+   * Format:
+   *    {"hash":"0000000000000000000000000000000000000000000000000000000000000000"}
+   */
+  public static String printHashMsg(String hexString) {
+    JSONObject jsonObject = new JSONObject();
+    jsonObject.put("hash", hexString);
+    return jsonObject.toJSONString();
+  }
+
   public static String printBlockList(BlockList list) {
     List<Block> blocks = list.getBlockList();
     JSONObject jsonObject = JSONObject.parseObject(JsonFormat.printToString(list));

@@ -495,5 +495,74 @@ public class UseTrxAssertException {
 
   }
 
+  @Test(enabled = true)
+  public void testTestAssertContract() {
+    String contractName = "TestThrowsContract";
+    String code = "608060405234801561001057600080fd5b5060b58061001f6000396000f30060806040526004361"
+        + "0605c5763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416"
+        + "632b813bc081146061578063357815c414607557806350bff6bf146075578063a26388bb146075575b60008"
+        + "0fd5b348015606c57600080fd5b5060736087565b005b348015608057600080fd5b506073605c565bfe00a1"
+        + "65627a7a723058209284d2c51e121903dde36db88dae131b1b20dc83b987a6f491dcac2d9b2d30db0029";
+    String abi = "[{\"constant\":false,\"inputs\":[],\"name\":\"testAssert\",\"outputs\":[],\""
+        + "payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant"
+        + "\":false,\"inputs\":[],\"name\":\"testRequire\",\"outputs\":[],\"payable\":false,\""
+        + "stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs"
+        + "\":[],\"name\":\"testThrow\",\"outputs\":[],\"payable\":false,\"stateMutability\":\""
+        + "nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\""
+        + "testRevert\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\","
+        + "\"type\":\"function\"}]";
+    contractAddress = PublicMethed.deployContract(contractName, abi, code, "", maxFeeLimit,
+        0L, 100, null, testKeyForAssetIssue016,
+        asset016Address, blockingStubFull);
+    Assert.assertTrue(PublicMethed.freezeBalanceGetEnergy(asset016Address, 10000000L,
+        3, 1, testKeyForAssetIssue016, blockingStubFull));
+    Assert.assertTrue(PublicMethed.freezeBalanceGetEnergy(asset016Address, 10000000L,
+        3, 0, testKeyForAssetIssue016, blockingStubFull));
+    Account info;
+    AccountResourceMessage resourceInfo = PublicMethed.getAccountResource(asset016Address,
+        blockingStubFull);
+    info = PublicMethed.queryAccount(testKeyForAssetIssue016, blockingStubFull);
+    Long beforeBalance = info.getBalance();
+    Long beforeEnergyUsed = resourceInfo.getEnergyUsed();
+    Long beforeNetUsed = resourceInfo.getNetUsed();
+    Long beforeFreeNetUsed = resourceInfo.getFreeNetUsed();
+
+    logger.info("beforeBalance:" + beforeBalance);
+    logger.info("beforeEnergyUsed:" + beforeEnergyUsed);
+    logger.info("beforeNetUsed:" + beforeNetUsed);
+    logger.info("beforeFreeNetUsed:" + beforeFreeNetUsed);
+
+    String txid = "";
+    txid = PublicMethed.triggerContract(contractAddress,
+        "testAssert()", "#", false,
+        0, maxFeeLimit, asset016Address, testKeyForAssetIssue016, blockingStubFull);
+    Optional<TransactionInfo> infoById;
+    infoById = PublicMethed.getTransactionInfoById(txid, blockingStubFull);
+    Long fee = infoById.get().getFee();
+    Long netUsed = infoById.get().getReceipt().getNetUsage();
+    Long energyUsed = infoById.get().getReceipt().getEnergyUsage();
+
+    logger.info("fee:" + fee);
+    logger.info("netUsed:" + netUsed);
+    logger.info("energyUsed:" + energyUsed);
+
+    Account infoafter = PublicMethed.queryAccount(testKeyForAssetIssue016, blockingStubFull);
+    AccountResourceMessage resourceInfoafter = PublicMethed.getAccountResource(asset016Address,
+        blockingStubFull);
+    Long afterBalance = infoafter.getBalance();
+    Long afterEnergyUsed = resourceInfoafter.getEnergyUsed();
+    Long afterNetUsed = resourceInfoafter.getNetUsed();
+    Long afterFreeNetUsed = resourceInfoafter.getFreeNetUsed();
+
+    logger.info("afterBalance:" + afterBalance);
+    logger.info("afterEnergyUsed:" + afterEnergyUsed);
+    logger.info("afterNetUsed:" + afterNetUsed);
+    logger.info("afterFreeNetUsed:" + afterFreeNetUsed);
+
+    Assert.assertTrue((beforeBalance - fee) == afterBalance);
+    Assert.assertTrue(beforeEnergyUsed + energyUsed >= afterEnergyUsed);
+    Assert.assertTrue(beforeFreeNetUsed + netUsed >= afterFreeNetUsed);
+    Assert.assertTrue(beforeNetUsed + netUsed >= afterNetUsed);
+  }
 
 }

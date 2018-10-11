@@ -39,8 +39,6 @@
       </package>
       <package name="stest.tron.wallet.committee">
       </package>
-      <package name="stest.tron.wallet.contract.exceptionfee">
-      </package>
     </packages>
     <!--      <classes>
             <class name="stest.tron.wallet.account.WalletTestAccount003"/>

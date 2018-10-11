@@ -147,7 +147,7 @@ public class AssertException {
     logger.info("afterEnergyUsed:" + afterEnergyUsed);
     logger.info("afterNetUsed:" + afterNetUsed);
     logger.info("afterFreeNetUsed:" + afterFreeNetUsed);
-    Assert.assertTrue(afterBalance + maxFeeLimit == beforeBalance);
+    Assert.assertTrue(afterBalance + maxFeeLimit + netFee == beforeBalance);
     Assert.assertTrue(beforeEnergyUsed + energyUsed >= afterEnergyUsed);
     Assert.assertTrue(beforeFreeNetUsed + netUsed >= afterFreeNetUsed);
     Assert.assertTrue(beforeNetUsed + netUsed >= afterNetUsed);
@@ -212,7 +212,7 @@ public class AssertException {
     logger.info("afterEnergyUsed:" + afterEnergyUsed);
     logger.info("afterNetUsed:" + afterNetUsed);
     logger.info("afterFreeNetUsed:" + afterFreeNetUsed);
-    Assert.assertTrue(afterBalance + maxFeeLimit == beforeBalance);
+    Assert.assertTrue(afterBalance + maxFeeLimit + netFee == beforeBalance);
     Assert.assertTrue(beforeEnergyUsed + energyUsed >= afterEnergyUsed);
     Assert.assertTrue(beforeFreeNetUsed + netUsed >= afterFreeNetUsed);
     Assert.assertTrue(beforeNetUsed + netUsed >= afterNetUsed);
@@ -288,7 +288,7 @@ public class AssertException {
     logger.info("afterEnergyUsed:" + afterEnergyUsed);
     logger.info("afterNetUsed:" + afterNetUsed);
     logger.info("afterFreeNetUsed:" + afterFreeNetUsed);
-    Assert.assertTrue(afterBalance + maxFeeLimit == beforeBalance);
+    Assert.assertTrue(afterBalance + maxFeeLimit + netFee == beforeBalance);
     Assert.assertTrue(beforeEnergyUsed + energyUsed >= afterEnergyUsed);
     Assert.assertTrue(beforeFreeNetUsed + netUsed >= afterFreeNetUsed);
     Assert.assertTrue(beforeNetUsed + netUsed >= afterNetUsed);
@@ -537,10 +537,12 @@ public class AssertException {
     Long fee = infoById.get().getFee();
     Long netUsed = infoById.get().getReceipt().getNetUsage();
     Long energyUsed = infoById.get().getReceipt().getEnergyUsage();
+    Long netFee = infoById.get().getReceipt().getNetFee();
 
     logger.info("fee:" + fee);
     logger.info("netUsed:" + netUsed);
     logger.info("energyUsed:" + energyUsed);
+    logger.info("netFee:" + netFee);
 
     Account infoafter = PublicMethed.queryAccount(testKeyForAssetIssue016, blockingStubFull);
     AccountResourceMessage resourceInfoafter = PublicMethed.getAccountResource(asset016Address,
@@ -555,7 +557,7 @@ public class AssertException {
     logger.info("afterNetUsed:" + afterNetUsed);
     logger.info("afterFreeNetUsed:" + afterFreeNetUsed);
 
-    Assert.assertTrue((beforeBalance - fee) == afterBalance);
+    Assert.assertTrue((beforeBalance - maxFeeLimit - netFee) == afterBalance);
     Assert.assertTrue(beforeEnergyUsed + energyUsed >= afterEnergyUsed);
     Assert.assertTrue(beforeFreeNetUsed + netUsed >= afterFreeNetUsed);
     Assert.assertTrue(beforeNetUsed + netUsed >= afterNetUsed);

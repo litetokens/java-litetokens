@@ -742,7 +742,6 @@ public class Manager {
           throw new BadBlockException("The merkle hash is not validated");
         }
       }
-      logger.info("00000000002f7b3bbf8708aea9450be4c49bb4662f39c5d6d2ac3d655e9c23e1    " + block.getBlockId().toString());
       if ("00000000002f7b3bbf8708aea9450be4c49bb4662f39c5d6d2ac3d655e9c23e1".equals(block.getBlockId().toString())) {
         logger.info("drop Rory's block");
         return;

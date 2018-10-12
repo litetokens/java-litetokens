@@ -528,7 +528,8 @@ public class Runtime {
         getResult().getInternalTransactions().add(0,rootInternalTransaction);
         deposit.commit();
       }
-    } catch (JVMStackOverFlowException e) {
+    }
+    catch (JVMStackOverFlowException e) {
       program.spendAllEnergy();
       result = program.getResult();
       result.setException(e);
@@ -542,6 +543,12 @@ public class Runtime {
       logger.info("timeout: {}", result.getException().getMessage());
     } catch (ContractValidateException e) {
       logger.info("when check constant, {}", e.getMessage());
+    } catch (RuntimeException e) {
+      program.spendAllEnergy();
+      result = program.getResult();
+      result.setException(e);
+      runtimeError = result.getException().getMessage();
+      logger.info("RuntimeException: {}", result.getException().getMessage());
     }catch (Throwable e) {
       program.spendAllEnergy();
       result = program.getResult();

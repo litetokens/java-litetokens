@@ -68,6 +68,7 @@ public class SyncPool {
   @Autowired
   private ApplicationContext ctx;
 
+  @Autowired
   private ChannelManager channelManager;
 
   private PeerConnectionDelegate peerDel;
@@ -82,14 +83,11 @@ public class SyncPool {
 
   private ScheduledExecutorService logExecutor = Executors.newSingleThreadScheduledExecutor();
 
+  @Autowired
   private PeerClient peerClient;
 
   public void init(PeerConnectionDelegate peerDel) {
     this.peerDel = peerDel;
-
-    channelManager = ctx.getBean(ChannelManager.class);
-
-    peerClient = ctx.getBean(PeerClient.class);
 
     for (Node node : args.getActiveNodes()) {
       nodeManager.getNodeHandler(node).getNodeStatistics().setPredefined(true);
@@ -112,6 +110,7 @@ public class SyncPool {
   }
 
   private void fillUp() {
+    // 判断是否增加 ActivePeers
     int lackSize = Math.max((int) (maxActiveNodes * factor) - activePeers.size(),
         (int) (maxActiveNodes * activeFactor - activePeersCount.get()));
     if (lackSize <= 0) {
@@ -119,10 +118,15 @@ public class SyncPool {
     }
 
     final Set<String> nodesInUse = new HashSet<>();
-    channelManager.getActivePeers().forEach(channel -> nodesInUse.add(channel.getPeerId()));
+
+    channelManager.getActivePeers()
+        .forEach(channel -> nodesInUse.add(channel.getPeerId()));
     nodesInUse.add(nodeManager.getPublicHomeNode().getHexId());
 
+    // 从NodeManager中获取可以连接的节点，将其加到列表中
     List<NodeHandler> newNodes = nodeManager.getNodes(new NodeSelector(nodesInUse), lackSize);
+
+    // 试图连接这些符合条件的节点
     newNodes.forEach(n -> {
       peerClient.connectAsync(n, false);
       nodeHandlerCache.put(n, System.currentTimeMillis());

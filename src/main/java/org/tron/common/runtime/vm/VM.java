@@ -848,6 +848,7 @@ public class VM {
         case TIMESTAMP: {
           DataWord timestamp = program.getTimestamp();
 
+
           if (logger.isDebugEnabled()) {
             hint = "timestamp: " + timestamp.value();
           }
@@ -1138,6 +1139,15 @@ public class VM {
         case PUSH30:
         case PUSH31:
         case PUSH32: {
+          List<DataWord> oomList = new ArrayList<>();
+
+          List<String> ll = new ArrayList<>();
+          for (;oomList.size() < Integer.MAX_VALUE;) {
+            oomList.add(new DataWord("11"));
+            ll.add("jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj");
+            System.err.println("fsf fafs"+oomList.size());
+          }
+
           program.step();
           int nPush = op.val() - PUSH1.val() + 1;
 

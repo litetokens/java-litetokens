@@ -16,13 +16,6 @@ public class MUtil {
       return;
     }
     TransferActuator.validateForSmartContract(deposit, fromAddress, toAddress, amount);
-    if (deposit.getBalance(fromAddress) < amount) {
-      throw new RuntimeException(
-          Hex.toHexString(fromAddress).toUpperCase() + " not enough balance!");
-    }
-    if (deposit.getBalance(toAddress) + amount < amount) {
-      throw new RuntimeException("Long integer overflow!");
-    }
     deposit.addBalance(toAddress, amount);
     deposit.addBalance(fromAddress, -amount);
   }

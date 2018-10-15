@@ -24,6 +24,7 @@ import static org.tron.common.utils.ByteUtil.EMPTY_BYTE_ARRAY;
 import com.google.common.primitives.Longs;
 import java.util.Arrays;
 import org.tron.common.crypto.Hash;
+import org.tron.common.runtime.vm.program.Program.Exception;
 import org.tron.core.Wallet;
 import org.tron.core.capsule.ContractCapsule;
 import org.tron.core.capsule.TransactionCapsule;
@@ -92,6 +93,14 @@ public class InternalTransaction {
       this.transferToAddress = Wallet.generateContractAddress(trx);
       this.note = "create";
       this.value = contract.getNewContract().getCallValue();
+      try {
+        this.data = contract.getNewContract().getBytecode().toByteArray();
+        if(this.data.length == 0){
+          this.data = null;
+        }
+      } catch (java.lang.Exception e){
+        this.data = null;
+      }
     }
     else if(trxType.equals(TrxType.TRX_CONTRACT_CALL_TYPE)){
       TriggerSmartContract contract = ContractCapsule.getTriggerContractFromTransaction(trx);
@@ -100,6 +109,14 @@ public class InternalTransaction {
       this.transferToAddress = this.receiveAddress.clone();
       this.note = "call";
       this.value = contract.getCallValue();
+      try {
+        this.data = contract.getData().toByteArray();
+        if(this.data.length == 0){
+          this.data = null;
+        }
+      } catch (java.lang.Exception e){
+        this.data = null;
+      }
     }
     // TODO: Should consider unknown type?
     this.hash = trxCap.getTransactionId().getBytes();

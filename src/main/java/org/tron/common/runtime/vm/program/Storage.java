@@ -10,14 +10,14 @@ import org.tron.core.db.StorageRowStore;
 
 public class Storage {
 
-  private byte[] addrHash;  // contract address
+  private byte[] addressHash;  // contract address hash
   private StorageRowStore store;
   private final Map<DataWord, StorageRowCapsule> rowCache = new HashMap<>();
 
   private static final int PREFIX_BYTES = 16;
 
   public Storage(byte[] address, StorageRowStore store) {
-    addrHash = addrHash(address);
+    addressHash = addrHash(address);
     this.store = store;
   }
 
@@ -25,7 +25,7 @@ public class Storage {
     if (rowCache.containsKey(key)) {
       return rowCache.get(key).getValue();
     } else {
-      StorageRowCapsule row = store.get(compose(key.getData(), addrHash));
+      StorageRowCapsule row = store.get(compose(key.getData(), addressHash));
       if (row == null || row.getInstance() == null) {
         return null;
       }
@@ -38,7 +38,7 @@ public class Storage {
     if (rowCache.containsKey(key)) {
       rowCache.get(key).setValue(value);
     } else {
-      byte[] rowKey = compose(key.getData(), addrHash);
+      byte[] rowKey = compose(key.getData(), addressHash);
       StorageRowCapsule row = new StorageRowCapsule(rowKey, value.getData());
       rowCache.put(key, row);
     }

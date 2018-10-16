@@ -141,6 +141,7 @@ public class InternalTransaction {
     return transferToAddress.clone();
   }
 
+  // TODO what meaning?
   public void reject() {
     this.rejected = true;
   }

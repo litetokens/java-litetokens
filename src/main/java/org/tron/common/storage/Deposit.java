@@ -41,8 +41,6 @@ public interface Deposit {
 
   byte[] getCode(byte[] codeHash);
 
-  //byte[] getCodeHash(byte[] address);
-
   void putStorageValue(byte[] address, DataWord key, DataWord value);
 
   DataWord getStorageValue(byte[] address, DataWord key);
@@ -52,7 +50,6 @@ public interface Deposit {
   long getBalance(byte[] address);
 
   long addBalance(byte[] address, long value);
-
 
   Deposit newDepositChild();
 

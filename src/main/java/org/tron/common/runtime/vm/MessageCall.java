@@ -57,7 +57,7 @@ public class MessageCall {
      */
     private DataWord outDataSize;
 
-    public MessageCall(OpCode type, DataWord energy, DataWord codeAddress,
+    private MessageCall(OpCode type, DataWord energy, DataWord codeAddress,
                        DataWord endowment, DataWord inDataOffs, DataWord inDataSize) {
         this.type = type;
         this.energy = energy;

@@ -24,7 +24,7 @@ import org.tron.common.runtime.vm.program.Stack;
 public class VM {
 
   private static final BigInteger _32_ = BigInteger.valueOf(32);
-  private static final String logString = "{}    Op: [{}]  Energy: [{}] Deep: [{}]  Hint: [{}]";
+  private static final String OP_FORMAT = "{}    Op: [{}]  Energy: [{}] Deep: [{}]  Hint: [{}]";
 
   // 3MB
   private static final BigInteger MEM_LIMIT = BigInteger.valueOf(3L * 1024 * 1024);
@@ -1194,7 +1194,7 @@ public class VM {
                 + " energy: " + adjustedCallEnergy.shortHex()
                 + " inOff: " + inDataOffs.shortHex()
                 + " inSize: " + inDataSize.shortHex();
-            logger.debug(logString, String.format("%5s", "[" + program.getPC() + "]"),
+            logger.debug(OP_FORMAT, String.format("%5s", "[" + program.getPC() + "]"),
                 String.format("%-12s", op.name()),
                 program.getEnergyLimitLeft().value(),
                 program.getCallDeep(), hint);

@@ -21,6 +21,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
+import org.spongycastle.util.encoders.Hex;
 import org.tron.common.runtime.vm.DataWord;
 import org.tron.common.runtime.vm.program.Program.IllegalOperationException;
 import org.tron.common.storage.Deposit;
@@ -28,7 +29,7 @@ import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.db.BlockStore;
 import org.tron.core.exception.StoreException;
 
-@Slf4j
+@Slf4j(topic = "vm")
 public class ProgramInvokeImpl implements ProgramInvoke {
 
   // private BlockStore blockStore;
@@ -80,15 +81,6 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     this.vmShouldEndInUs = vmShouldEndInUs;
     this.energyLimit = energyLimit;
 
-  }
-
-  public ProgramInvokeImpl(byte[] address, byte[] origin, byte[] caller, long balance,
-      long callValue, byte[] msgData,
-      byte[] lastHash, byte[] coinbase, long timestamp, long number, Deposit deposit,
-      long vmStartInUs, long vmShouldEndInUs, boolean byTestingSuite, long energyLimit) {
-    this(address, origin, caller, balance, callValue, msgData, lastHash, coinbase,
-        timestamp, number, deposit, vmStartInUs, vmShouldEndInUs, energyLimit);
-    this.byTestingSuite = byTestingSuite;
   }
 
   public ProgramInvokeImpl(byte[] address, byte[] origin, byte[] caller, long balance,
@@ -359,7 +351,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
         ", callValue=" + callValue +
         ", msgData=" + Arrays.toString(msgData) +
         ", prevHash=" + prevHash +
-        ", coinbase=" + coinbase +
+        ", witness=" + Hex.toHexString(coinbase.getData()) +
         ", timestamp=" + timestamp +
         ", number=" + number +
         ", byTransaction=" + byTransaction +

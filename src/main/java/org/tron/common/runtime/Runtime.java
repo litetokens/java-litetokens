@@ -62,6 +62,7 @@ import org.tron.protos.Contract.CreateSmartContract;
 import org.tron.protos.Contract.TriggerSmartContract;
 import org.tron.protos.Protocol;
 import org.tron.protos.Protocol.Block;
+import org.tron.protos.Protocol.BlockHeader;
 import org.tron.protos.Protocol.SmartContract;
 import org.tron.protos.Protocol.SmartContract.ABI;
 import org.tron.protos.Protocol.Transaction;
@@ -101,12 +102,31 @@ public class Runtime {
       ProgramInvokeFactory programInvokeFactory) {
     this.trace = trace;
     this.trx = trace.getTrx().getInstance();
+    TransactionCapsule trxCap = new TransactionCapsule(trx);
 
     if (Objects.nonNull(block)) {
       this.blockCap = block;
       this.executorType = ET_NORMAL_TYPE;
     } else {
-      this.blockCap = new BlockCapsule(Block.newBuilder().build());
+      Block.Builder blk = Block.newBuilder();
+      BlockHeader.Builder blkHeader = BlockHeader.newBuilder();
+      BlockHeader.raw.Builder raw = BlockHeader.raw.newBuilder();
+      raw.setParentHash(deposit.getDbManager().getDynamicPropertiesStore().getLatestBlockHeaderHash().getByteString());
+      raw.setWitnessAddress(deposit.getDbManager().getWitnessController().getScheduledWitness(1));
+      raw.setTimestamp(deposit.getDbManager().getDynamicPropertiesStore().getLatestBlockHeaderTimestamp() + 3000);
+      raw.setNumber(deposit.getDbManager().getHeadBlockNum());
+
+      Transaction.Contract contract = trxCap.getInstance().getRawData().getContractList().get(0);
+      byte[] owner = trxCap.getOwner(contract);
+      if (StringUtils.equals("TCx9PZKMx5JL3Nrbdpm1YGVCUBQvH4HUZY", Wallet.encode58Check(owner))) {
+        logger.info("HUZY BlockNumber:{}", deposit.getDbManager().getHeadBlockNum());
+        logger.info("HUZY BlockTimeStamp:{}",
+            deposit.getDbManager().getDynamicPropertiesStore().getLatestBlockHeaderTimestamp() + 3000);
+      }
+      blkHeader.setRawData(raw);
+      blk.setBlockHeader(blkHeader);
+      this.blockCap = new BlockCapsule(blk.build());
+      //this.blockCap = new BlockCapsule(Block.newBuilder().build());
       this.executorType = ET_PRE_TYPE;
     }
     this.deposit = deposit;

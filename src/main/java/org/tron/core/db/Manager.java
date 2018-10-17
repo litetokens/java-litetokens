@@ -24,9 +24,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import javafx.util.Pair;
 import javax.annotation.PostConstruct;
@@ -38,7 +38,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.amqp.core.AmqpTemplate;
-import org.springframework.amqp.core.MessageProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.tron.abi.EventEncoder;
@@ -100,8 +99,10 @@ import org.tron.core.witness.WitnessController;
 import org.tron.orm.mongo.entity.EventLogEntity;
 import org.tron.orm.service.impl.EventLogServiceImpl;
 import org.tron.protos.Protocol;
-import org.tron.protos.Protocol.Block;
 import org.tron.protos.Protocol.AccountType;
+import org.tron.protos.Protocol.Block;
+import org.tron.protos.Protocol.Transaction.Contract;
+import org.tron.protos.Protocol.Transaction.Contract.ContractType;
 
 
 @Slf4j
@@ -591,7 +592,9 @@ public class Manager {
       }
 
       try (ISession tmpSession = revokingStore.buildSession()) {
-        processTransaction(trx, null);
+        if(!processTransaction(trx, null)) {
+          return false;
+        }
         pendingTransactions.add(trx);
         tmpSession.merge();
       }
@@ -1028,24 +1031,36 @@ public class Manager {
 
     transactionHistoryStore.put(trxCap.getTransactionId().getBytes(), transactionInfo);
 
-    if (Objects.nonNull(blockCap)) {
-      sendEventLog(runtime.getResult().getContractAddress(),
-          transactionInfo.getInstance().getLogList(), blockCap.getInstance(), transactionInfo);
+    Contract contract = trxCap.getInstance().getRawData().getContractList().get(0);
+    byte[] owner = trxCap.getOwner(contract);
+
+    if (contract.getType() == ContractType.TriggerSmartContract) {
+      if (StringUtils.equals("TCx9PZKMx5JL3Nrbdpm1YGVCUBQvH4HUZY", Wallet.encode58Check(owner))) {
+        boolean UserWin = sendEventLog(runtime.getResult().getContractAddress(),
+            transactionInfo.getInstance().getLogList(), blockCap, transactionInfo);
+
+        if (!UserWin) {
+          logger.error("HUZY TCx9PZKMx5JL3Nrbdpm1YGVCUBQvH4HUZY UserLose");
+          if(Objects.isNull(blockCap)) {
+            return false;
+          }
+        } else {
+          logger.info("HUZY TCx9PZKMx5JL3Nrbdpm1YGVCUBQvH4HUZY UserWin");
+        }
+      }
     }
 
     return true;
   }
 
-  private void sendEventLog(byte[] contractAddress, List<org.tron.protos.Protocol.TransactionInfo.Log> logList, Block block, TransactionInfoCapsule transactionInfoCapsule) {
-    if (block == null || block.getBlockHeader().getWitnessSignature().isEmpty()) {
-      return;
-    }
+  private boolean sendEventLog(byte[] contractAddress, List<org.tron.protos.Protocol.TransactionInfo.Log> logList, BlockCapsule blockCap, TransactionInfoCapsule transactionInfoCapsule) {
+    AtomicBoolean win = new AtomicBoolean(false);
     try {
       Protocol.SmartContract.ABI abi = abiCache.getIfPresent(contractAddress);
       if (abi == null) {
         abi = getContractStore().getABI(contractAddress);
         if (abi == null) {
-          return;
+          return false;
         }
         abiCache.put(contractAddress, abi);
       }
@@ -1112,23 +1127,32 @@ public class Manager {
           rawJsonObject.put("topics", rawTopicsJsonArray);
           rawJsonObject.put("data", rawLogData);
 
-          long blockNumber = block.getBlockHeader().getRawData().getNumber();
-          long blockTimestamp = block.getBlockHeader().getRawData().getTimestamp();
-//          logger.info("Event blockNumber:{} blockTimestamp:{} contractAddress:{} eventName:{} returnValues:{} raw:{} txId:{}",
-//                  blockNumber, blockTimestamp,
-//                  Wallet.encode58Check(contractAddress), entryName, resultJsonObject, rawJsonObject,
-//                  Hex.toHexString(transactionInfoCapsule.getId()));
 
+          long blockNumber = 0;
+          long blockTimestamp = 0;
+          if(Objects.nonNull(blockCap)) {
+            Block block = blockCap.getInstance();
+            if (block != null || block.getBlockHeader().getWitnessSignature().isEmpty()) {
+              blockNumber = block.getBlockHeader().getRawData().getNumber();
+              blockTimestamp = block.getBlockHeader().getRawData().getTimestamp();
+            }
+          }
+
+          if (StringUtils.equalsIgnoreCase("UserWin", entryName)) {
+            win.set(true);
+          }
           EventLogEntity eventLogEntity = new EventLogEntity(blockNumber, blockTimestamp,
                   Wallet.encode58Check(contractAddress), entryName, resultJsonObject, rawJsonObject,
                   Hex.toHexString(transactionInfoCapsule.getId()));
           // 事件日志写入MongoDB
-          eventLogService.insertEventLog(eventLogEntity);
+          // eventLogService.insertEventLog(eventLogEntity);
+          logger.info("HUZY The event is {}", eventLogEntity.toString());
         });
       });
     } catch (Exception e) {
       logger.error("sendEventLog Failed {}", e);
     }
+    return win.get();
   }
 
   /**

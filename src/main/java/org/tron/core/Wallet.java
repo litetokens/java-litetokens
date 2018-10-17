@@ -419,8 +419,9 @@ public class Wallet {
       if (dbManager.getDynamicPropertiesStore().supportVM()) {
         trx.resetResult();
       }
-      dbManager.pushTransaction(trx);
-      p2pNode.broadcast(message);
+      if(dbManager.pushTransaction(trx)) {
+        p2pNode.broadcast(message);
+      }
 
       return builder.setResult(true).setCode(response_code.SUCCESS).build();
     } catch (ValidateSignatureException e) {

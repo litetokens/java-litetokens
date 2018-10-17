@@ -104,4 +104,17 @@ public class EventLogEntity implements Serializable {
     public void setTransactionId(String transactionId) {
         this.transactionId = transactionId;
     }
+
+    @Override
+    public String toString() {
+        return "EventLogEntity{" +
+            "blockNumber=" + blockNumber +
+            ", blockTimestamp=" + blockTimestamp +
+            ", contractAddress='" + contractAddress + '\'' +
+            ", entryName='" + entryName + '\'' +
+            ", resultJsonObject=" + resultJsonObject +
+            ", rawJsonObject=" + rawJsonObject +
+            ", transactionId='" + transactionId + '\'' +
+            '}';
+    }
 }

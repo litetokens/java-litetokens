@@ -6,6 +6,7 @@ import com.google.common.primitives.Longs;
 import com.google.protobuf.ByteString;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import org.spongycastle.util.encoders.Hex;
 import org.tron.common.runtime.vm.DataWord;
 import org.tron.common.runtime.vm.program.Storage;
 import org.tron.common.utils.ByteArray;
@@ -122,11 +123,8 @@ public class DepositImpl implements Deposit {
   }
 
   @Override
-  public synchronized AccountCapsule createAccount(byte[] address, Protocol.AccountType type) {
-    Key key = new Key(address);
-    AccountCapsule account = new AccountCapsule(ByteString.copyFrom(address), type);
-    accountCache.put(key, new Value(account.getData(), Type.VALUE_TYPE_CREATE));
-    return account;
+  public AccountCapsule createAccount(byte[] address, AccountType type) {
+    return createAccount(address,"", type);
   }
 
   @Override
@@ -141,7 +139,7 @@ public class DepositImpl implements Deposit {
   }
 
   @Override
-  public synchronized AccountCapsule getAccount(byte[] address) {
+  public AccountCapsule getAccount(byte[] address) {
     Key key = new Key(address);
     if (accountCache.containsKey(key)) {
       return accountCache.get(key).getAccount();
@@ -262,27 +260,27 @@ public class DepositImpl implements Deposit {
   }
 
   @Override
-  public synchronized void saveCode(byte[] codeHash, byte[] code) {
-    Key key = Key.create(codeHash);
+  public synchronized void saveCode(byte[] address, byte[] code) {
+    Key key = Key.create(address);
     Value value = Value.create(code, Type.VALUE_TYPE_CREATE);
     codeCache.put(key, value);
   }
 
   @Override
-  public synchronized byte[] getCode(byte[] addr) {
-    Key key = Key.create(addr);
+  public synchronized byte[] getCode(byte[] address) {
+    Key key = Key.create(address);
     if (codeCache.containsKey(key)) {
       return codeCache.get(key).getCode().getData();
     }
 
     byte[] code;
     if (parent != null) {
-      code = parent.getCode(addr);
+      code = parent.getCode(address);
     } else {
-      if (null == getCodeStore().get(addr)) {
+      if (null == getCodeStore().get(address)) {
         code = null;
       } else {
-        code = getCodeStore().get(addr).getData();
+        code = getCodeStore().get(address).getData();
       }
     }
     if (code != null) {
@@ -327,21 +325,15 @@ public class DepositImpl implements Deposit {
   }
 
   @Override
-  public synchronized long addBalance(byte[] address, long value) {
+  public long addBalance(byte[] address, long value) {
     AccountCapsule accountCapsule = getAccount(address);
     if (accountCapsule == null) {
-      accountCapsule = createAccount(address, Protocol.AccountType.Normal);
+      throw new IllegalArgumentException("Account does't exist:" + Hex.toHexString(address));
     }
 
     long balance = accountCapsule.getBalance();
     if (value == 0) {
       return balance;
-    }
-
-    if (value < 0 && balance < -value) {
-      throw new RuntimeException(
-          StringUtil.createReadableString(accountCapsule.createDbKey())
-              + " insufficient balance");
     }
     accountCapsule.setBalance(Math.addExact(balance, value));
     Key key = Key.create(address);
@@ -670,7 +662,6 @@ public class DepositImpl implements Deposit {
     commitVoteCache(deposit);
     commitProposalCache(deposit);
     commitDynamicPropertiesCache(deposit);
-    // commitAccountContractIndex(deposit);
   }
 
   @Override

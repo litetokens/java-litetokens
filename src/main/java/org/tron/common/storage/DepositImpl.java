@@ -50,14 +50,12 @@ public class DepositImpl implements Deposit {
   private HashMap<Key, Value> transactionCache = new HashMap<>();
   private HashMap<Key, Value> blockCache = new HashMap<>();
   private HashMap<Key, Value> witnessCache = new HashMap<>();
-  private HashMap<Key, Value> blockIndexCache = new HashMap<>();
   private HashMap<Key, Value> codeCache = new HashMap<>();
   private HashMap<Key, Value> contractCache = new HashMap<>();
 
   private HashMap<Key, Value> votesCache = new HashMap<>();
   private HashMap<Key, Value> proposalCache = new HashMap<>();
   private HashMap<Key, Value> dynamicPropertiesCache = new HashMap<>();
-  private HashMap<Key, Value> accountContractIndexCache = new HashMap<>();
   private HashMap<Key, Storage> storageCache = new HashMap<>();
 
   private DepositImpl(Manager dbManager, DepositImpl parent) {
@@ -304,17 +302,13 @@ public class DepositImpl implements Deposit {
     if (this.parent != null) {
       storage = parent.getStorage(address);
     } else {
-      storage = new Storage(address, dbManager.getStorageRowStore());
+      storage = new Storage(address, getStorageRowStore());
     }
     return storage;
   }
 
   @Override
   public synchronized void putStorageValue(byte[] address, DataWord key, DataWord value) {
-    address = convertToTronAddress(address);
-    if (getAccount(address) == null) {
-      return;
-    }
     Key addressKey = Key.create(address);
     Storage storage;
     if (storageCache.containsKey(addressKey)) {
@@ -328,10 +322,6 @@ public class DepositImpl implements Deposit {
 
   @Override
   public synchronized DataWord getStorageValue(byte[] address, DataWord key) {
-    address = convertToTronAddress(address);
-    if (getAccount(address) == null) {
-      return null;
-    }
     Key addressKey = Key.create(address);
     Storage storage;
     if (storageCache.containsKey(addressKey)) {

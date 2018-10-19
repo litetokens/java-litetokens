@@ -310,14 +310,7 @@ public class DepositImpl implements Deposit {
 
   @Override
   public synchronized void putStorageValue(byte[] address, DataWord key, DataWord value) {
-    Key addressKey = Key.create(address);
-    Storage storage;
-    if (storageCache.containsKey(addressKey)) {
-      storage = storageCache.get(addressKey);
-    } else {
-      storage = getStorage(address);
-      storageCache.put(addressKey, storage);
-    }
+    Storage storage = getStorage(address);
     storage.put(key, value);
   }
 

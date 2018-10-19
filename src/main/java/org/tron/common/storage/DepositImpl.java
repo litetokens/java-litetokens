@@ -293,9 +293,9 @@ public class DepositImpl implements Deposit {
 
   @Override
   public synchronized Storage getStorage(byte[] address) {
-    Key key = Key.create(address);
-    if (storageCache.containsKey(key)) {
-      return storageCache.get(key);
+    Key addressKey = Key.create(address);
+    if (storageCache.containsKey(addressKey)) {
+      return storageCache.get(addressKey);
     }
 
     Storage storage;
@@ -304,6 +304,7 @@ public class DepositImpl implements Deposit {
     } else {
       storage = new Storage(address, getStorageRowStore());
     }
+    storageCache.put(addressKey, storage);
     return storage;
   }
 
@@ -322,14 +323,7 @@ public class DepositImpl implements Deposit {
 
   @Override
   public synchronized DataWord getStorageValue(byte[] address, DataWord key) {
-    Key addressKey = Key.create(address);
-    Storage storage;
-    if (storageCache.containsKey(addressKey)) {
-      storage = storageCache.get(addressKey);
-    } else {
-      storage = getStorage(address);
-      storageCache.put(addressKey, storage);
-    }
+    Storage storage = getStorage(address);
     return storage.getValue(key);
   }
 

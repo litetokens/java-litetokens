@@ -180,7 +180,7 @@ public class DepositImpl implements Deposit {
 
 
   @Override
-  public synchronized VotesCapsule getVotesCapsule(byte[] address) {
+  public VotesCapsule getVotesCapsule(byte[] address) {
     Key key = new Key(address);
     if (votesCache.containsKey(key)) {
       return votesCache.get(key).getVotes();
@@ -201,7 +201,7 @@ public class DepositImpl implements Deposit {
 
 
   @Override
-  public synchronized ProposalCapsule getProposalCapsule(byte[] id) {
+  public ProposalCapsule getProposalCapsule(byte[] id) {
     Key key = new Key(id);
     if (proposalCache.containsKey(key)) {
       return proposalCache.get(key).getProposal();
@@ -233,14 +233,14 @@ public class DepositImpl implements Deposit {
   }
 
   @Override
-  public synchronized void createContract(byte[] address, ContractCapsule contractCapsule) {
+  public void createContract(byte[] address, ContractCapsule contractCapsule) {
     Key key = Key.create(address);
     Value value = Value.create(contractCapsule.getData(), Type.VALUE_TYPE_CREATE);
     contractCache.put(key, value);
   }
 
   @Override
-  public synchronized ContractCapsule getContract(byte[] address) {
+  public ContractCapsule getContract(byte[] address) {
     Key key = Key.create(address);
     if (contractCache.containsKey(key)) {
       return contractCache.get(key).getContract();
@@ -260,14 +260,14 @@ public class DepositImpl implements Deposit {
   }
 
   @Override
-  public synchronized void saveCode(byte[] address, byte[] code) {
+  public void saveCode(byte[] address, byte[] code) {
     Key key = Key.create(address);
     Value value = Value.create(code, Type.VALUE_TYPE_CREATE);
     codeCache.put(key, value);
   }
 
   @Override
-  public synchronized byte[] getCode(byte[] address) {
+  public byte[] getCode(byte[] address) {
     Key key = Key.create(address);
     if (codeCache.containsKey(key)) {
       return codeCache.get(key).getCode().getData();
@@ -290,7 +290,7 @@ public class DepositImpl implements Deposit {
   }
 
   @Override
-  public synchronized Storage getStorage(byte[] address) {
+  public Storage getStorage(byte[] address) {
     Key addressKey = Key.create(address);
     if (storageCache.containsKey(addressKey)) {
       return storageCache.get(addressKey);
@@ -307,19 +307,19 @@ public class DepositImpl implements Deposit {
   }
 
   @Override
-  public synchronized void putStorageValue(byte[] address, DataWord key, DataWord value) {
+  public void putStorageValue(byte[] address, DataWord key, DataWord value) {
     Storage storage = getStorage(address);
     storage.put(key, value);
   }
 
   @Override
-  public synchronized DataWord getStorageValue(byte[] address, DataWord key) {
+  public DataWord getStorageValue(byte[] address, DataWord key) {
     Storage storage = getStorage(address);
     return storage.getValue(key);
   }
 
   @Override
-  public synchronized long getBalance(byte[] address) {
+  public long getBalance(byte[] address) {
     AccountCapsule accountCapsule = getAccount(address);
     return accountCapsule == null ? 0L : accountCapsule.getBalance();
   }
@@ -420,11 +420,6 @@ public class DepositImpl implements Deposit {
   public void putContract(Key key, Value value) {
     contractCache.put(key, value);
   }
-
-//  @Override
-//  public void putStorage(Key key, Value value) {
-//    storageCache.put(key, value);
-//  }
 
   @Override
   public void putStorage(Key key, Storage cache) {
@@ -646,7 +641,7 @@ public class DepositImpl implements Deposit {
   }
 
   @Override
-  public synchronized void commit() {
+  public void commit() {
     Deposit deposit = null;
     if (parent != null) {
       deposit = parent;

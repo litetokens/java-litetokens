@@ -1328,7 +1328,7 @@ public class RpcApiService implements Service {
         retBuilder.setResult(false).setCode(response_code.OTHER_ERROR)
             .setMessage(ByteString.copyFromUtf8(e.getClass() + " : " + e.getMessage()));
         trxExtBuilder.setResult(retBuilder);
-        logger.warn("unknown exception caught: " + e.getMessage(), e);
+        logger.warn("Unknown exception caught: " + e.getMessage(), e);
       } finally {
         responseObserver.onNext(trxExtBuilder.build());
         responseObserver.onCompleted();

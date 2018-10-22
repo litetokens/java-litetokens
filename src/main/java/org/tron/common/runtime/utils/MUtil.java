@@ -27,14 +27,6 @@ public class MUtil {
     deposit.addBalance(fromAddress, -amount);
   }
 
-
-  public static void burn(Deposit deposit, byte[] address, long amount) {
-    if (deposit.getBalance(address) < amount) {
-      throw new RuntimeException("Not enough balance!");
-    }
-    deposit.addBalance(address, -amount);
-  }
-
   public static byte[] convertToTronAddress(byte[] address) {
     if (address.length == 20) {
       byte[] newAddress = new byte[21];

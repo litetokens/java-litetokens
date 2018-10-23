@@ -793,7 +793,7 @@ public class Program {
     DataWord keyWord = word1.clone();
     DataWord valWord = word2.clone();
     getContractState()
-        .putStorageValue(getContractAddress().getData(), keyWord,
+        .putStorageValue(convertToTronAddress(getContractAddress().getLast20Bytes()), keyWord,
             valWord);
   }
 
@@ -891,7 +891,7 @@ public class Program {
 
   public DataWord storageLoad(DataWord key) {
     DataWord ret = getContractState()
-        .getStorageValue(getContractAddress().getData(), key.clone());
+        .getStorageValue(convertToTronAddress(getContractAddress().getLast20Bytes()), key.clone());
     return ret == null ? null : ret.clone();
   }
 

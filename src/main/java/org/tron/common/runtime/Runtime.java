@@ -40,8 +40,7 @@ import org.tron.common.runtime.vm.program.ProgramPrecompile;
 import org.tron.common.runtime.vm.program.ProgramResult;
 import org.tron.common.runtime.vm.program.invoke.ProgramInvoke;
 import org.tron.common.runtime.vm.program.invoke.ProgramInvokeFactory;
-import org.tron.common.storage.Deposit;
-import org.tron.common.storage.DepositImpl;
+import org.tron.common.runtime.vm.Deposit;
 import org.tron.core.Constant;
 import org.tron.core.Wallet;
 import org.tron.core.actuator.Actuator;
@@ -131,13 +130,13 @@ public class Runtime {
    * For constant trx with latest blockCap.
    */
   private boolean isStaticCall = false;
-  public Runtime(Transaction tx, BlockCapsule block, DepositImpl deposit,
+  public Runtime(Transaction tx, BlockCapsule block, Deposit deposit,
                  ProgramInvokeFactory programInvokeFactory, boolean isStaticCall) {
     this(tx, block, deposit, programInvokeFactory);
     this.isStaticCall = isStaticCall;
   }
 
-  public Runtime(Transaction tx, BlockCapsule block, DepositImpl deposit,
+  public Runtime(Transaction tx, BlockCapsule block, Deposit deposit,
       ProgramInvokeFactory programInvokeFactory) {
     this.trx = tx;
     this.deposit = deposit;

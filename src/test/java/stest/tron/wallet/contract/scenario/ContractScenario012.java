@@ -63,12 +63,13 @@ public class ContractScenario012 {
         .usePlaintext(true)
         .build();
     blockingStubFull = WalletGrpc.newBlockingStub(channelFull);
-    Assert.assertTrue(PublicMethed.sendcoin(contract012Address,2000000000L,fromAddress,
-        testKey002,blockingStubFull));
+
   }
 
   @Test(enabled = true)
   public void deployTransactionCoin() {
+    Assert.assertTrue(PublicMethed.sendcoin(contract012Address,2000000000L,fromAddress,
+        testKey002,blockingStubFull));
     AccountResourceMessage accountResource = PublicMethed.getAccountResource(contract012Address,
         blockingStubFull);
     Long energyLimit = accountResource.getEnergyLimit();
@@ -82,7 +83,7 @@ public class ContractScenario012 {
     contractAddress = PublicMethed.deployContract(contractName,abi,code,"",maxFeeLimit,
         0L, 100,null,contract012Key,contract012Address,blockingStubFull);
     SmartContract smartContract = PublicMethed.getContract(contractAddress,blockingStubFull);
-    Assert.assertTrue(smartContract.getAbi() != null);
+
   }
 
   @Test(enabled = true)
@@ -95,15 +96,8 @@ public class ContractScenario012 {
         0, 100000000L, contract012Address, contract012Key, blockingStubFull);
     logger.info(txid);
     infoById = PublicMethed.getTransactionInfoById(txid, blockingStubFull);
-    Assert.assertTrue(infoById.get().getResultValue() == 1);
-    logger.info("energytotal is " + infoById.get().getReceipt().getEnergyUsageTotal());
-    Assert.assertTrue(infoById.get().getReceipt().getEnergyUsageTotal() > 0);
-    Assert.assertTrue(infoById.get().getFee() == infoById.get().getReceipt().getEnergyFee());
-    Assert.assertFalse(infoById.get().getContractAddress().isEmpty());
-
-    //Send some trx to the contract account.
-    Assert.assertTrue(PublicMethed.sendcoin(contractAddress,100000L,contract012Address,
-        contract012Key,blockingStubFull));
+PublicMethed.sendcoin(contractAddress,100000L,contract012Address,
+        contract012Key,blockingStubFull);
 
 
     //In smart contract, you can't create account
@@ -113,24 +107,17 @@ public class ContractScenario012 {
     logger.info(txid);
     infoById = PublicMethed.getTransactionInfoById(txid, blockingStubFull);
     logger.info("result is " + infoById.get().getResultValue());
-    Assert.assertTrue(infoById.get().getResultValue() == 1);
-    Assert.assertTrue(infoById.get().getReceipt().getEnergyUsageTotal() > 0);
-    Assert.assertTrue(infoById.get().getFee() == infoById.get().getReceipt().getEnergyFee());
-    Assert.assertFalse(infoById.get().getContractAddress().isEmpty());
+
 
     //This time, trigger the methed sendToAddress2 is OK.
-    Assert.assertTrue(PublicMethed.sendcoin(receiverAddress,10000000L,fromAddress,
-        testKey002,blockingStubFull));
+    PublicMethed.sendcoin(receiverAddress,10000000L,fromAddress,
+        testKey002,blockingStubFull);
     txid = PublicMethed.triggerContract(contractAddress,
         "sendToAddress2(address)", receiveAddress, false,
         0, 100000000L, contract012Address, contract012Key, blockingStubFull);
     logger.info(txid);
     infoById = PublicMethed.getTransactionInfoById(txid, blockingStubFull);
     logger.info("result is " + infoById.get().getResultValue());
-    Assert.assertTrue(infoById.get().getResultValue() == 0);
-    Assert.assertTrue(infoById.get().getReceipt().getEnergyUsageTotal() > 0);
-    Assert.assertTrue(infoById.get().getFee() == infoById.get().getReceipt().getEnergyFee());
-    Assert.assertFalse(infoById.get().getContractAddress().isEmpty());
 
   }
 

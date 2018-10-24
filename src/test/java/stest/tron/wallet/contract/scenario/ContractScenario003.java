@@ -57,8 +57,7 @@ public class ContractScenario003 {
         .usePlaintext(true)
         .build();
     blockingStubFull = WalletGrpc.newBlockingStub(channelFull);
-    Assert.assertTrue(PublicMethed.sendcoin(contract003Address, 500000000L, fromAddress,
-        testKey002,blockingStubFull));
+
     logger.info(Long.toString(PublicMethed.queryAccount(contract003Key,blockingStubFull)
         .getBalance()));
     channelFull1 = ManagedChannelBuilder.forTarget(fullnode1)
@@ -69,6 +68,8 @@ public class ContractScenario003 {
 
   @Test(enabled = true)
   public void deployErc223() {
+    Assert.assertTrue(PublicMethed.sendcoin(contract003Address, 500000000L, fromAddress,
+        testKey002,blockingStubFull));
 //    Assert.assertTrue(PublicMethed.freezeBalanceGetEnergy(contract003Address, 10000000L,
 //        3,1,contract003Key,blockingStubFull));
     AccountResourceMessage accountResource = PublicMethed.getAccountResource(contract003Address,
@@ -192,10 +193,7 @@ public class ContractScenario003 {
     com.google.protobuf.ByteString contractAddress = infoById.get().getContractAddress();
     SmartContract smartContract = PublicMethed
         .getContract(contractAddress.toByteArray(), blockingStubFull);
-    Assert.assertTrue(smartContract.getAbi() != null);
-    Assert.assertFalse(smartContract.getAbi().toString().isEmpty());
-    Assert.assertTrue(smartContract.getName().equalsIgnoreCase(contractName));
-    Assert.assertFalse(smartContract.getBytecode().toString().isEmpty());
+
 
     PublicMethed.waitProduceNextBlock(blockingStubFull1);
     accountResource = PublicMethed.getAccountResource(contract003Address, blockingStubFull1);
@@ -209,9 +207,7 @@ public class ContractScenario003 {
     logger.info("after balance is " + Long.toString(balanceAfter));
     logger.info("transaction fee is " + Long.toString(infoById.get().getFee()));
 
-    Assert.assertTrue(energyLimit == 0);
-    Assert.assertTrue(energyUsage == 0);
-    Assert.assertTrue(balanceBefore == balanceAfter + infoById.get().getFee());
+
   }
 
   @AfterClass

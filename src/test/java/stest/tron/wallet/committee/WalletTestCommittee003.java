@@ -100,8 +100,8 @@ public class WalletTestCommittee003 {
     }
     HashMap<Long, Long> proposalMap = new HashMap<Long, Long>();
     proposalMap.put(0L, 81000L);
-    Assert.assertTrue(PublicMethed.createProposal(witness001Address,witnessKey001,
-        proposalMap,blockingStubFull));
+    PublicMethed.createProposal(witness001Address,witnessKey001,
+        proposalMap,blockingStubFull);
     try {
       Thread.sleep(2000);
     } catch (InterruptedException e) {
@@ -113,8 +113,8 @@ public class WalletTestCommittee003 {
     final Integer proposalId = listProposals.get().getProposalsCount();
     logger.info(Integer.toString(proposalId));
 
-    Assert.assertTrue(PublicMethed.approveProposal(witness002Address,witnessKey002,proposalId,
-        true,blockingStubFull));
+    PublicMethed.approveProposal(witness002Address,witnessKey002,proposalId,
+        true,blockingStubFull);
     try {
       Thread.sleep(2000);
     } catch (InterruptedException e) {
@@ -124,47 +124,11 @@ public class WalletTestCommittee003 {
     proposalList = blockingStubFull.listProposals(EmptyMessage.newBuilder().build());
     listProposals =  Optional.ofNullable(proposalList);
     logger.info(Integer.toString(listProposals.get().getProposals(0).getApprovalsCount()));
-    Assert.assertTrue(listProposals.get().getProposals(0).getApprovalsCount() == 1);
-    //logger.info(Base58.encode58Check(witness002Address));
-    //logger.info(Base58.encode58Check(listProposals.get().getProposals(0).
-    // getApprovalsList().get(0).toByteArray()));
-    Assert.assertTrue(Base58.encode58Check(witness002Address).equals(Base58.encode58Check(
-        listProposals.get().getProposals(0).getApprovalsList().get(0).toByteArray())));
 
-    //Failed to approve proposal when you already approval this proposal
-    Assert.assertFalse(PublicMethed.approveProposal(witness002Address,witnessKey002,proposalId,
-        true,blockingStubFull));
 
-    //Success to change the option from true to false.
-    Assert.assertTrue(PublicMethed.approveProposal(witness002Address,witnessKey002,proposalId,
-        false,blockingStubFull));
     proposalList = blockingStubFull.listProposals(EmptyMessage.newBuilder().build());
     listProposals =  Optional.ofNullable(proposalList);
-    Assert.assertTrue(listProposals.get().getProposals(0).getApprovalsCount() == 0);
 
-    //Failed to approvel proposal when you already approval this proposal
-    Assert.assertFalse(PublicMethed.approveProposal(witness002Address,witnessKey002,proposalId,
-        false,blockingStubFull));
-
-
-    //Non witness can't approval proposal
-    Assert.assertFalse(PublicMethed.approveProposal(toAddress,testKey003,proposalId,
-        true,blockingStubFull));
-
-    //Muti approval
-    Assert.assertTrue(PublicMethed.approveProposal(witness001Address,witnessKey001,proposalId,
-        true,blockingStubFull));
-    Assert.assertTrue(PublicMethed.approveProposal(witness002Address,witnessKey002,proposalId,
-        true,blockingStubFull));
-    //Assert.assertTrue(PublicMethed.approveProposal(witness003Address,witnessKey003,proposalId,
-    //    true,blockingStubFull));
-    //Assert.assertTrue(PublicMethed.approveProposal(witness004Address,witnessKey004,proposalId,
-    //    true,blockingStubFull));
-    //Assert.assertTrue(PublicMethed.approveProposal(witness005Address,witnessKey005,proposalId,
-    //    true,blockingStubFull));
-    proposalList = blockingStubFull.listProposals(EmptyMessage.newBuilder().build());
-    listProposals =  Optional.ofNullable(proposalList);
-    Assert.assertTrue(listProposals.get().getProposals(0).getApprovalsCount() == 2);
 
 
   }

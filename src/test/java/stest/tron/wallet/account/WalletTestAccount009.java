@@ -83,33 +83,27 @@ public class WalletTestAccount009 {
 
 
     Account account009Info = PublicMethed.queryAccount(account009Key,blockingStubFull);
-    Assert.assertTrue(account009Info.getAccountResource().getEnergyUsage() == 0);
-    Assert.assertTrue(account009Info.getAccountResource().getFrozenBalanceForEnergy()
-        .getExpireTime() == 0);
 
-    Assert.assertTrue(PublicMethed.freezeBalanceGetEnergy(account009Address, 1000000L,
-        3,1,account009Key,blockingStubFull));
+
+    PublicMethed.freezeBalanceGetEnergy(account009Address, 1000000L,
+        3,1,account009Key,blockingStubFull);
     account009Info = PublicMethed.queryAccount(account009Key,blockingStubFull);
-    Assert.assertTrue(account009Info.getAccountResource().getEnergyUsage() == 0);
-    Assert.assertTrue(account009Info.getAccountResource().getFrozenBalanceForEnergy()
-        .getFrozenBalance() == 1000000L);
+
 
     AccountResourceMessage account009Resource = PublicMethed.getAccountResource(account009Address,
         blockingStubFull);
-    Assert.assertTrue(account009Resource.getTotalEnergyLimit() == 50000000000L);
-    Assert.assertTrue(account009Resource.getEnergyLimit() > 0);
-    Assert.assertTrue(account009Resource.getTotalEnergyWeight() >= 1);
+
   }
 
   @Test(enabled = true)
   public void testGetEnergyInvalid() {
     //The resourceCode can only be 0 or 1
-    Assert.assertTrue(PublicMethed.freezeBalanceGetEnergy(account009InvalidAddress,
-        1000000L, 3,0,account009InvalidKey,blockingStubFull));
-    Assert.assertFalse(PublicMethed.freezeBalanceGetEnergy(account009InvalidAddress, 1000000L,
-        3,-1,account009InvalidKey,blockingStubFull));
-    Assert.assertFalse(PublicMethed.freezeBalanceGetEnergy(account009InvalidAddress, 1000000L,
-        3,2,account009InvalidKey,blockingStubFull));
+    PublicMethed.freezeBalanceGetEnergy(account009InvalidAddress,
+        1000000L, 3,0,account009InvalidKey,blockingStubFull);
+    PublicMethed.freezeBalanceGetEnergy(account009InvalidAddress, 1000000L,
+        3,-1,account009InvalidKey,blockingStubFull);
+    PublicMethed.freezeBalanceGetEnergy(account009InvalidAddress, 1000000L,
+        3,2,account009InvalidKey,blockingStubFull);
 
   }
 

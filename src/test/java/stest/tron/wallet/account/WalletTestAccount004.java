@@ -101,8 +101,8 @@ public class WalletTestAccount004 {
       e.printStackTrace();
     }
     //Freeze balance success.
-    Assert.assertTrue(PublicMethed.freezeBalance(fromAddress, 1000000L,
-        3L, testKey002,blockingStubFull));
+    PublicMethed.freezeBalance(fromAddress, 1000000L,
+        3L, testKey002,blockingStubFull);
   }
 
   @Test(enabled = true)

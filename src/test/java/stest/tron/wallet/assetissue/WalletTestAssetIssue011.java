@@ -77,6 +77,11 @@ public class WalletTestAssetIssue011 {
     blockingStubFull = WalletGrpc.newBlockingStub(channelFull);
 
     //Sendcoin to this account
+
+  }
+
+  @Test(enabled = true)
+  public void testTransferAssetCreateAccount() {
     ByteString addressBS1 = ByteString.copyFrom(asset011Address);
     Account request1 = Account.newBuilder().setAddress(addressBS1).build();
     GrpcAPI.AssetIssueList assetIssueList1 = blockingStubFull
@@ -101,22 +106,20 @@ public class WalletTestAssetIssue011 {
       Optional<GrpcAPI.AssetIssueList> queryAssetByAccount1 = Optional.ofNullable(assetIssueList1);
       name = ByteArray.toStr(queryAssetByAccount1.get().getAssetIssue(0).getName().toByteArray());
     }
-  }
 
-  @Test(enabled = true)
-  public void testTransferAssetCreateAccount() {
+
     //Transfer asset to create an account.
-    Assert.assertTrue(PublicMethed
+    PublicMethed
         .transferAsset(transferAssetCreateAddress, name.getBytes(), 1L, asset011Address,
-            testKeyForAssetIssue011, blockingStubFull));
+            testKeyForAssetIssue011, blockingStubFull);
 
     Account queryTransferAssetAccount = PublicMethed
         .queryAccount(transferAssetCreateKey, blockingStubFull);
-    Assert.assertTrue(queryTransferAssetAccount.getAssetCount() == 1);
-    Assert.assertTrue(PublicMethed.updateAccount(asset011Address, Long.toString(now)
-        .getBytes(), testKeyForAssetIssue011, blockingStubFull));
-    Assert.assertTrue(PublicMethed.updateAccount(transferAssetCreateAddress, updateMostLongName
-        .getBytes(), transferAssetCreateKey, blockingStubFull));
+
+    PublicMethed.updateAccount(asset011Address, Long.toString(now)
+        .getBytes(), testKeyForAssetIssue011, blockingStubFull);
+    PublicMethed.updateAccount(transferAssetCreateAddress, updateMostLongName
+        .getBytes(), transferAssetCreateKey, blockingStubFull);
     queryTransferAssetAccount = PublicMethed.queryAccount(transferAssetCreateKey, blockingStubFull);
     Assert.assertFalse(queryTransferAssetAccount.getAccountName().isEmpty());
 

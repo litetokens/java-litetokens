@@ -84,12 +84,12 @@ public class WalletTestWitness003 {
     blockingStubFull = WalletGrpc.newBlockingStub(channelFull);
   }
 
-  @Test(enabled = true)
+  @Test(enabled = false)
   public void testInvaildToApplyBecomeWitness() {
     Assert.assertFalse(createWitness(INVAILD_ADDRESS, createUrl, testKey002));
   }
 
-  @Test(enabled = true)
+  @Test(enabled = false)
   public void testCreateWitness() {
     //If you are already is witness, apply failed
     //createWitness(fromAddress, createUrl, testKey002);
@@ -111,7 +111,7 @@ public class WalletTestWitness003 {
     }
   }
 
-  @Test(enabled = true)
+  @Test(enabled = false)
   public void testUpdateWitness() {
     GrpcAPI.WitnessList witnesslist = blockingStubFull
         .listWitnesses(GrpcAPI.EmptyMessage.newBuilder().build());

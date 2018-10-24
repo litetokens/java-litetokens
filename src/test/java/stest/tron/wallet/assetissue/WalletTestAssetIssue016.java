@@ -79,6 +79,11 @@ public class WalletTestAssetIssue016 {
         .build();
     blockingStubFull = WalletGrpc.newBlockingStub(channelFull);
 
+
+  }
+
+  @Test(enabled = true)
+  public void testGetAssetIssueNet() {
     //Sendcoin to this account
     ByteString addressBS1 = ByteString.copyFrom(asset016Address);
     Account request1 = Account.newBuilder().setAddress(addressBS1).build();
@@ -101,10 +106,8 @@ public class WalletTestAssetIssue016 {
       Optional<GrpcAPI.AssetIssueList> queryAssetByAccount1 = Optional.ofNullable(assetIssueList1);
       name = ByteArray.toStr(queryAssetByAccount1.get().getAssetIssue(0).getName().toByteArray());
     }
-  }
 
-  @Test(enabled = true)
-  public void testGetAssetIssueNet() {
+
     AccountNetMessage assetIssueInfo = PublicMethed.getAccountNet(asset016Address,blockingStubFull);
     Assert.assertTrue(assetIssueInfo.getAssetNetLimitCount() == 1);
     Assert.assertTrue(assetIssueInfo.getAssetNetUsedCount() == 1);

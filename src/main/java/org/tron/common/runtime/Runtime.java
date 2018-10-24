@@ -390,42 +390,50 @@ public class Runtime {
    * **
    */
 
-  private void call()
-      throws ContractValidateException {
-
-    if (!deposit.getDbManager().getDynamicPropertiesStore().supportVM()) {
-      logger.info("vm work is off, need to be opened by the committee");
-      throw new ContractValidateException("VM work is off, need to be opened by the committee");
-    }
+  private void call() throws ContractValidateException {
 
     Contract.TriggerSmartContract contract = ContractCapsule.getTriggerContractFromTransaction(trx);
     if (contract == null) {
       return;
     }
 
-    if(contract.getContractAddress() == null) {
-      throw new ContractValidateException("Cannot get contract address from TriggerContract");
+    if (!deposit.getDbManager().getDynamicPropertiesStore().supportVM()) {
+        logger.info("vm work is off, need to be opened by the committee");
+        throw new ContractValidateException("VM work is off, need to be opened by the committee");
     }
 
-    byte[] contractAddress = contract.getContractAddress().toByteArray();
+    ByteString contractAddressStr = contract.getContractAddress();
+    ByteString ownerAddressStr = contract.getOwnerAddress();
+    long callValue = contract.getCallValue();
+
+    if(contractAddressStr == null || contractAddressStr.isEmpty()) {
+      throw new ContractValidateException("Cannot get contract address from TriggerContract");
+    }
+    if(ownerAddressStr == null || ownerAddressStr.isEmpty()) {
+        throw new ContractValidateException("Cannot get owner address from TriggerContract");
+    }
+
+    byte[] contractAddress = contractAddressStr.toByteArray();
+    byte[] callerAddress = ownerAddressStr.toByteArray();
 
     ContractCapsule deployedContract = this.deposit.getContract(contractAddress);
-    if (null == deployedContract) {
+
+    if (deployedContract == null) {
       logger.info("No contract or not a smart contract");
       throw new ContractValidateException("No contract or not a smart contract");
     }
+
     byte[] code = this.deposit.getCode(contractAddress);
-    long callValue = contract.getCallValue();
+
     if (isNotEmpty(code)) {
-      AccountCapsule caller = this.deposit.getAccount(contract.getOwnerAddress().toByteArray());
+      AccountCapsule caller = this.deposit.getAccount(callerAddress);
       AccountCapsule creator = this.deposit.getAccount(
           deployedContract.getInstance()
               .getOriginAddress().toByteArray());
 
       long MAX_CPU_TIME_OF_ONE_TX = deposit.getDbManager().getDynamicPropertiesStore()
           .getMaxCpuTimeOfOneTx() * 1000;
-      long thisTxCPULimitInUs =
-          (long) (MAX_CPU_TIME_OF_ONE_TX * getThisTxCPULimitInUsRatio());
+      long thisTxCPULimitInUs = (long) (MAX_CPU_TIME_OF_ONE_TX * getThisTxCPULimitInUsRatio());
 
       long vmStartInUs = System.nanoTime() / 1000;
       long vmShouldEndInUs = vmStartInUs + thisTxCPULimitInUs;
@@ -459,8 +467,8 @@ public class Runtime {
     }
 
     program.getResult().setContractAddress(contractAddress);
+
     //transfer from callerAddress to targetAddress according to callValue
-    byte[] callerAddress = contract.getOwnerAddress().toByteArray();
     if (callValue > 0) {
       transfer(this.deposit, callerAddress, contractAddress, callValue);
     }

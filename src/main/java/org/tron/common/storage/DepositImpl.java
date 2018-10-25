@@ -704,11 +704,6 @@ public class DepositImpl implements Deposit {
   }
 
   @Override
-  public void flush() {
-    throw new RuntimeException("Not supported");
-  }
-
-  @Override
   public void setParent(Deposit deposit) {
     parent = deposit;
   }

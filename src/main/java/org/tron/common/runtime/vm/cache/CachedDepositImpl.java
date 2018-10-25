@@ -186,16 +186,11 @@ public class CachedDepositImpl implements Deposit {
     return accountCapsule.getBalance();
   }
 
-
   @Override
   public void setParent(Deposit deposit) {
     this.parent = deposit;
   }
 
-  @Override
-  public void flush() {
-
-  }
 
   @Override
   public void commit() {
@@ -209,58 +204,8 @@ public class CachedDepositImpl implements Deposit {
   }
 
   @Override
-  public void putAccount(Key key, Value value) {
-
-  }
-
-  @Override
-  public void putTransaction(Key key, Value value) {
-
-  }
-
-  @Override
-  public void putBlock(Key key, Value value) {
-
-  }
-
-  @Override
-  public void putWitness(Key key, Value value) {
-
-  }
-
-  @Override
-  public void putCode(Key key, Value value) {
-
-  }
-
-  @Override
-  public void putContract(Key key, Value value) {
-
-  }
-
-  @Override
   public void putStorage(byte[] key, Storage cache) {
     this.storageCache.put(key, cache);
-  }
-
-  @Override
-  public void putStorage(Key key, Storage cache) {
-
-  }
-
-  @Override
-  public void putVotes(Key key, Value value) {
-
-  }
-
-  @Override
-  public void putProposal(Key key, Value value) {
-
-  }
-
-  @Override
-  public void putDynamicProperties(Key key, Value value) {
-
   }
 
   @Override

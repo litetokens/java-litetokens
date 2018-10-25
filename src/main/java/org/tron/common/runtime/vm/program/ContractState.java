@@ -161,59 +161,16 @@ public class ContractState implements Deposit, ProgramListenerAware {
   }
 
   @Override
-  public Storage getStorage(byte[] address) {
-    return deposit.getStorage(address);
-  }
-
-  @Override
-  public void putAccount(Key key, Value value) {
-    deposit.putAccount(key, value);
-  }
-
-  @Override
-  public void putTransaction(Key key, Value value) {
-    deposit.putTransaction(key, value);
-  }
-
-  @Override
-  public void putBlock(Key key, Value value) {
-    deposit.putBlock(key, value);
-  }
-
-  @Override
-  public void putWitness(Key key, Value value) {
-    deposit.putWitness(key, value);
-  }
-
-  @Override
-  public void putCode(Key key, Value value) {
-    deposit.putCode(key, value);
-  }
-
-  @Override
-  public void putContract(Key key, Value value) {
-    deposit.putContract(key, value);
-  }
-
-  @Override
-  public void putStorage(Key key, Storage cache) {
+  public void putStorage(byte[] key, Storage cache) {
     deposit.putStorage(key, cache);
   }
 
   @Override
-  public void putVotes(Key key, Value value) {
-    deposit.putVotes(key, value);
+  public Storage getStorage(byte[] address) {
+    return deposit.getStorage(address);
   }
 
-  @Override
-  public void putProposal(Key key, Value value) {
-    deposit.putProposal(key, value);
-  }
-
-  @Override
-  public void putDynamicProperties(Key key, Value value) {
-    deposit.putDynamicProperties(key, value);
-  }
+ 
 
   @Override
   public void setParent(Deposit deposit) {

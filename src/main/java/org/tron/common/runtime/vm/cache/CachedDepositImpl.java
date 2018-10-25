@@ -1,16 +1,12 @@
 package org.tron.common.runtime.vm.cache;
 
-import static org.tron.common.runtime.utils.MUtil.convertToTronAddress;
-
 import com.google.protobuf.ByteString;
-import java.util.HashMap;
 import lombok.Getter;
 import org.tron.common.runtime.vm.DataWord;
 import org.tron.common.runtime.vm.program.Storage;
 import org.tron.common.storage.Deposit;
 import org.tron.common.utils.ByteArrayMap;
 import org.tron.core.capsule.*;
-import org.tron.core.db.ByteArrayWrapper;
 import org.tron.core.db.Manager;
 import org.tron.protos.Protocol;
 
@@ -32,14 +28,13 @@ public class CachedDepositImpl implements Deposit {
   @Getter
   private CachedSource<byte[], CodeCapsule> codeCache;
 
-//  private HashMap<ByteArrayWrapper, Storage> storageCache = new HashMap<>();
   private ByteArrayMap<Storage> storageCache = new ByteArrayMap<>();
 
   public static Deposit createRoot(Manager manager) {
     return new CachedDepositImpl(manager);
   }
 
-  // for deposit root
+  // only for deposit root
   private CachedDepositImpl(Manager manager) {
     this.manager = manager;
     accountCache = new ReadWriteCapsuleCache<>(manager.getAccountStore());
@@ -50,7 +45,7 @@ public class CachedDepositImpl implements Deposit {
     blockCache = new ReadWriteCapsuleCache<>(manager.getBlockStore());
   }
 
-  // for deposit child
+  // only for deposit child
   private CachedDepositImpl(Manager manager, CachedDepositImpl parent) {
     this.manager = manager;
     this.parent = parent;

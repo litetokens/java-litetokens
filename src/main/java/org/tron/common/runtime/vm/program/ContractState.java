@@ -151,11 +151,6 @@ public class ContractState implements Deposit, ProgramListenerAware {
   }
 
   @Override
-  public void flush() {
-    deposit.flush();
-  }
-
-  @Override
   public void commit() {
     deposit.commit();
   }

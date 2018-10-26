@@ -1,6 +1,8 @@
 package org.tron.common.storage;
 
 import org.tron.common.runtime.vm.DataWord;
+import org.tron.common.runtime.vm.cache.Key;
+import org.tron.common.runtime.vm.cache.Value;
 import org.tron.common.runtime.vm.program.Storage;
 import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.BlockCapsule;
@@ -58,29 +60,9 @@ public interface Deposit {
 
   void setParent(Deposit deposit);
 
-  void flush();
-
   void commit();
 
-  void putAccount(Key key, Value value);
-
-  void putTransaction(Key key, Value value);
-
-  void putBlock(Key key, Value value);
-
-  void putWitness(Key key, Value value);
-
-  void putCode(Key key, Value value);
-
-  void putContract(Key key, Value value);
-
-  void putStorage(Key key, Storage cache);
-
-  void putVotes(Key key, Value value);
-
-  void putProposal(Key key, Value value);
-
-  void putDynamicProperties(Key key, Value value);
+  void putStorage(byte[] key, Storage cache);
 
   void putAccountValue(byte[] address, AccountCapsule accountCapsule);
 

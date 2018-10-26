@@ -5,8 +5,10 @@ import static org.tron.common.runtime.utils.MUtil.convertToTronAddress;
 import com.google.common.primitives.Longs;
 import com.google.protobuf.ByteString;
 import java.util.HashMap;
-import java.util.concurrent.atomic.AtomicLong;
 import org.tron.common.runtime.vm.DataWord;
+import org.tron.common.runtime.vm.cache.Key;
+import org.tron.common.runtime.vm.cache.Type;
+import org.tron.common.runtime.vm.cache.Value;
 import org.tron.common.runtime.vm.program.Storage;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.StringUtil;
@@ -423,59 +425,10 @@ public class DepositImpl implements Deposit {
   }
 
   @Override
-  public void putAccount(Key key, Value value) {
-    accountCache.put(key, value);
+  public void putStorage(byte[] key, Storage cache) {
+    throw new RuntimeException("unsupported method in depositImp");
   }
 
-  @Override
-  public void putTransaction(Key key, Value value) {
-    transactionCache.put(key, value);
-  }
-
-  @Override
-  public void putBlock(Key key, Value value) {
-    blockCache.put(key, value);
-  }
-
-  @Override
-  public void putWitness(Key key, Value value) {
-    witnessCache.put(key, value);
-  }
-
-  @Override
-  public void putCode(Key key, Value value) {
-    codeCache.put(key, value);
-  }
-
-  @Override
-  public void putContract(Key key, Value value) {
-    contractCache.put(key, value);
-  }
-
-//  @Override
-//  public void putStorage(Key key, Value value) {
-//    storageCache.put(key, value);
-//  }
-
-  @Override
-  public void putStorage(Key key, Storage cache) {
-    storageCache.put(key, cache);
-  }
-
-  @Override
-  public void putVotes(Key key, Value value) {
-    votesCache.put(key, value);
-  }
-
-  @Override
-  public void putProposal(Key key, Value value) {
-    proposalCache.put(key, value);
-  }
-
-  @Override
-  public void putDynamicProperties(Key key, Value value) {
-    dynamicPropertiesCache.put(key, value);
-  }
 
   @Override
   public long getLatestProposalNum(){
@@ -530,126 +483,126 @@ public class DepositImpl implements Deposit {
     return bytesCapsule;
   }
 
-  private void commitAccountCache(Deposit deposit) {
-    accountCache.forEach((key, value) -> {
-      if (value.getType().isCreate() || value.getType().isDirty()) {
-        if (deposit != null) {
-          deposit.putAccount(key, value);
-        } else {
-          getAccountStore().put(key.getData(), value.getAccount());
-        }
-      }
-    });
-  }
-
-  private void commitTransactionCache(Deposit deposit) {
-    transactionCache.forEach((key, value) -> {
-      if (value.getType().isDirty() || value.getType().isCreate()) {
-        if (deposit != null) {
-          deposit.putTransaction(key, value);
-        } else {
-          getTransactionStore().put(key.getData(), value.getTransaction());
-        }
-      }
-    });
-  }
-
-  private void commitBlockCache(Deposit deposit) {
-    blockCache.forEach(((key, value) -> {
-      if (value.getType().isDirty() || value.getType().isCreate()) {
-        if (deposit != null) {
-          deposit.putBlock(key, value);
-        } else {
-          getBlockStore().put(key.getData(), value.getBlock());
-        }
-      }
-    }));
-  }
-
-  private void commitWitnessCache(Deposit deposit) {
-    witnessCache.forEach(((key, value) -> {
-      if (value.getType().isDirty() || value.getType().isCreate()) {
-        if (deposit != null) {
-          deposit.putWitness(key, value);
-        } else {
-          getWitnessStore().put(key.getData(), value.getWitness());
-        }
-      }
-    }));
-  }
-
-  private void commitCodeCache(Deposit deposit) {
-    codeCache.forEach(((key, value) -> {
-      if (value.getType().isDirty() || value.getType().isCreate()) {
-        if (deposit != null) {
-          deposit.putCode(key, value);
-        } else {
-          getCodeStore().put(key.getData(), value.getCode());
-        }
-      }
-    }));
-  }
-
-  private void commitContractCache(Deposit deposit) {
-    contractCache.forEach(((key, value) -> {
-      if (value.getType().isDirty() || value.getType().isCreate()) {
-        if (deposit != null) {
-          deposit.putContract(key, value);
-        } else {
-          getContractStore().put(key.getData(), value.getContract());
-        }
-      }
-    }));
-  }
-
-  private void commitStorageCache(Deposit deposit) {
-    storageCache.forEach((key, value) -> {
-      if (deposit != null) {
-        // write to parent cache
-        deposit.putStorage(key, value);
-      } else {
-        // persistence
-        value.commit();
-      }
-    });
-
-  }
-
-  private void commitVoteCache(Deposit deposit) {
-    votesCache.forEach(((key, value) -> {
-      if (value.getType().isDirty() || value.getType().isCreate()) {
-        if (deposit != null) {
-          deposit.putVotes(key, value);
-        } else {
-          getVotesStore().put(key.getData(), value.getVotes());
-        }
-      }
-    }));
-  }
-
-  private void commitProposalCache(Deposit deposit) {
-    proposalCache.forEach(((key, value) -> {
-      if (value.getType().isDirty() || value.getType().isCreate()) {
-        if (deposit != null) {
-          deposit.putProposal(key, value);
-        } else {
-          getProposalStore().put(key.getData(), value.getProposal());
-        }
-      }
-    }));
-  }
-
-  private void commitDynamicPropertiesCache(Deposit deposit) {
-    dynamicPropertiesCache.forEach(((key, value) -> {
-      if (value.getType().isDirty() || value.getType().isCreate()) {
-        if (deposit != null) {
-          deposit.putDynamicProperties(key, value);
-        } else {
-          getDynamicPropertiesStore().put(key.getData(), value.getDynamicProperties());
-        }
-      }
-    }));
-  }
+//  private void commitAccountCache(Deposit deposit) {
+//    accountCache.forEach((key, value) -> {
+//      if (value.getType().isCreate() || value.getType().isDirty()) {
+//        if (deposit != null) {
+//          deposit.putAccount(key, value);
+//        } else {
+//          getAccountStore().put(key.getData(), value.getAccount());
+//        }
+//      }
+//    });
+//  }
+//
+//  private void commitTransactionCache(Deposit deposit) {
+//    transactionCache.forEach((key, value) -> {
+//      if (value.getType().isDirty() || value.getType().isCreate()) {
+//        if (deposit != null) {
+//          deposit.putTransaction(key, value);
+//        } else {
+//          getTransactionStore().put(key.getData(), value.getTransaction());
+//        }
+//      }
+//    });
+//  }
+//
+//  private void commitBlockCache(Deposit deposit) {
+//    blockCache.forEach(((key, value) -> {
+//      if (value.getType().isDirty() || value.getType().isCreate()) {
+//        if (deposit != null) {
+//          deposit.putBlock(key, value);
+//        } else {
+//          getBlockStore().put(key.getData(), value.getBlock());
+//        }
+//      }
+//    }));
+//  }
+//
+//  private void commitWitnessCache(Deposit deposit) {
+//    witnessCache.forEach(((key, value) -> {
+//      if (value.getType().isDirty() || value.getType().isCreate()) {
+//        if (deposit != null) {
+//          deposit.putWitness(key, value);
+//        } else {
+//          getWitnessStore().put(key.getData(), value.getWitness());
+//        }
+//      }
+//    }));
+//  }
+//
+//  private void commitCodeCache(Deposit deposit) {
+//    codeCache.forEach(((key, value) -> {
+//      if (value.getType().isDirty() || value.getType().isCreate()) {
+//        if (deposit != null) {
+//          deposit.putCode(key, value);
+//        } else {
+//          getCodeStore().put(key.getData(), value.getCode());
+//        }
+//      }
+//    }));
+//  }
+//
+//  private void commitContractCache(Deposit deposit) {
+//    contractCache.forEach(((key, value) -> {
+//      if (value.getType().isDirty() || value.getType().isCreate()) {
+//        if (deposit != null) {
+//          deposit.putContract(key, value);
+//        } else {
+//          getContractStore().put(key.getData(), value.getContract());
+//        }
+//      }
+//    }));
+//  }
+//
+//  private void commitStorageCache(Deposit deposit) {
+//    storageCache.forEach((key, value) -> {
+//      if (deposit != null) {
+//        // write to parent cache
+//        deposit.putStorage(key, value);
+//      } else {
+//        // persistence
+//        value.commit();
+//      }
+//    });
+//
+//  }
+//
+//  private void commitVoteCache(Deposit deposit) {
+//    votesCache.forEach(((key, value) -> {
+//      if (value.getType().isDirty() || value.getType().isCreate()) {
+//        if (deposit != null) {
+//          deposit.putVotes(key, value);
+//        } else {
+//          getVotesStore().put(key.getData(), value.getVotes());
+//        }
+//      }
+//    }));
+//  }
+//
+//  private void commitProposalCache(Deposit deposit) {
+//    proposalCache.forEach(((key, value) -> {
+//      if (value.getType().isDirty() || value.getType().isCreate()) {
+//        if (deposit != null) {
+//          deposit.putProposal(key, value);
+//        } else {
+//          getProposalStore().put(key.getData(), value.getProposal());
+//        }
+//      }
+//    }));
+//  }
+//
+//  private void commitDynamicPropertiesCache(Deposit deposit) {
+//    dynamicPropertiesCache.forEach(((key, value) -> {
+//      if (value.getType().isDirty() || value.getType().isCreate()) {
+//        if (deposit != null) {
+//          deposit.putDynamicProperties(key, value);
+//        } else {
+//          getDynamicPropertiesStore().put(key.getData(), value.getDynamicProperties());
+//        }
+//      }
+//    }));
+//  }
 
 
   @Override
@@ -683,22 +636,17 @@ public class DepositImpl implements Deposit {
       deposit = parent;
     }
 
-    commitAccountCache(deposit);
-    commitTransactionCache(deposit);
-    commitBlockCache(deposit);
-    commitWitnessCache(deposit);
-    commitCodeCache(deposit);
-    commitContractCache(deposit);
-    commitStorageCache(deposit);
-    commitVoteCache(deposit);
-    commitProposalCache(deposit);
-    commitDynamicPropertiesCache(deposit);
+//    commitAccountCache(deposit);
+//    commitTransactionCache(deposit);
+//    commitBlockCache(deposit);
+//    commitWitnessCache(deposit);
+//    commitCodeCache(deposit);
+//    commitContractCache(deposit);
+//    commitStorageCache(deposit);
+//    commitVoteCache(deposit);
+//    commitProposalCache(deposit);
+//    commitDynamicPropertiesCache(deposit);
     // commitAccountContractIndex(deposit);
-  }
-
-  @Override
-  public void flush() {
-    throw new RuntimeException("Not supported");
   }
 
   @Override

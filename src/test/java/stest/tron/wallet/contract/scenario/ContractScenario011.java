@@ -323,25 +323,31 @@ public class ContractScenario011 {
     String newCxoAddress = "\"" + Base58.encode58Check(triggerUseTriggerEnergyUsageAddress)
         + "\"";
     PublicMethed.waitProduceNextBlock(blockingStubFull);
-    txid = PublicMethed.triggerContract(kittyCoreContractAddress,
-        "setCOO(address)", newCxoAddress, false, 0, 10000000, triggerAddress,
+    String txid1;
+    String txid2;
+    String txid3;
+    txid1 = PublicMethed.triggerContract(kittyCoreContractAddress,
+        "setCOO(address)", newCxoAddress, false, 0, maxFeeLimit, triggerAddress,
         triggerKey, blockingStubFull);
     logger.info("COO " + txid);
-    infoById = PublicMethed.getTransactionInfoById(txid, blockingStubFull);
-    Assert.assertTrue(infoById.get().getResultValue() == 0);
 
-    txid = PublicMethed.triggerContract(kittyCoreContractAddress,
-        "setCFO(address)", newCxoAddress, false, 0, 10000000, triggerAddress,
+    txid2 = PublicMethed.triggerContract(kittyCoreContractAddress,
+        "setCFO(address)", newCxoAddress, false, 0, maxFeeLimit, triggerAddress,
         triggerKey, blockingStubFull);
     logger.info("CFO " + txid);
-    infoById = PublicMethed.getTransactionInfoById(txid, blockingStubFull);
-    Assert.assertTrue(infoById.get().getResultValue() == 0);
 
-    txid = PublicMethed.triggerContract(kittyCoreContractAddress,
-        "setCEO(address)", newCxoAddress, false, 0, 1000000, triggerAddress,
+    txid3 = PublicMethed.triggerContract(kittyCoreContractAddress,
+        "setCEO(address)", newCxoAddress, false, 0, maxFeeLimit, triggerAddress,
         triggerKey, blockingStubFull);
     logger.info("CEO " + txid);
-    infoById = PublicMethed.getTransactionInfoById(txid, blockingStubFull);
+
+    PublicMethed.waitProduceNextBlock(blockingStubFull);
+
+    infoById = PublicMethed.getTransactionInfoById(txid1, blockingStubFull);
+    Assert.assertTrue(infoById.get().getResultValue() == 0);
+    infoById = PublicMethed.getTransactionInfoById(txid2, blockingStubFull);
+    Assert.assertTrue(infoById.get().getResultValue() == 0);
+    infoById = PublicMethed.getTransactionInfoById(txid3, blockingStubFull);
     Assert.assertTrue(infoById.get().getResultValue() == 0);
 
     PublicMethed.waitProduceNextBlock(blockingStubFull);

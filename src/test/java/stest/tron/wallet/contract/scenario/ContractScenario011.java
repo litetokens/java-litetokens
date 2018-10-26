@@ -322,7 +322,7 @@ public class ContractScenario011 {
             fromAddress, testKey002, blockingStubFull));
     String newCxoAddress = "\"" + Base58.encode58Check(triggerUseTriggerEnergyUsageAddress)
         + "\"";
-
+    PublicMethed.waitProduceNextBlock(blockingStubFull);
     txid = PublicMethed.triggerContract(kittyCoreContractAddress,
         "setCOO(address)", newCxoAddress, false, 0, 10000000, triggerAddress,
         triggerKey, blockingStubFull);

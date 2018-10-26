@@ -30,7 +30,6 @@ public class AssertException {
   private final byte[] testNetAccountAddress = PublicMethed.getFinalAddress(testNetAccountKey);
   private Long maxFeeLimit = Configuration.getByPath("testng.conf")
       .getLong("defaultParameter.maxFeeLimit");
-  private ManagedChannel channelSolidity = null;
 
   private ManagedChannel channelFull = null;
   private WalletGrpc.WalletBlockingStub blockingStubFull = null;
@@ -45,9 +44,6 @@ public class AssertException {
       .getStringList("fullnode.ip.list").get(0);
   private String fullnode1 = Configuration.getByPath("testng.conf")
       .getStringList("fullnode.ip.list").get(1);
-
-  private String soliditynode = Configuration.getByPath("testng.conf")
-      .getStringList("solidityNode.ip.list").get(0);
 
   byte[] contractAddress = null;
 
@@ -74,10 +70,6 @@ public class AssertException {
         .build();
     blockingStubFull1 = WalletGrpc.newBlockingStub(channelFull1);
 
-    channelSolidity = ManagedChannelBuilder.forTarget(soliditynode)
-        .usePlaintext(true)
-        .build();
-    blockingStubSolidity = WalletSolidityGrpc.newBlockingStub(channelSolidity);
     logger.info(Long.toString(PublicMethed.queryAccount(testNetAccountKey, blockingStubFull)
         .getBalance()));
     PublicMethed

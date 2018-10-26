@@ -35,12 +35,13 @@
   </test>
   <test name="Stest contract">
     <packages>
-      <package name="stest.tron.wallet.contract.scenario">
-      </package>
       <package name="stest.tron.wallet.contract.exceptionfee">
       </package>
       <package name="stest.tron.wallet.contract.grammar">
       </package>
+      <package name="stest.tron.wallet.contract.scenario">
+      </package>
+
     </packages>
     <!--      <classes>
             <class name="stest.tron.wallet.account.WalletTestAccount003"/>

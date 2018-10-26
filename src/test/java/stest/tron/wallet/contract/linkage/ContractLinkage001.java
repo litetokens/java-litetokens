@@ -32,11 +32,11 @@ public class ContractLinkage001 {
   private ManagedChannel channelFull = null;
   private WalletGrpc.WalletBlockingStub blockingStubFull = null;
   private String fullnode = Configuration.getByPath("testng.conf")
-      .getStringList("fullnode.ip.list").get(0);
+      .getStringList("fullnode.ip.list").get(1);
   private ManagedChannel channelFull1 = null;
   private WalletGrpc.WalletBlockingStub blockingStubFull1 = null;
   private String fullnode1 = Configuration.getByPath("testng.conf")
-      .getStringList("fullnode.ip.list").get(1);
+      .getStringList("fullnode.ip.list").get(0);
   private Long maxFeeLimit = Configuration.getByPath("testng.conf")
       .getLong("defaultParameter.maxFeeLimit");
 
@@ -62,12 +62,13 @@ public class ContractLinkage001 {
         .usePlaintext(true)
         .build();
     blockingStubFull1 = WalletGrpc.newBlockingStub(channelFull1);
-    Assert.assertTrue(PublicMethed.sendcoin(linkage001Address, 20000000000L, fromAddress,
-        testKey002, blockingStubFull));
+
   }
 
   @Test(enabled = true)
   public void deployContentValue() {
+    Assert.assertTrue(PublicMethed.sendcoin(linkage001Address, 20000000000L, fromAddress,
+        testKey002, blockingStubFull));
     Account info;
     AccountResourceMessage resourceInfo = PublicMethed.getAccountResource(linkage001Address,
         blockingStubFull);
@@ -162,7 +163,7 @@ public class ContractLinkage001 {
         + "payable\",\"type\":\"constructor\"}]";
     String contractName = "tronNative";
     String txid = PublicMethed.deployContractAndGetTransactionInfoById(contractName, payableAbi,
-        payableCode, "", maxFeeLimit, 20000000000L, 100, null,
+        payableCode, "", maxFeeLimit, beforeBalance, 100, null,
         linkage001Key, linkage001Address, blockingStubFull);
     PublicMethed.waitProduceNextBlock(blockingStubFull);
     Optional<TransactionInfo> infoById = null;

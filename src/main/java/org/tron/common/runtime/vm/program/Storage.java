@@ -30,7 +30,7 @@ public class Storage {
       capsule = store.get(compose(key));
       rowCache.put(key, capsule);
     }
-    return (capsule == null) ? null : capsule.getValue();
+    return (capsule == null || capsule.getInstance() == null) ? null : capsule.getValue();
   }
 
   public void put(DataWord key, DataWord value) {

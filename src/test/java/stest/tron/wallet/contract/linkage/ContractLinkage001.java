@@ -161,9 +161,11 @@ public class ContractLinkage001 {
         + "\"unFreezeBalance\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable"
         + "\",\"type\":\"function\"},{\"inputs\":[],\"payable\":true,\"stateMutability\":\""
         + "payable\",\"type\":\"constructor\"}]";
+    Account accountGet = PublicMethed.queryAccount(linkage001Key, blockingStubFull);
+    Long accountBalance = accountGet.getBalance();
     String contractName = "tronNative";
     String txid = PublicMethed.deployContractAndGetTransactionInfoById(contractName, payableAbi,
-        payableCode, "", maxFeeLimit, beforeBalance, 100, null,
+        payableCode, "", maxFeeLimit, accountBalance, 100, null,
         linkage001Key, linkage001Address, blockingStubFull);
     PublicMethed.waitProduceNextBlock(blockingStubFull);
     Optional<TransactionInfo> infoById = null;

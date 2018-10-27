@@ -194,7 +194,7 @@ public class ContractLinkage006 {
     String initParmes = "\"" + Base58.encode58Check(fromAddress) + "\",\"63\"";
     txid = PublicMethed.triggerContract(contractAddress,
         "init(address,uint256)", initParmes, false,
-        1000, 100000000L, linkage006Address2, linkage006Key2, blockingStubFull);
+        0, 100000000L, linkage006Address2, linkage006Key2, blockingStubFull);
     PublicMethed.waitProduceNextBlock(blockingStubFull);
     Optional<TransactionInfo> infoById1 = PublicMethed
         .getTransactionInfoById(txid, blockingStubFull);
@@ -228,7 +228,7 @@ public class ContractLinkage006 {
     logger.info("afterNetUsed1:" + afterNetUsed1);
     logger.info("afterFreeNetUsed1:" + afterFreeNetUsed1);
     logger.info("---------------:");
-    Assert.assertTrue((beforeBalance1 - fee1 - 1000L) == afterBalance1);
+    Assert.assertTrue((beforeBalance1 - fee1) == afterBalance1);
     Assert.assertTrue(afterNetUsed1 > beforeNetUsed1);
     Assert.assertTrue((beforeEnergyUsed1 + energyUsed1) >= afterEnergyUsed1);
 

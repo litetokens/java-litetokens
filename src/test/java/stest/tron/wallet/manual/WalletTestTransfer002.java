@@ -1,4 +1,4 @@
-package stest.tron.wallet.transfer;
+package stest.tron.wallet.manual;
 
 import com.google.protobuf.ByteString;
 import io.grpc.ManagedChannel;

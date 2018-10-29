@@ -135,12 +135,26 @@ public class DepositImpl implements Deposit {
 
   @Override
   public void putStorageValue(byte[] address, DataWord key, DataWord value) {
-    getStorage(address).put(key, value);
+    Storage storage;
+    if (storageMap.containsKey(address)) {
+      storage = this.storageMap.get(address);
+    } else {
+      storage = getStorage(address);
+      this.storageMap.put(address, storage);
+    }
+    storage.put(key, value);
   }
 
   @Override
   public DataWord getStorageValue(byte[] address, DataWord key) {
-    return getStorage(address).getValue(key);
+    Storage storage;
+    if (storageMap.containsKey(address)) {
+      storage = this.storageMap.get(address);
+    } else {
+      storage = getStorage(address);
+      this.storageMap.put(address, storage);
+    }
+    return storage.getValue(key);
   }
 
   @Override
@@ -151,10 +165,11 @@ public class DepositImpl implements Deposit {
     Storage storage;
     if (this.parent != null) {
       storage = parent.getStorage(address);
+
     } else {
       storage = new Storage(address, this.manager.getStorageRowStore());
     }
-    storageMap.put(address, storage);
+
     return storage;
   }
 

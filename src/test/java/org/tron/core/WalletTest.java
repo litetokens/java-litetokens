@@ -41,17 +41,22 @@ import org.tron.common.application.TronApplicationContext;
 import org.tron.common.crypto.ECKey;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.FileUtil;
+import org.tron.common.utils.Sha256Hash;
 import org.tron.common.utils.Utils;
 import org.tron.core.capsule.AssetIssueCapsule;
 import org.tron.core.capsule.BlockCapsule;
+import org.tron.core.capsule.BytesCapsule;
 import org.tron.core.capsule.ExchangeCapsule;
 import org.tron.core.capsule.ProposalCapsule;
 import org.tron.core.capsule.TransactionCapsule;
 import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.Parameter.ChainParameters;
 import org.tron.core.config.args.Args;
+import org.tron.core.db.AccountStateStore;
+import org.tron.core.db.BlockStore;
 import org.tron.core.db.DynamicPropertiesStore;
 import org.tron.core.db.Manager;
+import org.tron.core.exception.ItemNotFoundException;
 import org.tron.protos.Contract.AssetIssueContract;
 import org.tron.protos.Contract.TransferContract;
 import org.tron.protos.Protocol;
@@ -107,19 +112,54 @@ public class WalletTest {
   public static final long TRANSACTION_TIMESTAMP_FOUR = DateTime.now().minusDays(1).getMillis();
   public static final long TRANSACTION_TIMESTAMP_FIVE = DateTime.now().getMillis();
   private static AssetIssueCapsule Asset1;
+  private static BlockCapsule blockCapsuleForAccountState;
 
   static {
     Args.setParam(new String[]{"-d", dbPath}, Constant.TEST_CONF);
     context = new TronApplicationContext(DefaultConfig.class);
   }
 
+  /**
+   * Init wallet, database manager, transactions, blocks.
+   */
   @BeforeClass
   public static void init() {
     wallet = context.getBean(Wallet.class);
     manager = context.getBean(Manager.class);
     initTransaction();
     initBlock();
+    initAccountState();
     manager.getDynamicPropertiesStore().saveLatestBlockHeaderNumber(5);
+  }
+
+  private static void initAccountState() {
+    BlockStore blockStore = manager.getBlockStore();
+    AccountStateStore accountStateStore = manager.getAccountStateStore();
+
+    blockCapsuleForAccountState = new BlockCapsule(
+        1L,
+        Sha256Hash.wrap(ByteString.copyFrom(
+            ByteArray.fromHexString(
+                "9938a342238077182498b464ac0292229938a342238077182498b464ac029222"))),
+        0L,
+        ByteString.copyFrom(
+            ECKey.fromPrivate(
+                ByteArray.fromHexString(
+                    Args.getInstance().getLocalWitnesses().getPrivateKey()))
+                .getAddress()));
+
+    Sha256Hash accountStateMerkleRoot =
+        blockCapsuleForAccountState.calcAccountStateMerkleRoot(manager);
+
+    blockStore.put(
+        blockCapsuleForAccountState.getBlockId().getBytes(),
+        blockCapsuleForAccountState
+    );
+
+    accountStateStore.put(
+        blockCapsuleForAccountState.getBlockId().getBytes(),
+        new BytesCapsule(accountStateMerkleRoot.getBytes())
+    );
   }
 
   /**
@@ -228,17 +268,20 @@ public class WalletTest {
   private static void buildExchange() {
     Exchange.Builder builder = Exchange.newBuilder();
     builder.setExchangeId(1L).setCreatorAddress(ByteString.copyFromUtf8("Address1"));
-    ExchangeCapsule ExchangeCapsule = new ExchangeCapsule(builder.build());
-    manager.getExchangeStore().put(ExchangeCapsule.createDbKey(), ExchangeCapsule);
+    ExchangeCapsule exchangeCapsule = new ExchangeCapsule(builder.build());
+    manager.getExchangeStore().put(exchangeCapsule.createDbKey(), exchangeCapsule);
 
     builder.setExchangeId(2L).setCreatorAddress(ByteString.copyFromUtf8("Address2"));
-    ExchangeCapsule = new ExchangeCapsule(builder.build());
-    manager.getExchangeStore().put(ExchangeCapsule.createDbKey(), ExchangeCapsule);
+    exchangeCapsule = new ExchangeCapsule(builder.build());
+    manager.getExchangeStore().put(exchangeCapsule.createDbKey(), exchangeCapsule);
 
     manager.getDynamicPropertiesStore().saveLatestExchangeNum(2L);
 
   }
 
+  /**
+   * Destroy resources.
+   */
   @AfterClass
   public static void removeDb() {
     Args.clearParam();
@@ -437,4 +480,32 @@ public class WalletTest {
     System.out.printf(builder.build().toString()); 
   }
 
+  @Test
+  public void testGetAccountStateZero() {
+    byte[] accountStateById = new byte[0];
+    byte[] accountStateByNum =  new byte[0];
+    try {
+      accountStateById = wallet.getAccountStateById(
+          blockCapsuleForAccountState.getBlockId().getByteString()
+      );
+      accountStateByNum = wallet.getAccountStateByNum(
+          blockCapsuleForAccountState.getNum()
+      );
+    } catch (ItemNotFoundException e) {
+      e.printStackTrace();
+    }
+
+    Assert.assertArrayEquals(Sha256Hash.ZERO_HASH.getBytes(), accountStateById);
+    Assert.assertArrayEquals(Sha256Hash.ZERO_HASH.getBytes(), accountStateByNum);
+  }
+
+  @Test(expected = ItemNotFoundException.class)
+  public void testGetAccountStateByIdNotExits() throws ItemNotFoundException {
+    wallet.getAccountStateById(ByteString.copyFrom(ByteArray.fromString("not exits")));
+  }
+
+  @Test(expected = ItemNotFoundException.class)
+  public void testGetAccountStateByNumNotExits() throws ItemNotFoundException {
+    wallet.getAccountStateByNum(20181029L);
+  }
 }

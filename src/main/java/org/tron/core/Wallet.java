@@ -1001,16 +1001,12 @@ public class Wallet {
   /**
    * Get account state by block num.
    */
-  public byte[] getAccountStateByNum(long num) {
-    byte[] accountStateHash = new byte[0];
-    try {
-      BlockId blockId = dbManager.getBlockIdByNum(num);
+  public byte[] getAccountStateByNum(long num) throws ItemNotFoundException {
+    byte[] accountStateHash = new byte[32];
+    BlockId blockId = dbManager.getBlockIdByNum(num);
 
-      ByteString id = blockId.getByteString();
-      accountStateHash = getAccountStateById(id);
-    } catch (ItemNotFoundException e) {
-      return accountStateHash;
-    }
+    ByteString id = blockId.getByteString();
+    accountStateHash = getAccountStateById(id);
 
     return accountStateHash;
   }
@@ -1018,10 +1014,10 @@ public class Wallet {
   /**
    * Get account state by block id, if not exists then return null.
    */
-  public byte[] getAccountStateById(ByteString id) {
+  public byte[] getAccountStateById(ByteString id) throws ItemNotFoundException {
     return Optional.ofNullable(id)
         .map(i -> dbManager.getAccountStateStore().getById(i))
         .map(BytesCapsule::getData)
-        .orElse(null);
+        .orElseThrow(ItemNotFoundException::new);
   }
 }

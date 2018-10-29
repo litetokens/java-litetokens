@@ -69,6 +69,7 @@ import org.tron.core.config.args.Args;
 import org.tron.core.db.BandwidthProcessor;
 import org.tron.core.db.Manager;
 import org.tron.core.exception.ContractValidateException;
+import org.tron.core.exception.ItemNotFoundException;
 import org.tron.core.exception.StoreException;
 import org.tron.core.exception.VMIllegalException;
 import org.tron.protos.Contract;
@@ -253,7 +254,7 @@ public class RpcApiService implements Service {
       long num = request.getNum();
       try {
         responseObserver.onNext(BytesMessage.parseFrom(wallet.getAccountStateByNum(num)));
-      } catch (InvalidProtocolBufferException e) {
+      } catch (InvalidProtocolBufferException | ItemNotFoundException e) {
         responseObserver.onNext(null);
       }
       responseObserver.onCompleted();
@@ -265,7 +266,7 @@ public class RpcApiService implements Service {
       ByteString id = request.getValue();
       try {
         responseObserver.onNext(BytesMessage.parseFrom(wallet.getAccountStateById(id)));
-      } catch (InvalidProtocolBufferException e) {
+      } catch (InvalidProtocolBufferException | ItemNotFoundException e) {
         responseObserver.onNext(null);
       }
       responseObserver.onCompleted();

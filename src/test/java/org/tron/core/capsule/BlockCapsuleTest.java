@@ -2,23 +2,32 @@ package org.tron.core.capsule;
 
 import com.google.protobuf.ByteString;
 import java.io.File;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.tron.common.application.TronApplicationContext;
+import org.tron.common.crypto.ECKey;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.FileUtil;
 import org.tron.common.utils.Sha256Hash;
 import org.tron.core.Constant;
 import org.tron.core.Wallet;
+import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.args.Args;
+import org.tron.core.db.AccountStore;
+import org.tron.core.db.Manager;
 import org.tron.core.exception.BadItemException;
 import org.tron.protos.Contract.TransferContract;
+import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Transaction.Contract.ContractType;
 
 @Slf4j
 public class BlockCapsuleTest {
+  private static Manager dbManager;
+  private static TronApplicationContext context;
 
   private static BlockCapsule blockCapsule0 = new BlockCapsule(1,
       Sha256Hash.wrap(ByteString
@@ -28,16 +37,27 @@ public class BlockCapsuleTest {
       ByteString.copyFrom("1234567".getBytes()));
   private static String dbPath = "output_bloackcapsule_test";
 
+  /**
+   * Init Spring context and database manager.
+   */
   @BeforeClass
   public static void init() {
     Args.setParam(new String[]{"-d", dbPath},
         Constant.TEST_CONF);
+
+    context = new TronApplicationContext(DefaultConfig.class);
+
+    dbManager = context.getBean(Manager.class);
   }
 
+  /**
+   * Delete database directory, clear args, destroy context.
+   */
   @AfterClass
   public static void removeDb() {
     Args.clearParam();
     FileUtil.deleteDir(new File(dbPath));
+    context.destroy();
   }
 
   @Test
@@ -124,4 +144,70 @@ public class BlockCapsuleTest {
     Assert.assertEquals(1234L, blockCapsule0.getTimeStamp());
   }
 
+  @Test
+  public void testCalcAccountStateMerkleRootEmpty() {
+    BlockCapsule blockCapsule = new BlockCapsule(1,
+        Sha256Hash.wrap(ByteString
+            .copyFrom(ByteArray
+                .fromHexString(
+                    "9938a342238077182498b464ac0292229938a342238077182498b464ac029222"
+                ))),
+        1234,
+        ByteString.copyFrom("1234567".getBytes()));
+
+    Sha256Hash accountStateMerkleRoot = blockCapsule.calcAccountStateMerkleRoot(dbManager);
+    Assert.assertEquals(Sha256Hash.ZERO_HASH, accountStateMerkleRoot);
+  }
+
+  @Test
+  public void testCalcAccountStateMerkleRoot() {
+    BlockCapsule blockCapsule = new BlockCapsule(
+        1,
+        Sha256Hash.wrap(ByteString.copyFrom(
+            ByteArray.fromHexString(
+                "9938a342238077182498b464ac0292229938a342238077182498b464ac029222"))),
+        0,
+        ByteString.copyFrom(
+            ECKey.fromPrivate(
+                ByteArray.fromHexString(
+                    Args.getInstance().getLocalWitnesses().getPrivateKey()))
+                .getAddress()));
+
+    blockCapsule.addTransaction(
+        new TransactionCapsule(
+            TransferContract.newBuilder()
+                .setAmount(1)
+                .setOwnerAddress(ByteString
+                    .copyFrom(Objects.requireNonNull(
+                        Wallet.decodeFromBase58Check("27QAUYjg5FXfxcvyHcWF3Aokd5eu9iYgs1c"))))
+                .setToAddress(ByteString
+                    .copyFrom(Objects.requireNonNull(
+                        Wallet.decodeFromBase58Check("27g8BKC65R7qsnEr2vf7R2Nm7MQfvuJ7im4"))))
+                .build(), ContractType.TransferContract
+
+        ));
+
+    AccountStore accountStore = dbManager.getAccountStore();
+    AccountCapsule owner = new AccountCapsule(
+        Account.newBuilder()
+            .setAddress(
+                ByteString.copyFrom(
+                    Objects.requireNonNull(
+                        Wallet.decodeFromBase58Check("27QAUYjg5FXfxcvyHcWF3Aokd5eu9iYgs1c"))))
+            .build());
+    AccountCapsule to = new AccountCapsule(
+        Account.newBuilder()
+            .setAddress(
+                ByteString.copyFrom(
+                    Objects.requireNonNull(
+                        Wallet.decodeFromBase58Check("27g8BKC65R7qsnEr2vf7R2Nm7MQfvuJ7im4"))))
+            .build());
+    accountStore.put(owner.getAddress().toByteArray(), owner);
+    accountStore.put(to.getAddress().toByteArray(), to);
+
+    Sha256Hash accountStateMerkleRoot = blockCapsule.calcAccountStateMerkleRoot(dbManager);
+    Assert.assertEquals(
+        "e3801c38a38527b61e41afbf133de9c61c05b1ede74db0e344605a9709e9d390",
+        accountStateMerkleRoot.toString());
+  }
 }

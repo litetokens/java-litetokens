@@ -5,6 +5,7 @@ import static org.tron.common.runtime.utils.MUtil.convertToTronAddress;
 import static org.tron.common.runtime.vm.OpCode.CALL;
 import static org.tron.common.runtime.vm.OpCode.PUSH1;
 import static org.tron.common.runtime.vm.OpCode.REVERT;
+import static org.tron.common.runtime.vm.OpCode.STOP;
 import static org.tron.common.utils.ByteUtil.EMPTY_BYTE_ARRAY;
 
 import java.math.BigInteger;
@@ -91,6 +92,12 @@ public class VM {
       long energyCost = op.getTier().asInt();
       EnergyCost energyCosts = EnergyCost.getInstance();
       DataWord adjustedCallEnergy = null;
+/*
+      deploycontract B [{"constant":false,"inputs":[],"name":"timing","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}] 608060405234801561001057600080fd5b5060a98061001f6000396000f300608060405260043610603e5763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416634fba5adf81146043575b600080fd5b348015604e57600080fd5b5060556057565b005b60005b710b7abc627050305adf14a3d9e40000000000811015607a57600201605a565b505600a165627a7a72305820b2bc70dfac1e1705e41e5455235bfa293e76a6d23630bd4dd18b5b1889171e420029 # # false  100000000 0
+*/
+      if (System.nanoTime() / 1000 > program.getVmShouldEndInUs() - 1000) {
+        op = STOP;
+      }
 
       // Calculate fees and spend energy
       switch (op) {
@@ -258,6 +265,10 @@ public class VM {
 
       program.spendEnergy(energyCost, op.name());
       program.checkCPUTimeLimit(op.name());
+
+      System.err.println();
+
+
 
       // Execute operation
       switch (op) {

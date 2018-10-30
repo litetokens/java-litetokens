@@ -485,6 +485,16 @@ message SmartContract {
 
 }
 
+message Confirmation {
+  message BlockId {
+    bytes hash = 1;
+    int64 number = 2;
+  }
+  BlockId blockId = 1;
+  bytes witness_address = 2;
+  bytes witness_signature = 3;
+}
+
 message InternalTransaction {
   // internalTransaction identity, the root InternalTransaction hash
   // should equals to root transaction id.
@@ -503,3 +513,4 @@ message InternalTransaction {
   bytes note = 5;
   bool rejected = 6;
 }
+

@@ -26,6 +26,7 @@ import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
 import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
 import static org.tron.common.runtime.utils.MUtil.convertToTronAddress;
 import static org.tron.common.runtime.utils.MUtil.transfer;
+import static org.tron.common.runtime.vm.OpCode.STOP;
 import static org.tron.common.utils.BIUtil.isPositive;
 import static org.tron.common.utils.BIUtil.toBI;
 
@@ -89,6 +90,8 @@ public class Program {
   private long nonce;
   private byte[] rootTransactionId;
   private Boolean isRootCallConstant;
+
+  private long last = 0;
 
   private InternalTransaction transaction;
 
@@ -751,7 +754,8 @@ public class Program {
     getResult().spendEnergy(energyValue);
   }
 
-  public void checkCPUTimeLimit(String opName) {
+  public void
+  checkCPUTimeLimit(String opName) throws TronException {
 
     if (Args.getInstance().isDebug()) {
       return;
@@ -760,6 +764,28 @@ public class Program {
       return;
     }
     long vmNowInUs = System.nanoTime() / 1000;
+
+
+//    if (vmNowInUs > getVmShouldEndInUs() - 1000) {
+//
+//    }
+
+//      System.err.println("1->" + last);
+//      System.err.println(now);
+////      System.out.println(program.getVmShouldEndInUs());
+//
+//      System.err.println((now - program.getVmStartInUs()) / 1000);
+      long timecost = (vmNowInUs - getVmStartInUs()) / 1000;
+      if(timecost > 49) {
+        throw new TronException("sss");
+      }
+    System.err.println("第" + last + "ms, 已经消耗:" + getResult().getEnergyUsed());
+
+    if (timecost > last) {
+        last = timecost;
+//        System.err.println("第" + last + "ms, 已经消耗:" + getResult().getEnergyUsed());
+      }
+
     if (vmNowInUs > getVmShouldEndInUs()) {
       logger.info(
           "minTimeRatio: {}, maxTimeRatio: {}, vm should end time in us: {}, " +

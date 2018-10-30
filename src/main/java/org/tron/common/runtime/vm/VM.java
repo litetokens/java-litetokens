@@ -20,6 +20,7 @@ import org.tron.common.runtime.vm.program.Program.JVMStackOverFlowException;
 import org.tron.common.runtime.vm.program.Program.OutOfEnergyException;
 import org.tron.common.runtime.vm.program.Program.OutOfResourceException;
 import org.tron.common.runtime.vm.program.Stack;
+import org.tron.core.exception.TronException;
 
 @Slf4j(topic = "VM")
 public class VM {
@@ -31,6 +32,7 @@ public class VM {
   private static final BigInteger MEM_LIMIT = BigInteger.valueOf(3L * 1024 * 1024);
 
   private final VMConfig config;
+  public  long last = 0;
 
   public VM() {
     config = VMConfig.getInstance();
@@ -95,9 +97,6 @@ public class VM {
 /*
       deploycontract B [{"constant":false,"inputs":[],"name":"timing","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}] 608060405234801561001057600080fd5b5060a98061001f6000396000f300608060405260043610603e5763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416634fba5adf81146043575b600080fd5b348015604e57600080fd5b5060556057565b005b60005b710b7abc627050305adf14a3d9e40000000000811015607a57600201605a565b505600a165627a7a72305820b2bc70dfac1e1705e41e5455235bfa293e76a6d23630bd4dd18b5b1889171e420029 # # false  100000000 0
 */
-      if (System.nanoTime() / 1000 > program.getVmShouldEndInUs() - 1000) {
-        op = STOP;
-      }
 
       // Calculate fees and spend energy
       switch (op) {
@@ -264,11 +263,11 @@ public class VM {
       }
 
       program.spendEnergy(energyCost, op.name());
-      program.checkCPUTimeLimit(op.name());
-
-      System.err.println();
-
-
+      try {
+        program.checkCPUTimeLimit(op.name());
+      } catch (TronException e) {
+        op = STOP;
+      }
 
       // Execute operation
       switch (op) {

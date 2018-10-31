@@ -37,6 +37,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+// flushCount += size - maxSize;
+// size = maxSize;
+// flush();
+
+// 用flushCount代替solidity来控制刷块
+// 然后置0；
+// 
+
 @Slf4j
 public class SnapshotManager implements RevokingDatabase {
   private static final int DEFAULT_STACK_MAX_SIZE = 256;
@@ -146,6 +154,10 @@ public class SnapshotManager implements RevokingDatabase {
       throw new RevokingStoreIllegalStateException("activeSession has to be greater than 0");
     }
 
+    if (size <= 0) {
+      return;
+    }
+    
     disabled = true;
 
     try {
@@ -169,6 +181,10 @@ public class SnapshotManager implements RevokingDatabase {
       throw new RevokingStoreIllegalStateException("activeSession has to be equal 0");
     }
 
+    if (size <= 0) {
+      throw new RevokingStoreIllegalStateException("there is not snapshot to be poped");
+    }
+    
     disabled = true;
 
     try {
@@ -227,12 +243,10 @@ public class SnapshotManager implements RevokingDatabase {
 
     printDebug("before upadtesolidity");
     for (int i = 0; i < diff; i++) {
-      ++flushCount;
       for (RevokingDBWithCachingNewValue db : dbs) {
         db.getHead().updateSolidity();
       }
     }
-    flush();
     printDebug("after upadtesolidity");
   }
 
@@ -247,7 +261,6 @@ public class SnapshotManager implements RevokingDatabase {
 //    Multimap<String, byte[]> values = ArrayListMultimap.create();
     // debug end
 
-    int count = 0;
     for (RevokingDBWithCachingNewValue db : dbs) {
       if (Snapshot.isRoot(db.getHead())) {
         return;
@@ -289,7 +302,6 @@ public class SnapshotManager implements RevokingDatabase {
 //        }
       // debug end
 
-      count = snapshots.size();
       ((SnapshotRoot) solidity.getRoot()).merge(snapshots);
 
       solidity.resetSolidity();
@@ -300,7 +312,6 @@ public class SnapshotManager implements RevokingDatabase {
         solidity.getRoot().setNext(solidity.getNext());
       }
     }
-    size = size - count;
     // debug begin
 //    List<String> debugDumpDatas = debugDumpDataMap.entrySet().stream().map(Entry::getValue).sorted(String::compareTo).collect(Collectors.toList());
 //    logger.info("***debug refresh:    blocks={}, datahash:{}, accounts:{}\n", debugBlockHashs, Sha256Hash.of(debugDumpDatas.toString().getBytes()), printAccount(null));

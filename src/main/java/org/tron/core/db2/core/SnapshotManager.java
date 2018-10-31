@@ -47,7 +47,6 @@ import java.util.stream.Collectors;
 // 每个head有自己的solidity，注意使用弱引用，防止内存泄漏
 // head的solidity如果是null，即被gc回收了，则返回snapshotroot
 
-//updateSolidity不需要判断是否has ？ 
 
 @Slf4j
 public class SnapshotManager implements RevokingDatabase {

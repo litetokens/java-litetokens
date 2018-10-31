@@ -46,10 +46,12 @@ import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.capsule.BlockCapsule.BlockId;
 import org.tron.core.capsule.BytesCapsule;
+import org.tron.core.capsule.ConfirmationCapsule;
 import org.tron.core.capsule.TransactionCapsule;
 import org.tron.core.capsule.TransactionInfoCapsule;
 import org.tron.core.capsule.WitnessCapsule;
 import org.tron.core.capsule.utils.BlockUtil;
+import org.tron.core.capsule.ContractCapsule;
 import org.tron.core.config.Parameter.ChainConstant;
 import org.tron.core.config.args.Args;
 import org.tron.core.config.args.GenesisBlock;
@@ -734,6 +736,14 @@ public class Manager {
                   + " , the headers is "
                   + block.getMerkleRoot());
           throw new BadBlockException("The merkle hash is not validated");
+        }
+
+        // confirmation
+        // TODO not in sync
+        if (witnessController.isActiveWitness()) {
+          // ConfirmationCapsule confirmation = new ConfirmationCapsule();
+          // BlockCapsule blockCapsule =
+          //     new BlockCapsule(number + 1, preHash, when, witnessCapsule.getAddress());
         }
       }
 

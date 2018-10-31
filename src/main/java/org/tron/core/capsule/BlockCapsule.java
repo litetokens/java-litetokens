@@ -39,6 +39,7 @@ import org.tron.core.exception.ValidateSignatureException;
 import org.tron.protos.Protocol.Block;
 import org.tron.protos.Protocol.BlockHeader;
 import org.tron.protos.Protocol.Transaction;
+import org.tron.protos.Protocol.Confirmation;
 
 @Slf4j
 public class BlockCapsule implements ProtoCapsule<Block> {
@@ -120,7 +121,9 @@ public class BlockCapsule implements ProtoCapsule<Block> {
 
   private Block block;
   public boolean generatedByMyself = false;
+  public boolean bftSolidified = false;
   private List<TransactionCapsule> transactions = new ArrayList<>();
+  private List<ConfirmationCapsule> confirmations = new ArrayList<>();
 
   public BlockCapsule(long number, Sha256Hash hash, long when, ByteString witnessAddress) {
     // blockheader raw

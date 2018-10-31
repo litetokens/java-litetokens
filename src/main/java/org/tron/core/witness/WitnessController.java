@@ -40,6 +40,10 @@ public class WitnessController {
 
   private AtomicBoolean generatingBlock = new AtomicBoolean(false);
 
+  @Getter
+  private Map<ByteString, WitnessCapsule> localWitnessStateMap = Maps
+      .newHashMap(); //  <address,WitnessCapsule>
+
   public static WitnessController createInstance(Manager manager) {
     WitnessController instance = new WitnessController();
     instance.setManager(manager);
@@ -87,6 +91,23 @@ public class WitnessController {
 
   public void setCurrentShuffledWitnesses(List<ByteString> addresses) {
     this.manager.getWitnessScheduleStore().saveCurrentShuffledWitnesses(addresses);
+  }
+
+  public Map<ByteString, WitnessCapsule> getLocalWitnessStateMap() {
+    return localWitnessStateMap;
+  }
+
+  public void setLocalWitnessStateMap(
+      Map<ByteString, WitnessCapsule> localWitnessStateMap) {
+    this.localWitnessStateMap = localWitnessStateMap;
+  }
+
+  public void addLocalWitnessStateMap(ByteString key, WitnessCapsule value) {
+    this.localWitnessStateMap.put(key, value);
+  }
+
+  public boolean isActiveWitness() {
+    return activeWitnessesContain(localWitnessStateMap.keySet());
   }
 
   /**

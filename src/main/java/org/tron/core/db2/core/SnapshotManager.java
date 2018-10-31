@@ -43,6 +43,9 @@ import java.util.stream.Collectors;
 
 // 用flushCount代替solidity来控制刷块
 // 然后置0；
+
+// 每个head有自己的solidity，注意使用弱引用，防止内存泄漏
+// head的solidity如果是null，即被gc回收了，则返回snapshotroot
 // 
 
 @Slf4j

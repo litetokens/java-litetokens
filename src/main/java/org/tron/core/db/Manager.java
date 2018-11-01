@@ -77,6 +77,7 @@ import org.tron.core.exception.UnLinkedBlockException;
 import org.tron.core.exception.VMIllegalException;
 import org.tron.core.exception.ValidateScheduleException;
 import org.tron.core.exception.ValidateSignatureException;
+import org.tron.core.services.WitnessService;
 import org.tron.core.witness.ProposalController;
 import org.tron.core.witness.WitnessController;
 import org.tron.protos.Protocol.AccountType;
@@ -122,6 +123,10 @@ public class Manager {
   @Autowired
   private ContractStore contractStore;
   @Autowired
+  private DelegatedResourceStore delegatedResourceStore;
+  @Autowired
+  private DelegatedResourceAccountIndexStore delegatedResourceAccountIndexStore;
+  @Autowired
   @Getter
   private StorageRowStore storageRowStore;
 
@@ -149,6 +154,10 @@ public class Manager {
   @Getter
   @Setter
   private String netType;
+
+  @Getter
+  @Setter
+  private WitnessService witnessService;
 
   @Getter
   @Setter
@@ -190,6 +199,15 @@ public class Manager {
 
   public void setWitnessScheduleStore(final WitnessScheduleStore witnessScheduleStore) {
     this.witnessScheduleStore = witnessScheduleStore;
+  }
+
+
+  public DelegatedResourceStore getDelegatedResourceStore() {
+    return delegatedResourceStore;
+  }
+
+  public DelegatedResourceAccountIndexStore getDelegatedResourceAccountIndexStore() {
+    return delegatedResourceAccountIndexStore;
   }
 
   public CodeStore getCodeStore() {
@@ -760,9 +778,9 @@ public class Manager {
 
           logger.warn(
               "******** before switchFork ******* push block: "
-                  + block.getShortString()
+                  + block.toString()
                   + ", new block:"
-                  + newBlock.getShortString()
+                  + newBlock.toString()
                   + ", dynamic head num: "
                   + dynamicPropertiesStore.getLatestBlockHeaderNumber()
                   + ", dynamic head hash: "
@@ -781,9 +799,9 @@ public class Manager {
 
           logger.warn(
               "******** after switchFork ******* push block: "
-                  + block.getShortString()
+                  + block.toString()
                   + ", new block:"
-                  + newBlock.getShortString()
+                  + newBlock.toString()
                   + ", dynamic head num: "
                   + dynamicPropertiesStore.getLatestBlockHeaderNumber()
                   + ", dynamic head hash: "
@@ -1168,6 +1186,10 @@ public class Manager {
       ReceiptCheckErrException, VMIllegalException, TooBigTransactionResultException {
     // todo set revoking db max size.
 
+    if (witnessService != null){
+      witnessService.processBlock(block);
+    }
+
     // checkWitness
     if (!witnessController.validateWitnessSchedule(block)) {
       throw new ValidateScheduleException("validateWitnessSchedule error");
@@ -1194,7 +1216,6 @@ public class Manager {
     this.updateTransHashCache(block);
     updateMaintenanceState(needMaint);
     updateRecentBlock(block);
-
   }
 
   private void updateTransHashCache(BlockCapsule block) {
@@ -1236,8 +1257,19 @@ public class Manager {
       logger.warn("latestSolidifiedBlockNum = 0,LatestBlockNum:{}", numbers);
       return;
     }
+
+    long oldSolidifiedBlockNum = dynamicPropertiesStore.getLatestSolidifiedBlockNum();
     getDynamicPropertiesStore().saveLatestSolidifiedBlockNum(latestSolidifiedBlockNum);
     logger.info("update solid block, num = {}", latestSolidifiedBlockNum);
+    BlockId blockId;
+    try {
+      blockId = getBlockIdByNum(latestSolidifiedBlockNum);
+    } catch (ItemNotFoundException e) {
+      blockId = null;
+    }
+    if (blockId == null || !blockStore.hasOnSolidity(blockId.getBytes())) {
+      revokingStore.updateSolidity(oldSolidifiedBlockNum, latestSolidifiedBlockNum);
+    }
   }
 
   public void updateFork() {
@@ -1392,10 +1424,11 @@ public class Manager {
     closeOneStore(recentBlockStore);
     closeOneStore(transactionHistoryStore);
     closeOneStore(votesStore);
+    closeOneStore(delegatedResourceStore);
     logger.info("******** end to close db ********");
   }
 
-  private void closeOneStore(ITronChainBase database) {
+  public void closeOneStore(ITronChainBase database) {
     logger.info("******** begin to close " + database.getName() + " ********");
     try {
       database.close();

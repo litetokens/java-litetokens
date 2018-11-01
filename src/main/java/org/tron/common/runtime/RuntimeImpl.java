@@ -72,7 +72,6 @@ import org.tron.protos.Protocol.Transaction.Result.contractResult;
 
 @Slf4j(topic = "Runtime")
 public class RuntimeImpl implements Runtime {
-
   private VMConfig config = VMConfig.getInstance();
 
   private Transaction trx;
@@ -221,14 +220,13 @@ public class RuntimeImpl implements Runtime {
         .floorDiv(max(account.getBalance() - callValue, 0), sunPerEnergy);
 
     long energyFromFeeLimit;
-    long totalBalanceForEnergyFreeze = account.getAccountResource().getFrozenBalanceForEnergy()
-        .getFrozenBalance();
+    long totalBalanceForEnergyFreeze = account.getAllFrozenBalanceForEnergy();
     if (0 == totalBalanceForEnergyFreeze) {
       energyFromFeeLimit =
           feeLimit / sunPerEnergy;
     } else {
       long totalEnergyFromFreeze = energyProcessor
-          .calculateGlobalEnergyLimit(totalBalanceForEnergyFreeze);
+          .calculateGlobalEnergyLimit(account);
       long leftBalanceForEnergyFreeze = getEnergyFee(totalBalanceForEnergyFreeze,
           leftEnergyFromFreeze,
           totalEnergyFromFreeze);
@@ -598,7 +596,6 @@ public class RuntimeImpl implements Runtime {
     }
     return false;
   }
-
   public void finalization() {
     if (StringUtils.isEmpty(runtimeError)) {
       for (DataWord contract : result.getDeleteAccounts()) {

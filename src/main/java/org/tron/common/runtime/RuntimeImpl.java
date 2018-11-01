@@ -394,7 +394,7 @@ public class RuntimeImpl implements Runtime {
           .getAccount(newSmartContract.getOriginAddress().toByteArray());
 
       long energyLimit;
-      if (false) {  // TODO according to version
+      if (true) {  // TODO according to version
         long creatorEnergyLimit = newSmartContract.getEnergyLimit();
         if (creatorEnergyLimit <= 0) {
           throw new ContractValidateException("The creator's energyLimit must be > 0");
@@ -489,7 +489,7 @@ public class RuntimeImpl implements Runtime {
             deployedContract.getInstance()
                 .getOriginAddress().toByteArray());
 
-        if (false) { // TODO according to version
+        if (true) { // TODO according to version
           energyLimit = getEnergyLimit2(creator, caller, contract, feeLimit, callValue);
         } else {
           energyLimit = getEnergyLimit(creator, caller, contract, feeLimit, callValue);

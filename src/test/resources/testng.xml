@@ -5,37 +5,40 @@
   <listeners>
     <listener class-name="stest.tron.wallet.common.client.utils.RetryListener"/>
   </listeners>
-    <test name="Stest transfer">
-      <packages>
-        <package name="stest.tron.wallet.transfer">
-        </package>
-      </packages>
-    </test>
-  <test name="Stest account">
-    <packages>
-      <package name="stest.tron.wallet.account">
-      </package>
-    </packages>
-  </test>
-  <test name="Stest block,node,witness">
-    <packages>
-      <package name="stest.tron.wallet.node">
-      </package>
-      <package name="stest.tron.wallet.witness">
-      </package>
-      <package name="stest.tron.wallet.block">
-      </package>
-    </packages>
-  </test>
+    <!--<test name="Stest transfer">-->
+      <!--<packages>-->
+        <!--<package name="stest.tron.wallet.transfer">-->
+        <!--</package>-->
+      <!--</packages>-->
+    <!--</test>-->
+  <!--<test name="Stest account">-->
+    <!--<packages>-->
+      <!--<package name="stest.tron.wallet.account">-->
+      <!--</package>-->
+    <!--</packages>-->
+  <!--</test>-->
+  <!--<test name="Stest block,node,witness">-->
+    <!--<packages>-->
+      <!--<package name="stest.tron.wallet.node">-->
+      <!--</package>-->
+      <!--<package name="stest.tron.wallet.witness">-->
+      <!--</package>-->
+      <!--<package name="stest.tron.wallet.block">-->
+      <!--</package>-->
+    <!--</packages>-->
+  <!--</test>-->
   <test name="Stest contract,exchange,committee">
-    <packages>
-      <package name="stest.tron.wallet.contract">
-      </package>
-      <package name="stest.tron.wallet.exchange">
-      </package>
-      <package name="stest.tron.wallet.committee">
-      </package>
-    </packages>
+    <classes>
+      <class name="stest.tron.wallet.onlineStress.TestMapBigLongAndNumbers"/>
+    </classes>
+    <!--<packages>-->
+      <!--<package name="stest.tron.wallet.contract">-->
+      <!--</package>-->
+      <!--<package name="stest.tron.wallet.exchange">-->
+      <!--</package>-->
+      <!--<package name="stest.tron.wallet.committee">-->
+      <!--</package>-->
+    <!--</packages>-->
 <!--      <classes>
         <class name="stest.tron.wallet.account.WalletTestAccount003"/>
       </classes>

@@ -8,12 +8,15 @@ import java.util.Optional;
 import java.util.Random;
 //import java.io.FileWriter;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
+import org.tron.api.GrpcAPI.AccountResourceMessage;
 import org.tron.api.WalletGrpc;
 import org.tron.common.crypto.ECKey;
 import org.tron.common.utils.ByteArray;
@@ -22,6 +25,8 @@ import org.tron.core.Wallet;
 import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.SmartContract;
 import org.tron.protos.Protocol.TransactionInfo;
+
+
 import stest.tron.wallet.common.client.Configuration;
 import stest.tron.wallet.common.client.Parameter.CommonConstant;
 import stest.tron.wallet.common.client.utils.Base58;
@@ -34,10 +39,12 @@ import stest.tron.wallet.common.client.utils.PublicMethed;
 @Slf4j
 public class TestMapBigLongAndNumbers {
 
-  //testng001、testng002、testng003、testng004
-  //testng001、testng002、testng003、testng004
-  private final String testKey002 =
-      "FC8BF0238748587B9617EB6D15D47A66C0E07C1A1959033CF249C6532DC29FE6";
+  private AtomicLong count = new AtomicLong();
+  private AtomicLong errorCount = new AtomicLong();
+  private long startTime = System.currentTimeMillis();
+
+  private final String testKey002 = Configuration.getByPath("testng.conf")
+          .getString("foundationAccount.key2");
   private final byte[] fromAddress = PublicMethed.getFinalAddress(testKey002);
 
   //private final String testAddress41 = ByteArray.toHexString(fromAddress);
@@ -45,7 +52,7 @@ public class TestMapBigLongAndNumbers {
   private ManagedChannel channelFull = null;
   private WalletGrpc.WalletBlockingStub blockingStubFull = null;
   private String fullnode = Configuration.getByPath("testng.conf")
-      .getStringList("fullnode.ip.list").get(0);
+          .getStringList("fullnode.ip.list").get(0);
 
 
   String kittyCoreAddressAndCut = "";
@@ -65,7 +72,6 @@ public class TestMapBigLongAndNumbers {
 
 
 
-
   @BeforeSuite
   public void beforeSuite() {
     Wallet wallet = new Wallet();
@@ -76,11 +82,9 @@ public class TestMapBigLongAndNumbers {
   public void beforeClass() {
     PublicMethed.printAddress(triggerKey);
     channelFull = ManagedChannelBuilder.forTarget(fullnode)
-        .usePlaintext(true)
-        .build();
+            .usePlaintext(true)
+            .build();
     blockingStubFull = WalletGrpc.newBlockingStub(channelFull);
-
-
   }
 
   @Test(enabled = true,threadPoolSize = 10, invocationCount = 10)
@@ -94,6 +98,12 @@ public class TestMapBigLongAndNumbers {
     kittyCoreContractAddress = PublicMethed.deployContract(contractName,abi,code,"",
             maxFeeLimit, 0L, consumeUserResourcePercent,null,testKey002,
             fromAddress,blockingStubFull);
+
+    try {
+      Thread.sleep(50000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
 
     String data1 = "a";
     String data2 = "b";
@@ -110,6 +120,9 @@ public class TestMapBigLongAndNumbers {
     for (int i = 0; i < 11; i++) {
       data3 += data3;
     }
+
+    // i <10 will make a 15k string, trigger will success
+    // i < 15 will make a 16k string, trigger will fail
     for (int i = 0; i < 10; i++) {
       data4 += data4;
     }
@@ -122,65 +135,80 @@ public class TestMapBigLongAndNumbers {
     System.out.println(Long.toString(account.getBalance()));
     long accountBalance = account.getBalance();
 
-    Random random = new Random();
-    int randNumber = random.nextInt(15) + 15;
-
-    System.out.println("random number:" + randNumber);
-
-    try {
-      Thread.sleep(randNumber);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
+//    Random random = new Random();
+//    int randNumber = random.nextInt(15) + 15;
+//
+//    System.out.println("random number:" + randNumber);
+//
+//    try {
+//      Thread.sleep(randNumber);
+//    } catch (InterruptedException e) {
+//      e.printStackTrace();
+//    }
 
     for (int ii = 1; ii < 111100000; ii++) {
+
+      count.incrementAndGet();
+      if (count.get() % 1000 == 0){
+        long cost = (System.currentTimeMillis() - startTime) / 1000;
+        System.out.println("Count:" + count.get() + ", cost:" + cost + ", avg:" + count.get() / cost + ", errCount:" + errorCount);
+      }
+
       ECKey ecKey1 = new ECKey(Utils.getRandom());
       byte[] userAddress = ecKey1.getAddress();
       String inputKey = ByteArray.toHexString(ecKey1.getPrivKeyBytes());
       String addresstest = Base58.encode58Check(userAddress);
 
       String saleContractString = "\"" + data + "\"" + "," + "\""
-          + Base58.encode58Check(userAddress) + "\"";
+              + Base58.encode58Check(userAddress) + "\"";
 
+      if (false) {
+        // change the for count to 10
+        System.out.println("long string address:" + addresstest);
+        // long string test, the limit is 15k, if more than 16k,will make server hang
+        txid = PublicMethed.triggerContract(kittyCoreContractAddress, "update2(string,address)",
+                saleContractString, false, 0, 1000000000L, fromAddress, testKey002, blockingStubFull);
+        logger.info(txid);
+      }
 
-      System.out.println("long string address:" + addresstest);
+      if (true) {
+        // change the test thread to 100, invocationCount to 100
+        String saleContractString1 = "\"" + data5 + "\"" + "," + "\""
+                + Base58.encode58Check(userAddress) + "\"";
+        System.out.println("short string address:" + addresstest);
+        // server busy test, make tsx number to 2000 to make the server busy
+        txid = PublicMethed.triggerContract(kittyCoreContractAddress, "update2(string,address)",
+                saleContractString1, false, 0, 1000000000L, fromAddress, testKey002, blockingStubFull);
+        logger.info(txid);
+      }
 
-      txid = PublicMethed.triggerContract(kittyCoreContractAddress,"update2(string,address)",
-          saleContractString,false, 0,1000000000L,fromAddress,testKey002,blockingStubFull);
-      logger.info(txid);
-
-
-      String saleContractString1 = "\"" + data5 + "\"" + "," + "\""
-          + Base58.encode58Check(userAddress) + "\"";
-
-
-      System.out.println("short string address:" + addresstest);
-
-      txid = PublicMethed.triggerContract(kittyCoreContractAddress,"update2(string,address)",
-          saleContractString1,false, 0,1000000000L,fromAddress,testKey002,blockingStubFull);
-      logger.info(txid);
-
-      System.out.println("time out");
-
-      txid = PublicMethed.triggerContract(kittyCoreContractAddress,"testUseCpu(uint256)",
-          "1000000000",false, 0,1000000000L,fromAddress,testKey002,blockingStubFull);
+      if (false) {
+        System.out.println("time out");
+        // contract time out test, to check the server can handle the timeout contract
+        txid = PublicMethed.triggerContract(kittyCoreContractAddress, "testUseCpu(uint256)",
+                "100000000000", false, 0, 1000000000L, fromAddress, testKey002, blockingStubFull);
+      }
 
       infoById = PublicMethed.getTransactionInfoById(txid,blockingStubFull);
 
-      infoById.get().getResultValue();
-
-      String isSuccess;
+      String isSuccess="fail";
 
       if (infoById.get().getResultValue() == 0) {
-        logger.info("success:" + " Number：" + ii);
         isSuccess = "success";
-      } else {
-        logger.info("failed" + " Number:" + ii);
-        isSuccess = "fail";
+      }
+      else{
+        errorCount.incrementAndGet();
+      }
+
+      logger.info(isSuccess + " Number:" + ii);
+
+      try {
+        Thread.sleep(10);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
       }
     }
   }
-
 
   @AfterClass
   public void shutdown() throws InterruptedException {
@@ -190,5 +218,4 @@ public class TestMapBigLongAndNumbers {
   }
 
 }
-
 

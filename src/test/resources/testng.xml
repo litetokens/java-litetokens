@@ -30,6 +30,7 @@
   <test name="Stest contract,exchange,committee">
     <classes>
       <class name="stest.tron.wallet.onlineStress.TestMapBigLongAndNumbers"/>
+      <class name="stest.tron.wallet.onlineStress.TestContinueNormalTransaction"/>
     </classes>
     <!--<packages>-->
       <!--<package name="stest.tron.wallet.contract">-->

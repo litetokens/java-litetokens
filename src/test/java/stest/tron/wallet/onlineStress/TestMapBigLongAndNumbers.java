@@ -99,6 +99,7 @@ public class TestMapBigLongAndNumbers {
             maxFeeLimit, 0L, consumeUserResourcePercent,null,testKey002,
             fromAddress,blockingStubFull);
 
+    //for 27witnesses test env, have to wait all of the witness commit
     try {
       Thread.sleep(50000);
     } catch (InterruptedException e) {
@@ -121,8 +122,6 @@ public class TestMapBigLongAndNumbers {
       data3 += data3;
     }
 
-    // i <10 will make a 15k string, trigger will success
-    // i < 15 will make a 16k string, trigger will fail
     for (int i = 0; i < 10; i++) {
       data4 += data4;
     }
@@ -134,17 +133,6 @@ public class TestMapBigLongAndNumbers {
     Account account = PublicMethed.queryAccountByAddress(fromAddress, blockingStubFull);
     System.out.println(Long.toString(account.getBalance()));
     long accountBalance = account.getBalance();
-
-//    Random random = new Random();
-//    int randNumber = random.nextInt(15) + 15;
-//
-//    System.out.println("random number:" + randNumber);
-//
-//    try {
-//      Thread.sleep(randNumber);
-//    } catch (InterruptedException e) {
-//      e.printStackTrace();
-//    }
 
     for (int ii = 1; ii < 111100000; ii++) {
 

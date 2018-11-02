@@ -2,37 +2,28 @@ package stest.tron.wallet.onlineStress;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import java.io.File;
-import java.io.IOException;
 import java.util.Optional;
-import java.util.Random;
-//import java.io.FileWriter;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
-import org.tron.api.GrpcAPI.AccountResourceMessage;
 import org.tron.api.WalletGrpc;
 import org.tron.common.crypto.ECKey;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Utils;
 import org.tron.core.Wallet;
 import org.tron.protos.Protocol.Account;
-import org.tron.protos.Protocol.SmartContract;
 import org.tron.protos.Protocol.TransactionInfo;
-
-
 import stest.tron.wallet.common.client.Configuration;
 import stest.tron.wallet.common.client.Parameter.CommonConstant;
 import stest.tron.wallet.common.client.utils.Base58;
-//import java.io.BufferedWriter;
-
 import stest.tron.wallet.common.client.utils.PublicMethed;
+
+//import java.io.FileWriter;
+//import java.io.BufferedWriter;
 
 
 
@@ -137,9 +128,10 @@ public class TestMapBigLongAndNumbers {
     for (int ii = 1; ii < 111100000; ii++) {
 
       count.incrementAndGet();
-      if (count.get() % 1000 == 0){
+      if (count.get() % 1000 == 0) {
         long cost = (System.currentTimeMillis() - startTime) / 1000;
-        System.out.println("Count:" + count.get() + ", cost:" + cost + ", avg:" + count.get() / cost + ", errCount:" + errorCount);
+        System.out.println("Count:" + count.get() + ", cost:" + cost + ", avg:" + count.get() / cost
+            + ", errCount:" + errorCount);
       }
 
       ECKey ecKey1 = new ECKey(Utils.getRandom());
@@ -155,7 +147,7 @@ public class TestMapBigLongAndNumbers {
         System.out.println("long string address:" + addresstest);
         // long string test, the limit is 15k, if more than 16k,will make server hang
         txid = PublicMethed.triggerContract(kittyCoreContractAddress, "update2(string,address)",
-                saleContractString, false, 0, 1000000000L, fromAddress, testKey002, blockingStubFull);
+            saleContractString, false, 0, 1000000000L, fromAddress, testKey002, blockingStubFull);
         logger.info(txid);
       }
 
@@ -166,7 +158,7 @@ public class TestMapBigLongAndNumbers {
         System.out.println("short string address:" + addresstest);
         // server busy test, make tsx number to 2000 to make the server busy
         txid = PublicMethed.triggerContract(kittyCoreContractAddress, "update2(string,address)",
-                saleContractString1, false, 0, 1000000000L, fromAddress, testKey002, blockingStubFull);
+            saleContractString1, false, 0, 1000000000L, fromAddress, testKey002, blockingStubFull);
         logger.info(txid);
       }
 
@@ -179,12 +171,11 @@ public class TestMapBigLongAndNumbers {
 
       infoById = PublicMethed.getTransactionInfoById(txid,blockingStubFull);
 
-      String isSuccess="fail";
+      String isSuccess = "fail";
 
       if (infoById.get().getResultValue() == 0) {
         isSuccess = "success";
-      }
-      else{
+      } else {
         errorCount.incrementAndGet();
       }
 

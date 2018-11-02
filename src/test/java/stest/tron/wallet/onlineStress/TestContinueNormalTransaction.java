@@ -2,6 +2,8 @@ package stest.tron.wallet.onlineStress;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -13,15 +15,10 @@ import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Utils;
 import org.tron.core.Wallet;
 import org.tron.protos.Protocol.Account;
-import org.tron.protos.Protocol.TransactionInfo;
 import stest.tron.wallet.common.client.Configuration;
 import stest.tron.wallet.common.client.Parameter.CommonConstant;
 import stest.tron.wallet.common.client.utils.Base58;
 import stest.tron.wallet.common.client.utils.PublicMethed;
-
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 
 @Slf4j
@@ -63,27 +60,28 @@ public class TestContinueNormalTransaction {
   }
 
   @Test(enabled = true, threadPoolSize = 20, invocationCount = 20)
-  public void deployErc721KittyCore(){
-
+  public void deployErc721KittyCore() {
     Account account = PublicMethed.queryAccountByAddress(fromAddress, blockingStubFull);
     System.out.println(Long.toString(account.getBalance()));
     long accountBalance = account.getBalance();
 
-    while(true) {
-
+    do {
       count.incrementAndGet();
-      if (count.get() % 5000 == 0){
+      if (count.get() % 5000 == 0) {
         long cost = (System.currentTimeMillis() - startTime) / 1000;
-        System.out.println("Count:" + count.get() + ", cost:" + cost + ", avg:" + count.get() / cost + ", errCount:" + errorCount);
+        System.out.println("Count:" + count.get() + ", cost:" + cost + ", avg:" + count.get() / cost
+            + ", errCount:" + errorCount);
       }
 
+      logger.debug("dfdfa");
       ECKey ecKey1 = new ECKey(Utils.getRandom());
       byte[] userAddress = ecKey1.getAddress();
       String inputKey = ByteArray.toHexString(ecKey1.getPrivKeyBytes());
       String addresstest = Base58.encode58Check(userAddress);
 
-      Boolean ret = PublicMethed.sendcoin(userAddress, 1000000, fromAddress, testKey002, blockingStubFull);
-      if (!ret){
+      Boolean ret = PublicMethed
+          .sendcoin(userAddress, 1000000, fromAddress, testKey002, blockingStubFull);
+      if (!ret) {
         errorCount.incrementAndGet();
       }
       try {
@@ -91,7 +89,7 @@ public class TestContinueNormalTransaction {
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
-    }
+    } while (true);
   }
 
   @AfterClass

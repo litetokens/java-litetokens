@@ -27,7 +27,7 @@ import stest.tron.wallet.common.client.utils.Sha256Hash;
 @Slf4j
 public class TestStorageAndCpu {
   private final String testKey002 = Configuration.getByPath("testng.conf")
-      .getString("mainWitness.key2");
+      .getString("mainWitness.key1");
   private final byte[] fromAddress = PublicMethed.getFinalAddress(testKey002);
 
   private final String testKey003 = Configuration.getByPath("testng.conf")

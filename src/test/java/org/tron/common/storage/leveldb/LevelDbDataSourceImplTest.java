@@ -41,6 +41,7 @@ import org.tron.core.Constant;
 import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.args.Args;
 
+/*
 @Slf4j
 public class LevelDbDataSourceImplTest {
 
@@ -66,9 +67,11 @@ public class LevelDbDataSourceImplTest {
     dataSourceTest = new LevelDbDataSourceImpl(dbPath + File.separator, "test_levelDb");
   }
 
-  /**
+  */
+/**
    * Release resources.
-   */
+   *//*
+
   @AfterClass
   public static void destroy() {
     Args.clearParam();
@@ -273,3 +276,4 @@ public class LevelDbDataSourceImplTest {
     dataSource.closeDB();
   }
 }
+*/

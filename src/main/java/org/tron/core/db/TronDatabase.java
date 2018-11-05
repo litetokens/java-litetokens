@@ -6,7 +6,7 @@ import java.util.Map.Entry;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.tron.common.storage.leveldb.LevelDbDataSourceImpl;
+import org.tron.common.storage.leveldb.RocksDbDataSourceImpl;
 import org.tron.core.config.args.Args;
 import org.tron.core.db.api.IndexHelper;
 import org.tron.core.db2.core.ITronChainBase;
@@ -16,7 +16,7 @@ import org.tron.core.exception.ItemNotFoundException;
 @Slf4j
 public abstract class TronDatabase<T> implements ITronChainBase<T> {
 
-  protected LevelDbDataSourceImpl dbSource;
+  protected RocksDbDataSourceImpl dbSource;
   @Getter
   private String dbName;
 
@@ -25,14 +25,14 @@ public abstract class TronDatabase<T> implements ITronChainBase<T> {
 
   protected TronDatabase(String dbName) {
     this.dbName = dbName;
-    dbSource = new LevelDbDataSourceImpl(Args.getInstance().getOutputDirectoryByDbName(dbName), dbName);
+    dbSource = new RocksDbDataSourceImpl(Args.getInstance().getOutputDirectoryByDbName(dbName), dbName);
     dbSource.initDB();
   }
 
   protected TronDatabase() {
   }
 
-  public LevelDbDataSourceImpl getDbSource() {
+  public RocksDbDataSourceImpl getDbSource() {
     return dbSource;
   }
 

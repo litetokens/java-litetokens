@@ -20,9 +20,10 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.iq80.leveldb.WriteOptions;
+import org.rocksdb.RocksDB;
+import org.rocksdb.WriteOptions;
 import org.tron.common.storage.SourceInter;
-import org.tron.common.storage.leveldb.LevelDbDataSourceImpl;
+import org.tron.common.storage.leveldb.RocksDbDataSourceImpl;
 import org.tron.common.utils.FileUtil;
 import org.tron.common.utils.Utils;
 import org.tron.core.config.args.Args;
@@ -35,14 +36,18 @@ import org.tron.core.exception.RevokingStoreIllegalStateException;
 @Getter // only for unit test
 public abstract class AbstractRevokingStore implements RevokingDatabase {
 
+  static {
+    RocksDB.loadLibrary();
+  }
+
   private static final int DEFAULT_STACK_MAX_SIZE = 256;
 
   private Deque<RevokingState> stack = new LinkedList<>();
   private boolean disabled = true;
   private int activeDialog = 0;
   private AtomicInteger maxSize = new AtomicInteger(DEFAULT_STACK_MAX_SIZE);
-  private WriteOptions writeOptions = new WriteOptions().sync(true);
-  private List<LevelDbDataSourceImpl> dbs = new ArrayList<>();
+  private WriteOptions writeOptions = new WriteOptions().setSync(true);
+  private List<RocksDbDataSourceImpl> dbs = new ArrayList<>();
 
   @Override
   public ISession buildSession() {
@@ -71,12 +76,12 @@ public abstract class AbstractRevokingStore implements RevokingDatabase {
 
   @Override
   public synchronized void check() {
-    LevelDbDataSourceImpl check =
-        new LevelDbDataSourceImpl(Args.getInstance().getOutputDirectoryByDbName("tmp"), "tmp");
+    RocksDbDataSourceImpl check =
+        new RocksDbDataSourceImpl(Args.getInstance().getOutputDirectoryByDbName("tmp"), "tmp");
     check.initDB();
 
     if (!check.allKeys().isEmpty()) {
-      Map<String, LevelDbDataSourceImpl> dbMap = dbs.stream()
+      Map<String, RocksDbDataSourceImpl> dbMap = dbs.stream()
           .map(db -> Maps.immutableEntry(db.getDBName(), db))
           .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
@@ -88,9 +93,9 @@ public abstract class AbstractRevokingStore implements RevokingDatabase {
 
         byte[] realValue = value.length == 1 ? null : Arrays.copyOfRange(value, 1, value.length);
         if (realValue != null) {
-          dbMap.get(db).putData(realKey, realValue, new WriteOptions().sync(true));
+          dbMap.get(db).putData(realKey, realValue, new WriteOptions().setSync(true));
         } else {
-          dbMap.get(db).deleteData(realKey, new WriteOptions().sync(true));
+          dbMap.get(db).deleteData(realKey, new WriteOptions().setSync(true));
         }
       }
     }
@@ -103,6 +108,7 @@ public abstract class AbstractRevokingStore implements RevokingDatabase {
   public void add(IRevokingDB revokingDB) {
     dbs.add(((RevokingDBWithCachingOldValue) revokingDB).getDbSource());
   }
+
 
   public synchronized void onCreate(RevokingTuple tuple, byte[] value) {
     if (disabled) {
@@ -253,10 +259,12 @@ public abstract class AbstractRevokingStore implements RevokingDatabase {
   }
 
   private synchronized void prune(WriteOptions options) {
+    logger.info("activeDialog:{}", activeDialog);
     if (activeDialog != 0) {
       throw new RevokingStoreIllegalStateException("activeDialog has to be equal 0");
     }
 
+    logger.info("stack.size:{}", stack.size());
     if (stack.isEmpty()) {
       throw new RevokingStoreIllegalStateException("stack is empty");
     }
@@ -317,6 +325,8 @@ public abstract class AbstractRevokingStore implements RevokingDatabase {
           exit = true;
         }
       }
+
+      System.err.println("******** it is here********");
 
       while (true) {
         try {

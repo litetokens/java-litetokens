@@ -2,17 +2,21 @@ package org.tron.core.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Lazy;
 import org.tron.core.config.args.Args;
+import org.tron.core.db.RevokingStoreAspect;
+import org.tron.core.db2.core.ManagerAspect;
 import org.tron.core.db.RevokingDatabase;
 import org.tron.core.db.RevokingStore;
 import org.tron.core.db.api.IndexHelper;
 import org.tron.core.db2.core.SnapshotManager;
+import org.tron.core.net.node.NodeImplAspect;
 
 @Configuration
 @Import(CommonConfig.class)
@@ -48,6 +52,16 @@ public class DefaultConfig {
     } else {
       throw new RuntimeException("db version is error.");
     }
+  }
+
+  @Bean
+  public ManagerAspect dbSnapshotsHelper() {
+    return new ManagerAspect();
+  }
+
+  @Bean
+  public RevokingStoreAspect revokingStoreAspect() {
+    return new RevokingStoreAspect();
   }
 
 }

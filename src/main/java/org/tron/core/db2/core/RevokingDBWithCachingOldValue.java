@@ -5,18 +5,21 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
-import org.tron.common.storage.leveldb.LevelDbDataSourceImpl;
+import org.tron.common.storage.leveldb.RocksDbDataSourceImpl;
 import org.tron.core.config.args.Args;
 import org.tron.core.db.AbstractRevokingStore;
 import org.tron.core.db.RevokingStore;
 import org.tron.core.db2.common.IRevokingDB;
 import org.tron.core.exception.ItemNotFoundException;
 
+@Slf4j
 public class RevokingDBWithCachingOldValue implements IRevokingDB {
   private AbstractRevokingStore revokingDatabase;
+
   @Getter
-  private LevelDbDataSourceImpl dbSource;
+  private RocksDbDataSourceImpl dbSource;
 
   public RevokingDBWithCachingOldValue(String dbName) {
     this(dbName, RevokingStore.getInstance());
@@ -24,25 +27,25 @@ public class RevokingDBWithCachingOldValue implements IRevokingDB {
 
   // only for unit test
   public RevokingDBWithCachingOldValue(String dbName, AbstractRevokingStore revokingDatabase) {
-    dbSource = new LevelDbDataSourceImpl(Args.getInstance().getOutputDirectoryByDbName(dbName), dbName);
+    dbSource = new RocksDbDataSourceImpl(Args.getInstance().getOutputDirectoryByDbName(dbName), dbName);
     dbSource.initDB();
     this.revokingDatabase = revokingDatabase;
   }
 
   @Override
-  public void put(byte[] key, byte[] newValue) {
-    if (Objects.isNull(key) || Objects.isNull(newValue)) {
+  public void put(byte[] key, byte[] value) {
+    if (Objects.isNull(key) || Objects.isNull(value)) {
       return;
     }
     //logger.info("Address is {}, " + item.getClass().getSimpleName() + " is {}", key, item);
-    byte[] value = dbSource.getData(key);
-    if (ArrayUtils.isNotEmpty(value)) {
-      onModify(key, value);
+    byte[] oldValue = dbSource.getData(key);
+    if (ArrayUtils.isNotEmpty(oldValue)) {
+      onModify(key, oldValue);
     }
 
-    dbSource.putData(key, newValue);
+    dbSource.putData(key, value);
 
-    if (ArrayUtils.isEmpty(value)) {
+    if (ArrayUtils.isEmpty(oldValue)) {
       onCreate(key);
     }
   }

@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.iq80.leveldb.WriteOptions;
-import org.tron.common.storage.leveldb.LevelDbDataSourceImpl;
+import org.tron.common.storage.leveldb.RocksDbDataSourceImpl;
 import org.tron.common.utils.FileUtil;
 import org.tron.core.config.args.Args;
 import org.tron.core.db.RevokingDatabase;
@@ -197,9 +197,9 @@ public class SnapshotManager implements RevokingDatabase {
   }
 
   private void createCheckPoint() {
-    LevelDbDataSourceImpl levelDbDataSource =
-        new LevelDbDataSourceImpl(Args.getInstance().getOutputDirectoryByDbName("tmp"), "tmp");
-    levelDbDataSource.initDB();
+    RocksDbDataSourceImpl rocksDbDataSource =
+        new RocksDbDataSourceImpl(Args.getInstance().getOutputDirectoryByDbName("tmp"), "tmp");
+    rocksDbDataSource.initDB();
     Map<WrappedByteArray, WrappedByteArray> batch = new HashMap<>();
     for (RevokingDBWithCachingNewValue db : dbs) {
       Snapshot head = db.getHead();
@@ -217,17 +217,17 @@ public class SnapshotManager implements RevokingDatabase {
       }
     }
 
-    levelDbDataSource.updateByBatch(batch.entrySet().stream()
+    /*rocksDbDataSource.updateByBatch(batch.entrySet().stream()
         .map(e -> Maps.immutableEntry(e.getKey().getBytes(), e.getValue().getBytes()))
         .collect(HashMap::new, (m, k) -> m.put(k.getKey(), k.getValue()), HashMap::putAll), writeOptions);
-    levelDbDataSource.closeDB();
+   */ rocksDbDataSource.closeDB();
   }
 
   private void deleteCheckPoint() {
-    LevelDbDataSourceImpl levelDbDataSource =
-        new LevelDbDataSourceImpl(Args.getInstance().getOutputDirectoryByDbName("tmp"), "tmp");
+    RocksDbDataSourceImpl rocksDbDataSource =
+        new RocksDbDataSourceImpl(Args.getInstance().getOutputDirectoryByDbName("tmp"), "tmp");
 
-    FileUtil.recursiveDelete(levelDbDataSource.getDbPath().toString());
+    FileUtil.recursiveDelete(rocksDbDataSource.getDbPath().toString());
   }
 
   // ensure run this method first after process start.
@@ -239,8 +239,8 @@ public class SnapshotManager implements RevokingDatabase {
       }
     }
 
-    LevelDbDataSourceImpl levelDbDataSource =
-        new LevelDbDataSourceImpl(Args.getInstance().getOutputDirectoryByDbName("tmp"), "tmp");
+    RocksDbDataSourceImpl levelDbDataSource =
+        new RocksDbDataSourceImpl(Args.getInstance().getOutputDirectoryByDbName("tmp"), "tmp");
     levelDbDataSource.initDB();
     if (!levelDbDataSource.allKeys().isEmpty()) {
       Map<String, RevokingDBWithCachingNewValue> dbMap = dbs.stream()

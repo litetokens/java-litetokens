@@ -47,8 +47,9 @@ import org.tron.common.utils.FileUtil;
 import org.tron.core.config.args.Args;
 import org.tron.core.db.common.iterator.StoreIterator;
 
-@Slf4j
-@NoArgsConstructor
+/*@Slf4j
+@NoArgsConstructor*/
+/*
 public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
     Iterable<Map.Entry<byte[], byte[]>> {
 
@@ -58,9 +59,11 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
   private String parentName;
   private ReadWriteLock resetDbLock = new ReentrantReadWriteLock();
 
-  /**
+  */
+/**
    * constructor.
-   */
+   *//*
+
   public LevelDbDataSourceImpl(String parentName, String name) {
     this.dataBaseName = name;
     this.parentName = Paths.get(
@@ -131,9 +134,11 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
     return Paths.get(parentName, dataBaseName);
   }
 
-  /**
+  */
+/**
    * reset database.
-   */
+   *//*
+
   public void resetDb() {
     closeDB();
     FileUtil.recursiveDelete(getDbPath().toString());
@@ -145,9 +150,11 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
     return alive;
   }
 
-  /**
+  */
+/**
    * destroy database.
-   */
+   *//*
+
   public void destroyDb(File fileLocation) {
     resetDbLock.writeLock().lock();
     try {
@@ -196,7 +203,6 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
     }
   }
 
-  @Override
   public void putData(byte[] key, byte[] value, WriteOptions options) {
     resetDbLock.readLock().lock();
     try {
@@ -216,7 +222,6 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
     }
   }
 
-  @Override
   public void deleteData(byte[] key, WriteOptions options) {
     resetDbLock.readLock().lock();
     try {
@@ -456,3 +461,4 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
   }
 
 }
+*/

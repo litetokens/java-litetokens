@@ -4,6 +4,7 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Streams;
 import com.google.common.reflect.TypeToken;
+import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
@@ -12,7 +13,13 @@ import java.util.Objects;
 import javax.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.iq80.leveldb.util.FileUtils;
+import org.rocksdb.Checkpoint;
+import org.rocksdb.RocksDB;
+import org.rocksdb.RocksDBException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.tron.common.storage.leveldb.RocksDbDataSourceImpl;
+import org.tron.common.utils.FileUtil;
 import org.tron.core.capsule.ProtoCapsule;
 import org.tron.core.config.args.Args;
 import org.tron.core.db.api.IndexHelper;
@@ -27,7 +34,8 @@ import org.tron.core.exception.ItemNotFoundException;
 public abstract class TronStoreWithRevoking<T extends ProtoCapsule> implements ITronChainBase<T> {
 
   protected IRevokingDB revokingDB;
-  private TypeToken<T> token = new TypeToken<T>(getClass()) {};
+  private TypeToken<T> token = new TypeToken<T>(getClass()) {
+  };
   @Autowired
   private RevokingDatabase revokingDatabase;
   @Autowired(required = false)
@@ -54,7 +62,8 @@ public abstract class TronStoreWithRevoking<T extends ProtoCapsule> implements I
 
   // only for test
   protected TronStoreWithRevoking(String dbName, RevokingDatabase revokingDatabase) {
-      this.revokingDB = new RevokingDBWithCachingOldValue(dbName, (AbstractRevokingStore) revokingDatabase);
+    this.revokingDB = new RevokingDBWithCachingOldValue(dbName,
+        (AbstractRevokingStore) revokingDatabase);
   }
 
   @Override
@@ -132,5 +141,39 @@ public abstract class TronStoreWithRevoking<T extends ProtoCapsule> implements I
   public long size() {
     return Streams.stream(revokingDB.iterator()).count();
   }
+
+
+  public void backup(int i) {
+    RocksDB tmp = this.revokingDB.getDbSource().getDatabase();
+    String parentDir1 = "bak1/database/";
+    String parentDir2 = "bak2/database/";
+
+    try {
+      if (i == 1) {
+        Checkpoint.create(tmp)
+            .createCheckpoint(parentDir1 + this.revokingDB.getDbSource().getDBName());
+        FileUtils
+            .deleteRecursively(new File(parentDir2 + this.revokingDB.getDbSource().getDBName()));
+      } else {
+        Checkpoint.create(tmp)
+            .createCheckpoint(parentDir2 + this.revokingDB.getDbSource().getDBName());
+        FileUtils
+            .deleteRecursively(new File(parentDir1 + this.revokingDB.getDbSource().getDBName()));
+      }
+    } catch (RocksDBException e) {
+      e.printStackTrace();
+    }
+  }
+
+  public boolean deleteDbBakPath(int i){
+    String parentDir1 = "bak1/database/";
+    String parentDir2 = "bak2/database/";
+    if (i == 1) {
+      return FileUtils.deleteRecursively(new File(parentDir1 + this.revokingDB.getDbSource().getDBName()));
+    } else {
+      return FileUtils.deleteRecursively(new File(parentDir2 + this.revokingDB.getDbSource().getDBName()));
+    }
+  }
+
 
 }

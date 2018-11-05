@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -606,6 +607,7 @@ public class Manager {
       VMIllegalException, TooBigTransactionResultException, UnLinkedBlockException,
       NonCommonBlockException, BadNumberBlockException, BadBlockException {
     block.generatedByMyself = true;
+
     pushBlock(block);
   }
 
@@ -723,6 +725,14 @@ public class Manager {
       TaposException, TooBigTransactionException, TooBigTransactionResultException, DupTransactionException, TransactionExpirationException,
       BadNumberBlockException, BadBlockException, NonCommonBlockException,
       ReceiptCheckErrException, VMIllegalException {
+
+    /*if (block.getNum() % 3000 == 0) {
+      long t1 = System.currentTimeMillis();
+      backupallstore();
+      logger.info("backupallstore use {} ms!", System.currentTimeMillis() - t1);
+
+    }*/
+
     try (PendingManager pm = new PendingManager(this)) {
 
       if (!block.generatedByMyself) {
@@ -816,7 +826,55 @@ public class Manager {
     }
   }
 
+  public void logDynamicProperties() {
+    Iterator iter = dynamicPropertiesStore.revokingDB.iterator();
+    logger.info("dynamic propoties key start-------------------");
+    while (iter.hasNext()) {
+      Entry<byte[], byte[]> entry = (Entry<byte[], byte[]>) iter.next();
+      byte[] key = entry.getKey();
+      String keyString = new String(key);
+      String[] array = {"ALLOW_CREATION_OF_CONTRACTS", "ALLOW_UPDATE_ACCOUNT_NAME",
+          "ASSET_ISSUE_FEE", "CREATE_ACCOUNT_FEE", "CREATE_NEW_ACCOUNT_BANDWIDTH_RATE",
+          "CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT", "ENERGY_FEE", "EXCHANGE_BALANCE_LIMIT",
+          "EXCHANGE_CREATE_FEE", "FREE_NET_LIMIT", "LATEST_EXCHANGE_NUM", "LATEST_PROPOSAL_NUM",
+          "LATEST_SOLIDIFIED_BLOCK_NUM", "MAINTENANCE_TIME_INTERVAL", "MAX_CPU_TIME_OF_ONE_TX",
+          "NEXT_MAINTENANCE_TIME", "ONE_DAY_NET_LIMIT", "PUBLIC_NET_TIME", "PUBLIC_NET_USAGE",
+          "REMOVE_THE_POWER_OF_THE_GR", "WER_OF_THE_GR", "STORAGE_EXCHANGE_TAX_RATE",
+          "TOTAL_CREATE_ACCOUNT_COST", "TOTAL_CREATE_WITNESS_FEE", "TOTAL_ENERGY_LIMIT",
+          "TOTAL_ENERGY_WEIGHT", "TOTAL_NET_LIMIT", "TOTAL_NET_WEIGHT", "TOTAL_STORAGE_POOL",
+          "TOTAL_STORAGE_RESERVED", "TOTAL_STORAGE_TAX", "TOTAL_TRANSACTION_COST",
+          "TRANSACTION_FEE", "WITNESS_PAY_PER_BLOCK", "WITNESS_STANDBY_ALLOWANCE",
+          "latest_block_header_number", "latest_block_header_timestamp", "ACCOUNT_UPGRADE_COST",
+          "PUBLIC_NET_LIMIT"};
+      List<String> longValue = Arrays.asList(array);
+      String[] array1 = {"BLOCK_FILLED_SLOTS_INDEX", "MAX_FROZEN_SUPPLY_NUMBER",
+          "MAX_FROZEN_SUPPLY_TIME", "MAX_FROZEN_TIME", "MIN_FROZEN_SUPPLY_TIME", "MIN_FROZEN_TIME",
+          "WITNESS_ALLOWANCE_FROZEN_TIME", "state_flag"};
+      List<String> intValue = Arrays.asList(array1);
+      byte[] value = entry.getValue();
+
+      if (longValue.contains(keyString)) {
+        logger.info("dynamic propoties key:{}, value :{}", new String(key),
+            ByteArray.toLong(value));
+      } else if (intValue.contains(keyString)) {
+        logger.info("dynamic propoties key:{}, value :{}", new String(key),
+            ByteArray.toInt(value));
+      } else if ("latest_block_header_hash".equals(keyString)) {
+        logger.info("dynamic propoties key:{}, value :{}", new String(key),
+            ByteArray.toHexString(value));
+      } else {
+        logger.info("dynamic propoties key:{}, value :{}", new String(key),
+            new String(value));
+      }
+    }
+    logger.info("dynamic propoties key end-------------------");
+  }
+
+
   public void updateDynamicProperties(BlockCapsule block) {
+    //logDynamicProperties();
+    //getDbData();
+
     long slot = 1;
     if (block.getNum() != 1) {
       slot = witnessController.getSlotAtTime(block.getTimeStamp());
@@ -1026,17 +1084,17 @@ public class Manager {
       UnLinkedBlockException, ValidateScheduleException, AccountResourceInsufficientException {
 
     //check that the first block after the maintenance period has just been processed
-   // if (lastHeadBlockIsMaintenanceBefore != lastHeadBlockIsMaintenance()) {
-      if (!witnessController.validateWitnessSchedule(witnessCapsule.getAddress(), when)) {
-        logger.info("It's not my turn, "
-            + "and the first block after the maintenance period has just been processed");
-        
-        logger.info("when:{},lastHeadBlockIsMaintenanceBefore:{},lastHeadBlockIsMaintenanceAfter:{}",
-                when, lastHeadBlockIsMaintenanceBefore,lastHeadBlockIsMaintenance() );
-        
-        return null;
-      }
-   // }
+    // if (lastHeadBlockIsMaintenanceBefore != lastHeadBlockIsMaintenance()) {
+    if (!witnessController.validateWitnessSchedule(witnessCapsule.getAddress(), when)) {
+      logger.info("It's not my turn, "
+          + "and the first block after the maintenance period has just been processed");
+
+      logger.info("when:{},lastHeadBlockIsMaintenanceBefore:{},lastHeadBlockIsMaintenanceAfter:{}",
+          when, lastHeadBlockIsMaintenanceBefore, lastHeadBlockIsMaintenance());
+
+      return null;
+    }
+    // }
 
     final long timestamp = this.dynamicPropertiesStore.getLatestBlockHeaderTimestamp();
     final long number = this.dynamicPropertiesStore.getLatestBlockHeaderNumber();
@@ -1183,7 +1241,6 @@ public class Manager {
     if (!witnessController.validateWitnessSchedule(block)) {
       throw new ValidateScheduleException("validateWitnessSchedule error");
     }
-
     for (TransactionCapsule transactionCapsule : block.getTransactions()) {
       if (block.generatedByMyself) {
         transactionCapsule.setVerified(true);

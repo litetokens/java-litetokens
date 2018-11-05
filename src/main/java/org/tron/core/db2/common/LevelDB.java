@@ -2,20 +2,21 @@ package org.tron.core.db2.common;
 
 import com.google.common.collect.Maps;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import lombok.Getter;
-import org.iq80.leveldb.WriteOptions;
-import org.tron.common.storage.leveldb.LevelDbDataSourceImpl;
+import org.rocksdb.WriteOptions;
+import org.tron.common.storage.leveldb.RocksDbDataSourceImpl;
 import org.tron.core.db.common.WrappedByteArray;
-import org.tron.core.db.common.iterator.DBIterator;
 
 public class LevelDB implements DB<byte[], byte[]> {
   @Getter
-  private LevelDbDataSourceImpl db;
-  private WriteOptions writeOptions = new WriteOptions().sync(true);
+  private RocksDbDataSourceImpl db;
+  private WriteOptions writeOptions = new WriteOptions().setSync(true);
 
   public LevelDB(String parentName, String name) {
-    db = new LevelDbDataSourceImpl(parentName, name);
+    db = new RocksDbDataSourceImpl(parentName, name);
     db.initDB();
   }
 
@@ -35,7 +36,7 @@ public class LevelDB implements DB<byte[], byte[]> {
   }
 
   @Override
-  public DBIterator iterator() {
+  public Iterator<Entry<byte[],byte[]>> iterator() {
     return db.iterator();
   }
 

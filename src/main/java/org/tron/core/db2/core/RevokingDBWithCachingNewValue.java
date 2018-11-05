@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.ArrayUtils;
+import org.tron.common.storage.leveldb.RocksDbDataSourceImpl;
 import org.tron.common.utils.ByteUtil;
 import org.tron.core.config.args.Args;
 import org.tron.core.db.common.WrappedByteArray;
@@ -135,6 +136,11 @@ public class RevokingDBWithCachingNewValue implements IRevokingDB {
         .map(WrappedByteArray::getBytes)
         .collect(Collectors.toSet());
 
+  }
+
+  @Override
+  public RocksDbDataSourceImpl getDbSource() {
+    return null;
   }
 
 }

@@ -26,7 +26,7 @@ import org.tron.core.exception.NonCommonBlockException;
 import org.tron.core.exception.UnLinkedBlockException;
 
 @Component
-public class KhaosDatabase extends TronDatabase {
+public class KhaosDatabase {
 
   public static class KhaosBlock {
 
@@ -152,29 +152,6 @@ public class KhaosDatabase extends TronDatabase {
   @Getter
   private KhaosStore miniUnlinkedStore = new KhaosStore();
 
-  @Autowired
-  protected KhaosDatabase(@Value("block_KDB") String dbName) {
-    super(dbName);
-  }
-
-  @Override
-  public void put(byte[] key, Object item) {
-  }
-
-  @Override
-  public void delete(byte[] key) {
-  }
-
-  @Override
-  public Object get(byte[] key) {
-    return null;
-  }
-
-  @Override
-  public boolean has(byte[] key) {
-    return false;
-  }
-
   void start(BlockCapsule blk) {
     this.head = new KhaosBlock(blk);
     miniStore.insert(this.head);
@@ -270,7 +247,8 @@ public class KhaosDatabase extends TronDatabase {
   /**
    * Find two block's most recent common parent block.
    */
-  public Pair<LinkedList<KhaosBlock>, LinkedList<KhaosBlock>> getBranch(Sha256Hash block1, Sha256Hash block2)
+  public Pair<LinkedList<KhaosBlock>, LinkedList<KhaosBlock>> getBranch(Sha256Hash block1,
+      Sha256Hash block2)
       throws NonCommonBlockException {
     LinkedList<KhaosBlock> list1 = new LinkedList<>();
     LinkedList<KhaosBlock> list2 = new LinkedList<>();
@@ -312,6 +290,7 @@ public class KhaosDatabase extends TronDatabase {
       throw new NonCommonBlockException();
     }
   }
+
   /**
    * Find two block's most recent common parent block.
    */

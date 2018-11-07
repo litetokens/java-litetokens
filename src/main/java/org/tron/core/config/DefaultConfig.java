@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Lazy;
 import org.tron.core.config.args.Args;
 import org.tron.core.db.RevokingStoreAspect;
+import org.tron.core.db.RocksRevokingStore;
 import org.tron.core.db2.core.ManagerAspect;
 import org.tron.core.db.RevokingDatabase;
 import org.tron.core.db.RevokingStore;
@@ -49,13 +50,15 @@ public class DefaultConfig {
       return RevokingStore.getInstance();
     } else if (dbVersion == 2) {
       return new SnapshotManager();
+    } else if (dbVersion == 3) {
+      return RocksRevokingStore.getInstance();
     } else {
       throw new RuntimeException("db version is error.");
     }
   }
 
   @Bean
-  public ManagerAspect dbSnapshotsHelper() {
+  public ManagerAspect managerAspect() {
     return new ManagerAspect();
   }
 

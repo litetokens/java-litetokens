@@ -726,13 +726,6 @@ public class Manager {
       BadNumberBlockException, BadBlockException, NonCommonBlockException,
       ReceiptCheckErrException, VMIllegalException {
 
-    /*if (block.getNum() % 3000 == 0) {
-      long t1 = System.currentTimeMillis();
-      backupallstore();
-      logger.info("backupallstore use {} ms!", System.currentTimeMillis() - t1);
-
-    }*/
-
     try (PendingManager pm = new PendingManager(this)) {
 
       if (!block.generatedByMyself) {

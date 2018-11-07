@@ -2,7 +2,6 @@ package org.tron.core.db.backup;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,6 +11,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.config.args.Args;
 import org.tron.core.db.AccountIdIndexStore;
 import org.tron.core.db.AccountIndexStore;
@@ -25,6 +25,7 @@ import org.tron.core.db.DynamicPropertiesStore;
 import org.tron.core.db.ExchangeStore;
 import org.tron.core.db.ProposalStore;
 import org.tron.core.db.RecentBlockStore;
+import org.tron.core.db.RevokingDatabase;
 import org.tron.core.db.StorageRowStore;
 import org.tron.core.db.TransactionHistoryStore;
 import org.tron.core.db.TransactionStore;
@@ -37,7 +38,9 @@ import org.tron.core.db.WitnessStore;
 @Component
 public class BackupDbUtil {
 
-  public static final String DB_BACKUP_STATE = "DB";
+  private static final String DB_BACKUP_STATE = "DB";
+  private static final int DB_BACKUP_INDEX1 = 1;
+  private static final int DB_BACKUP_INDEX2 = 2;
 
   public enum STATE {
     UNDEFINED(0), BAKINGONE(1), BAKEDONE(11), BAKINGTWO(2), BAKEDTWO(22);
@@ -68,6 +71,8 @@ public class BackupDbUtil {
     }
 
   }
+  @Autowired
+  private RevokingDatabase db;
 
   @Autowired
   private AccountStore accountStore;
@@ -111,8 +116,6 @@ public class BackupDbUtil {
 
   private String propPath;
   Properties prop = new Properties();
-  InputStream in = null;
-
 
   @Getter
   @Setter
@@ -126,15 +129,16 @@ public class BackupDbUtil {
 
   public int getBackupState() {
     try {
-      in = new BufferedInputStream(new FileInputStream(propPath));
+      InputStream in = new BufferedInputStream(new FileInputStream(propPath));
       prop.load(in);
+      in.close();
     } catch (IOException e) {
       logger.error("getBackupState:{}", e.getMessage());
     }
     return Integer.valueOf((String) prop.get(BackupDbUtil.DB_BACKUP_STATE));
   }
 
-  public void setBackupState(int state) {
+  private void setBackupState(int state) {
     try {
       FileOutputStream oFile = new FileOutputStream(propPath);
       prop.setProperty(BackupDbUtil.DB_BACKUP_STATE, String.valueOf(state));
@@ -165,34 +169,38 @@ public class BackupDbUtil {
     }
   }
 
-  public void doBackup() {
+  public void doBackup(BlockCapsule block) {
+    if (block.getNum() % 5000 == 0) {
+      return;
+    }
+
     long t1 = System.currentTimeMillis();
 
     try {
       switch (STATE.valueOf(getBackupState())) {
         case BAKINGONE:
-          deleteDbBakPath(1);  //删除旧备份
-          backup(1);
-          switchBackupState(); //备份成功之后，记下完整的备份号。
-          deleteDbBakPath(2);
+          deleteBackup(DB_BACKUP_INDEX1);
+          backup(DB_BACKUP_INDEX1);
+          switchBackupState();
+          deleteBackup(DB_BACKUP_INDEX2);
           break;
         case BAKEDONE:
-          deleteDbBakPath(2);
-          backup(2);
-          switchBackupState(); //备份成功之后，记下完整的备份号。
-          deleteDbBakPath(1);
+          deleteBackup(DB_BACKUP_INDEX2);
+          backup(DB_BACKUP_INDEX2);
+          switchBackupState();
+          deleteBackup(DB_BACKUP_INDEX1);
           break;
         case BAKINGTWO:
-          deleteDbBakPath(2);  //删除旧备份
-          backup(2);
-          switchBackupState(); //备份成功之后，记下完整的备份号。
-          deleteDbBakPath(1);
+          deleteBackup(DB_BACKUP_INDEX2);
+          backup(DB_BACKUP_INDEX2);
+          switchBackupState();
+          deleteBackup(DB_BACKUP_INDEX1);
           break;
         case BAKEDTWO:
-          deleteDbBakPath(1);
-          backup(1);
-          switchBackupState(); //备份成功之后，记下完整的备份号。
-          deleteDbBakPath(2);
+          deleteBackup(DB_BACKUP_INDEX1);
+          backup(DB_BACKUP_INDEX1);
+          switchBackupState();
+          deleteBackup(DB_BACKUP_INDEX2);
           break;
       }
     } catch (UndefinedStateException e) {
@@ -222,7 +230,7 @@ public class BackupDbUtil {
     storageRowStore.backup(i);
   }
 
-  private void deleteDbBakPath(int i) {
+  private void deleteBackup(int i) {
     accountStore.deleteDbBakPath(i);
     blockStore.deleteDbBakPath(i);
     transactionStore.deleteDbBakPath(i);
@@ -242,7 +250,6 @@ public class BackupDbUtil {
     contractStore.deleteDbBakPath(i);
     storageRowStore.deleteDbBakPath(i);
   }
-
 }
 
 class UndefinedStateException extends RuntimeException {

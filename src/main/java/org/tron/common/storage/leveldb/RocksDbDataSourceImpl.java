@@ -1,6 +1,5 @@
 package org.tron.common.storage.leveldb;
 
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -8,9 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -18,26 +15,16 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.iq80.leveldb.DB;
-import org.iq80.leveldb.DBIterator;
 import org.rocksdb.Options;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.RocksIterator;
+import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
 import org.tron.common.storage.DbSourceInter;
 import org.tron.common.utils.FileUtil;
 import org.tron.core.config.args.Args;
 import org.tron.core.db.common.iterator.RockStoreIterator;
-import org.tron.core.db.common.iterator.StoreIterator;
-import org.tron.core.exception.BadItemException;
-
-/**
- * @program: java-tron
- * @description:
- * @author: shydesky@gmail.com
- * @create: 2018-10-30
- **/
 
 @Slf4j
 @NoArgsConstructor
@@ -62,7 +49,7 @@ public class RocksDbDataSourceImpl implements DbSourceInter<byte[]>,
     this.newParentName = Paths.get(
         parentName,
         Args.getInstance().getStorage().getDbDirectory()
-    ).toString().replace("output-rocksdb2", "output-rocksdb3");
+    ).toString();
   }
 
   public Path getDbPath() {
@@ -244,14 +231,63 @@ public class RocksDbDataSourceImpl implements DbSourceInter<byte[]>,
     return new RockStoreIterator(database.newIterator());
   }
 
+  private void updateByBatchInner(Map<byte[], byte[]> rows) throws Exception {
+    try (WriteBatch batch = new WriteBatch()) {
+      for (Map.Entry<byte[], byte[]> entry : rows.entrySet()) {
+        if (entry.getValue() == null) {
+          batch.delete(entry.getKey());
+        }else {
+          batch.put(entry.getKey(), entry.getValue());
+        }
+      }
+      database.write(new WriteOptions(), batch);
+    }
+  }
+
+  private void updateByBatchInner(Map<byte[], byte[]> rows, WriteOptions options)
+      throws Exception {
+    try (WriteBatch batch = new WriteBatch()) {
+      for (Map.Entry<byte[], byte[]> entry : rows.entrySet()) {
+        if (entry.getValue() == null) {
+          batch.delete(entry.getKey());
+        } else {
+          batch.put(entry.getKey(), entry.getValue());
+        }
+      }
+      database.write(new WriteOptions(), batch);
+    }
+  }
+
   @Override
   public void updateByBatch(Map<byte[], byte[]> rows) {
-
+    resetDbLock.readLock().lock();
+    try {
+      updateByBatchInner(rows);
+    } catch (Exception e) {
+      try {
+        updateByBatchInner(rows);
+      } catch (Exception e1) {
+        throw new RuntimeException(e);
+      }
+    } finally {
+      resetDbLock.readLock().unlock();
+    }
   }
 
   @Override
   public void updateByBatch(Map<byte[], byte[]> rows, WriteOptions writeOptions) {
-
+    resetDbLock.readLock().lock();
+    try {
+      updateByBatchInner(rows, writeOptions);
+    } catch (Exception e) {
+      try {
+        updateByBatchInner(rows);
+      } catch (Exception e1) {
+        throw new RuntimeException(e);
+      }
+    } finally {
+      resetDbLock.readLock().unlock();
+    }
   }
 
   public Map<byte[], byte[]> getNext(byte[] key, long limit) {

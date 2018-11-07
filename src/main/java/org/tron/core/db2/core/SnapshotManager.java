@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.iq80.leveldb.WriteOptions;
+import org.rocksdb.WriteOptions;
 import org.tron.common.storage.leveldb.RocksDbDataSourceImpl;
 import org.tron.common.utils.FileUtil;
 import org.tron.core.config.args.Args;
@@ -36,7 +36,7 @@ public class SnapshotManager implements RevokingDatabase {
   private boolean disabled = true;
   private int activeSession = 0;
   private boolean unChecked = true;
-  private WriteOptions writeOptions = new WriteOptions().sync(true);
+  private WriteOptions writeOptions = new WriteOptions().setSync(true);
 
   public ISession buildSession() {
     return buildSession(false);
@@ -217,10 +217,10 @@ public class SnapshotManager implements RevokingDatabase {
       }
     }
 
-    /*rocksDbDataSource.updateByBatch(batch.entrySet().stream()
+    rocksDbDataSource.updateByBatch(batch.entrySet().stream()
         .map(e -> Maps.immutableEntry(e.getKey().getBytes(), e.getValue().getBytes()))
         .collect(HashMap::new, (m, k) -> m.put(k.getKey(), k.getValue()), HashMap::putAll), writeOptions);
-   */ rocksDbDataSource.closeDB();
+    rocksDbDataSource.closeDB();
   }
 
   private void deleteCheckPoint() {

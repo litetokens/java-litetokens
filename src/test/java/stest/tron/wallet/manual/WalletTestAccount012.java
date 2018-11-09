@@ -7,7 +7,6 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
-import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeSuite;
@@ -30,7 +29,7 @@ import stest.tron.wallet.common.client.utils.PublicMethed;
 @Slf4j
 public class WalletTestAccount012 {
   private final String testKey002 = Configuration.getByPath("testng.conf")
-      .getString("foundationAccount.key2");
+      .getString("mainWitness.key2");
   private final byte[] fromAddress = PublicMethed.getFinalAddress(testKey002);
 
   private final String testKey003 = Configuration.getByPath("testng.conf")
@@ -60,9 +59,7 @@ public class WalletTestAccount012 {
   Long currentBlockNum;
 
   //get account
-  ECKey ecKey1 = new ECKey(Utils.getRandom());
-  byte[] asset011Address = ecKey1.getAddress();
-  String testKeyForAssetIssue011 = ByteArray.toHexString(ecKey1.getPrivKeyBytes());
+
 
 
 
@@ -75,7 +72,6 @@ public class WalletTestAccount012 {
 
   @BeforeClass(enabled = true)
   public void beforeClass() {
-    PublicMethed.printAddress(testKeyForAssetIssue011);
     PublicMethed.printAddress(testKey002);
     PublicMethed.printAddress(testKey003);
     channelFull = ManagedChannelBuilder.forTarget(fullnode)
@@ -91,8 +87,13 @@ public class WalletTestAccount012 {
     beforeTime = System.currentTimeMillis();
   }
 
-  @Test(enabled = true,threadPoolSize = 1, invocationCount = 1)
+  @Test(enabled = true,threadPoolSize = 30, invocationCount = 30)
   public void storageAndCpu() {
+    ECKey ecKey1 = new ECKey(Utils.getRandom());
+    byte[] asset011Address = ecKey1.getAddress();
+    String testKeyForAssetIssue011 = ByteArray.toHexString(ecKey1.getPrivKeyBytes());
+    PublicMethed.printAddress(testKeyForAssetIssue011);
+
     PublicMethed.sendcoin(asset011Address,10000000000L,fromAddress,testKey002,blockingStubFull);
     Random rand = new Random();
     Integer randNum = rand.nextInt(30) + 1;
@@ -106,7 +107,7 @@ public class WalletTestAccount012 {
         "",maxFeeLimit,
         0L, 100,null,testKeyForAssetIssue011,asset011Address,blockingStubFull);
     try {
-      Thread.sleep(3000);
+      Thread.sleep(30000);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
@@ -123,7 +124,7 @@ public class WalletTestAccount012 {
     Long beforeTotalEnergyLimit = accountResource.getTotalEnergyLimit();
     Account account = PublicMethed.queryAccount(testKeyForAssetIssue011,blockingStubFull);
     Long afterTotalEnergyLimit;
-    while (i++ < 5) {
+    while (i++ < 10000) {
       accountResource = PublicMethed.getAccountResource(asset011Address,
           blockingStubFull);
       beforeEnergyLimit = accountResource.getEnergyLimit();
@@ -134,30 +135,31 @@ public class WalletTestAccount012 {
           0, maxFeeLimit, asset011Address, testKeyForAssetIssue011, blockingStubFull);
       accountResource = PublicMethed.getAccountResource(asset011Address,
           blockingStubFull);
-      logger.info("Current limit is " + accountResource.getTotalEnergyLimit());
-      PublicMethed.freezeBalanceGetEnergy(asset011Address,1000000L,3,
-          1,testKeyForAssetIssue011,blockingStubFull);
+      //logger.info("Current limit is " + accountResource.getTotalEnergyLimit());
+      //PublicMethed.freezeBalanceGetEnergy(asset011Address,1000000L,3,
+      //    1,testKeyForAssetIssue011,blockingStubFull);
 
       accountResource = PublicMethed.getAccountResource(asset011Address,
           blockingStubFull);
       afterEnergyLimit = accountResource.getEnergyLimit();
       afterTotalEnergyLimit = accountResource.getTotalEnergyLimit();
 
-      logger.info("Total energy limit min is " + (afterTotalEnergyLimit - beforeTotalEnergyLimit));
-      logger.info("Energy limit min is " + (afterEnergyLimit - beforeEnergyLimit));
+      logger.info("Total energy limit is " + (float)afterTotalEnergyLimit/50000000000L);
+      //logger.info("Total energy limit min is " + (afterTotalEnergyLimit - beforeTotalEnergyLimit));
+      //logger.info("Energy limit min is " + (afterEnergyLimit - beforeEnergyLimit));
       Float rate = (float)(afterTotalEnergyLimit - beforeTotalEnergyLimit) / beforeTotalEnergyLimit;
-      logger.info("rate is " + rate);
-      Assert.assertTrue(rate >= 0.001001000 && rate <= 0.001001002);
-      txidList.add(txid);
+      //logger.info("rate is " + rate);
+      //Assert.assertTrue(rate >= 0.001001000 && rate <= 0.001001002);
+      //txidList.add(txid);
       try {
-        Thread.sleep(3000);
+        Thread.sleep(30);
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
       account = PublicMethed.queryAccount(testKeyForAssetIssue011,blockingStubFull);
       Float energyrate = (float)(beforeEnergyLimit) / account.getAccountResource()
-          .getFrozenBalanceForEnergy().getFrozenBalance() * 1000000;
-      logger.info("energy rate is " + energyrate);
+          .getFrozenBalanceForEnergy().getFrozenBalance();
+      //logger.info("energy rate is " + energyrate);
     }
   }
 

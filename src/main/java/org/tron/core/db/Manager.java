@@ -1149,6 +1149,8 @@ public class Manager {
           eventLogService.insertEventLog(eventLogEntity);
         });
       });
+    } catch (org.springframework.dao.DuplicateKeyException e){
+
     } catch (Exception e) {
       logger.error("sendEventLog Failed {}", e);
     }

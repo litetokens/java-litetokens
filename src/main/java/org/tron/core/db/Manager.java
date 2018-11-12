@@ -1056,6 +1056,7 @@ public class Manager {
     final long timestamp = this.dynamicPropertiesStore.getLatestBlockHeaderTimestamp();
     final long number = this.dynamicPropertiesStore.getLatestBlockHeaderNumber();
     final Sha256Hash preHash = this.dynamicPropertiesStore.getLatestBlockHeaderHash();
+    long startTime = System.currentTimeMillis();
 
     // judge create block time
     if (when < timestamp) {
@@ -1071,6 +1072,7 @@ public class Manager {
     session.setValue(revokingStore.buildSession());
 
     Iterator iterator = pendingTransactions.iterator();
+    logger.info("PUSH BLOCK, pendingTransactions size: {}", pendingTransactions.size());
     while (iterator.hasNext()) {
       TransactionCapsule trx = (TransactionCapsule) iterator.next();
       if (DateTime.now().getMillis() - when
@@ -1128,7 +1130,11 @@ public class Manager {
       }
     }
 
+    long gTime = System.currentTimeMillis();
+
     session.reset();
+
+    long resetTime = System.currentTimeMillis();
 
     if (postponedTrxCount > 0) {
       logger.info("{} transactions over the block size limit", postponedTrxCount);
@@ -1140,8 +1146,21 @@ public class Manager {
     blockCapsule.setMerkleRoot();
     blockCapsule.sign(privateKey);
 
+    long signTime = System.currentTimeMillis();
+
     try {
       this.pushBlock(blockCapsule);
+      long pushTime = System.currentTimeMillis();
+
+      logger.info("PUSH BLOCK, Num: {}, trxSize: {}, generateTime: {}, pendingTransactions: {}, resetTime: {}, signTime: {}, pushBlockTime: {}",
+          blockCapsule.getNum(),
+          blockCapsule.getTransactions().size(),
+          pendingTransactions.size(),
+          gTime - startTime,
+          resetTime - gTime,
+          signTime - resetTime,
+          pushTime - signTime);
+
       return blockCapsule;
     } catch (TaposException e) {
       logger.info("contract not processed during TaposException");

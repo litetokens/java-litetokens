@@ -1039,7 +1039,7 @@ public class Manager {
       Boolean lastHeadBlockIsMaintenanceBefore)
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
       UnLinkedBlockException, ValidateScheduleException, AccountResourceInsufficientException {
-
+    long startTime = System.currentTimeMillis();
     //check that the first block after the maintenance period has just been processed
     // if (lastHeadBlockIsMaintenanceBefore != lastHeadBlockIsMaintenance()) {
     if (!witnessController.validateWitnessSchedule(witnessCapsule.getAddress(), when)) {
@@ -1056,7 +1056,7 @@ public class Manager {
     final long timestamp = this.dynamicPropertiesStore.getLatestBlockHeaderTimestamp();
     final long number = this.dynamicPropertiesStore.getLatestBlockHeaderNumber();
     final Sha256Hash preHash = this.dynamicPropertiesStore.getLatestBlockHeaderHash();
-    long startTime = System.currentTimeMillis();
+    boolean flag = false;
 
     // judge create block time
     if (when < timestamp) {
@@ -1080,6 +1080,7 @@ public class Manager {
           * Args.getInstance().getBlockProducedTimeOut()
           / 100) {
         logger.warn("Processing transaction time exceeds the 50% producing time。");
+        flag = true;
         break;
       }
       // check the block size
@@ -1149,17 +1150,21 @@ public class Manager {
     long signTime = System.currentTimeMillis();
 
     try {
+      logger.info("PUSH BLOCK, pendingTransactions size: {}", pendingTransactions.size());
       this.pushBlock(blockCapsule);
       long pushTime = System.currentTimeMillis();
 
-      logger.info("PUSH BLOCK, Num: {}, trxSize: {}, generateTime: {}, pendingTransactions: {}, resetTime: {}, signTime: {}, pushBlockTime: {}",
+      logger.info("PUSH BLOCK, Num: {}, trxSize: {}, pendingTransactions: {}, flag: {}"
+              + "generateTime: {}, resetTime: {}, signTime: {}, pushBlockTime: {}, totalTime: {}",
           blockCapsule.getNum(),
           blockCapsule.getTransactions().size(),
           pendingTransactions.size(),
+          flag,
           gTime - startTime,
           resetTime - gTime,
           signTime - resetTime,
-          pushTime - signTime);
+          pushTime - signTime,
+          System.currentTimeMillis() - startTime);
 
       return blockCapsule;
     } catch (TaposException e) {

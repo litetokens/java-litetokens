@@ -10,12 +10,14 @@ import org.tron.core.db.TransactionTrace.TimeResultType;
 @Slf4j
 public class PendingManager implements AutoCloseable {
 
+  long time;
+
   @Getter
   static List<TransactionCapsule> tmpTransactions = new ArrayList<>();
   Manager dbManager;
 
   public PendingManager(Manager db) {
-
+    time = System.currentTimeMillis();
     this.dbManager = db;
     tmpTransactions.addAll(db.getPendingTransactions());
     db.getPendingTransactions().clear();
@@ -24,6 +26,8 @@ public class PendingManager implements AutoCloseable {
 
   @Override
   public void close() {
+
+    logger.info("PUSH BLOCK PendingManager cost: {}", System.currentTimeMillis() - time);
 
     for (TransactionCapsule tx : PendingManager.tmpTransactions) {
       try {

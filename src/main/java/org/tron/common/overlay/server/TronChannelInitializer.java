@@ -69,11 +69,37 @@ public class TronChannelInitializer extends ChannelInitializer<NioSocketChannel>
       ch.config().setOption(ChannelOption.SO_RCVBUF, 256 * 1024);
       ch.config().setOption(ChannelOption.SO_BACKLOG, 1024);
 
+<<<<<<< HEAD
       // be aware of channel closing
       ch.closeFuture().addListener((ChannelFutureListener) future -> {
         logger.info("Close channel:" + channel);
         if (!peerDiscoveryMode) {
           channelManager.notifyDisconnect(channel);
+=======
+    @Override
+    public void initChannel(NioSocketChannel ch) throws Exception {
+        try {
+            final Channel channel = ctx.getBean(PeerConnection.class);
+
+            channel.init(ch.pipeline(), remoteId, peerDiscoveryMode, channelManager, p2pNode);
+            
+            // limit the size of receiving buffer to 1024
+            ch.config().setRecvByteBufAllocator(new FixedRecvByteBufAllocator(256 * 1024));
+            ch.config().setOption(ChannelOption.SO_RCVBUF, 256 * 1024);
+            ch.config().setOption(ChannelOption.SO_BACKLOG, 1024);
+
+            // be aware of channel closing
+            ch.closeFuture().addListener((ChannelFutureListener) future -> {
+                logger.info("Close channel:" + channel);
+                logger.info("peerDiscoveryMode: " + peerDiscoveryMode);
+                if (!peerDiscoveryMode) {
+                    channelManager.notifyDisconnect(channel);
+                }
+            });
+
+        } catch (Exception e) {
+            logger.error("Unexpected error: ", e);
+>>>>>>> a5fe7ed59... sss
         }
       });
 

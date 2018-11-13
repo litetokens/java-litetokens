@@ -1229,6 +1229,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
       ids.addAll(blockIds);
       if (!ids.isEmpty()) {
         peer.sendMessage(new FetchInvDataMessage(ids, InventoryType.BLOCK));
+        logger.info(ids.get(1))
       }
     });
 
@@ -1297,10 +1298,12 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
   @Override
   public void onDisconnectPeer(PeerConnection peer) {
 
+    logger.info("peer.getSyncBlockRequested(): " + peer.getSyncBlockRequested().isEmpty());
     if (!peer.getSyncBlockRequested().isEmpty()) {
       peer.getSyncBlockRequested().keySet()
           .forEach(blockId -> syncBlockIdWeRequested.invalidate(blockId));
       isFetchSyncActive = true;
+      logger.info("disconnect peer: " + peer.getNode().getHost() + " and isFetchSyncActive:" + isFetchSyncActive);
     }
 
     if (!peer.getAdvObjWeRequested().isEmpty()) {

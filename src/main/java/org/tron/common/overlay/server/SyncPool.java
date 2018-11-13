@@ -188,6 +188,7 @@ public class SyncPool {
   }
 
   public synchronized void onDisconnect(Channel peer) {
+    logger.info("activePeers.contains(peer):" + activePeers.contains(peer));
     if (activePeers.contains(peer)) {
       if (!peer.isActive()) {
         passivePeersCount.decrementAndGet();

@@ -225,6 +225,7 @@ public class WitnessService implements Service {
     }
 
     long scheduledTime = controller.getSlotTime(slot);
+    long time = System.currentTimeMillis();
 
     if (scheduledTime - now > PRODUCE_TIME_OUT) {
       return BlockProductionCondition.LAG;
@@ -241,6 +242,7 @@ public class WitnessService implements Service {
       controller.setGeneratingBlock(true);
       BlockCapsule block;
       synchronized (tronApp.getDbManager()) {
+        logger.info("PUSH BLOCK get block cost: {}", System.currentTimeMillis() - time);
         block = generateBlock(scheduledTime, scheduledWitness,
             controller.lastHeadBlockIsMaintenance());
 

@@ -68,7 +68,9 @@ public class NodeDelegateImpl implements NodeDelegate {
     }
     try {
       dbManager.preValidateTransactionSign(block);
+      long time = System.currentTimeMillis();
       dbManager.pushBlock(block);
+      logger.info("PUSH BLOCK net push block cost: {}", System.currentTimeMillis() - time);
       if (!syncMode) {
         List<TransactionCapsule> trx = null;
         trx = block.getTransactions();

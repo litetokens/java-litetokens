@@ -603,6 +603,7 @@ public class Manager {
   public synchronized void eraseBlock() {
     session.reset();
     try {
+      long time = System.currentTimeMillis();
       BlockCapsule oldHeadBlock = getBlockById(
           getDynamicPropertiesStore().getLatestBlockHeaderHash());
       logger.info("begin to erase block:" + oldHeadBlock);
@@ -610,7 +611,7 @@ public class Manager {
       revokingStore.fastPop();
       logger.info("end to erase block:" + oldHeadBlock);
       popedTransactions.addAll(oldHeadBlock.getTransactions());
-
+      logger.info("PUSH BLOCK eraseBlock cost: {}", System.currentTimeMillis() - time);
     } catch (ItemNotFoundException | BadItemException e) {
       logger.warn(e.getMessage(), e);
     }

@@ -83,6 +83,7 @@ public class IncrementalMerkleWitnessCapsule implements ProtoCapsule<Incremental
         .build();
   }
 
+
   @Override
   public byte[] getData() {
     return this.witness.toByteArray();

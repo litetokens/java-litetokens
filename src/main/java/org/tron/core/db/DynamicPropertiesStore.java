@@ -129,6 +129,11 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   private static final byte[] ALLOW_CREATION_OF_CONTRACTS = "ALLOW_CREATION_OF_CONTRACTS"
       .getBytes();
 
+  //token id,Incremental，The initial value is 1000000
+  private static final byte[] TOKEN_ID_NUM = "TOKEN_ID_NUM".getBytes();
+
+  //Used only for token updates, once，value is {0,1}
+  private static final byte[] TOKEN_UPDATE_DONE = "TOPEN_UPDATE_DONE".getBytes();
 
   @Autowired
   private DynamicPropertiesStore(@Value("properties") String dbName) {
@@ -970,6 +975,37 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
         .orElseThrow(
             () -> new IllegalArgumentException("not found ALLOW_SAME_TOKEN_NAME"));
   }
+
+
+  public void saveTokenIdNum(long num) {
+    this.put(TOKEN_ID_NUM,
+        new BytesCapsule(ByteArray.fromLong(num)));
+  }
+
+  public long getTokenIdNum() {
+    return Optional.ofNullable(getUnchecked(TOKEN_ID_NUM))
+        .map(BytesCapsule::getData)
+        .map(ByteArray::toLong)
+        .orElseThrow(
+            () -> new IllegalArgumentException("not found TOKEN_ID_NUM"));
+  }
+
+  public void saveTokenUpdateDone(long num) {
+    this.put(TOKEN_UPDATE_DONE,
+        new BytesCapsule(ByteArray.fromLong(num)));
+  }
+
+  public long getTokenUpdateDone() {
+    return Optional.ofNullable(getUnchecked(TOKEN_UPDATE_DONE))
+        .map(BytesCapsule::getData)
+        .map(ByteArray::toLong)
+        .orElseThrow(
+            () -> new IllegalArgumentException("not found TOKEN_UPDATE_DONE"));
+  }
+
+
+
+
 
   public void saveAllowCreationOfContracts(long allowCreationOfContracts) {
     this.put(DynamicPropertiesStore.ALLOW_CREATION_OF_CONTRACTS,

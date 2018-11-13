@@ -224,25 +224,25 @@ public class WitnessService implements Service {
       return NOT_MY_TURN;
     }
 
-    long scheduledTime = controller.getSlotTime(slot);
-    long time = System.currentTimeMillis();
-
-    if (scheduledTime - now > PRODUCE_TIME_OUT) {
-      return BlockProductionCondition.LAG;
-    }
-
-    if (!privateKeyMap.containsKey(scheduledWitness)) {
-      return BlockProductionCondition.NO_PRIVATE_KEY;
-    }
+    BlockCapsule block;
 
     try {
-
-      controller.getManager().lastHeadBlockIsMaintenance();
-
-      controller.setGeneratingBlock(true);
-      BlockCapsule block;
       synchronized (tronApp.getDbManager()) {
-        logger.info("PUSH BLOCK get block cost: {}", System.currentTimeMillis() - time);
+        long scheduledTime = controller.getSlotTime(slot);
+
+        if (scheduledTime - now > PRODUCE_TIME_OUT) {
+          return BlockProductionCondition.LAG;
+        }
+
+        if (!privateKeyMap.containsKey(scheduledWitness)) {
+          return BlockProductionCondition.NO_PRIVATE_KEY;
+        }
+
+        controller.getManager().lastHeadBlockIsMaintenance();
+
+        controller.setGeneratingBlock(true);
+
+
         block = generateBlock(scheduledTime, scheduledWitness,
             controller.lastHeadBlockIsMaintenance());
 

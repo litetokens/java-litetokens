@@ -1154,11 +1154,12 @@ public class Manager {
       this.pushBlock(blockCapsule);
       long pushTime = System.currentTimeMillis();
 
-      logger.info("PUSH BLOCK, Num: {}, trxSize: {}, pendingTransactions: {}, flag: {}"
+      logger.info("PUSH BLOCK, Num: {}, trxSize: {}, pendingTransactions: {}, repushTransactionsSize: {}, flag: {},"
               + "generateTime: {}, resetTime: {}, signTime: {}, pushBlockTime: {}, totalTime: {}",
           blockCapsule.getNum(),
           blockCapsule.getTransactions().size(),
           pendingTransactions.size(),
+          repushTransactions.size(),
           flag,
           gTime - startTime,
           resetTime - gTime,

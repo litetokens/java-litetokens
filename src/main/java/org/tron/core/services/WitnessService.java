@@ -64,7 +64,8 @@ public class WitnessService implements Service {
 
   private AtomicInteger dupBlockCount = new AtomicInteger(0);
   private AtomicLong dupBlockTime = new AtomicLong(0);
-  private long blockCycle = ChainConstant.BLOCK_PRODUCED_INTERVAL * ChainConstant.MAX_ACTIVE_WITNESS_NUM;
+  private long blockCycle =
+      ChainConstant.BLOCK_PRODUCED_INTERVAL * ChainConstant.MAX_ACTIVE_WITNESS_NUM;
 
   /**
    * Construction method.
@@ -242,6 +243,9 @@ public class WitnessService implements Service {
 
         controller.setGeneratingBlock(true);
 
+        controller.getManager().lastHeadBlockIsMaintenance();
+
+        controller.setGeneratingBlock(true);
 
         block = generateBlock(scheduledTime, scheduledWitness,
             controller.lastHeadBlockIsMaintenance());
@@ -296,12 +300,12 @@ public class WitnessService implements Service {
         this.privateKeyMap.get(witnessAddress), lastHeadBlockIsMaintenance);
   }
 
-  private boolean dupWitnessCheck(){
-    if (dupBlockCount.get() == 0){
+  private boolean dupWitnessCheck() {
+    if (dupBlockCount.get() == 0) {
       return false;
     }
 
-    if (System.currentTimeMillis() - dupBlockTime.get() > dupBlockCount.get() * blockCycle){
+    if (System.currentTimeMillis() - dupBlockTime.get() > dupBlockCount.get() * blockCycle) {
       dupBlockCount.set(0);
       return false;
     }
@@ -309,22 +313,22 @@ public class WitnessService implements Service {
     return true;
   }
 
-  public void processBlock(BlockCapsule block){
-    if (block.generatedByMyself){
+  public void processBlock(BlockCapsule block) {
+    if (block.generatedByMyself) {
       return;
     }
 
-    if (System.currentTimeMillis() - block.getTimeStamp() > ChainConstant.BLOCK_PRODUCED_INTERVAL){
+    if (System.currentTimeMillis() - block.getTimeStamp() > ChainConstant.BLOCK_PRODUCED_INTERVAL) {
       return;
     }
 
-    if (!privateKeyMap.containsKey(block.getWitnessAddress())){
+    if (!privateKeyMap.containsKey(block.getWitnessAddress())) {
       return;
     }
 
-    if (dupBlockCount.get() == 0){
+    if (dupBlockCount.get() == 0) {
       dupBlockCount.set(new Random().nextInt(10));
-    }else {
+    } else {
       dupBlockCount.set(10);
     }
 

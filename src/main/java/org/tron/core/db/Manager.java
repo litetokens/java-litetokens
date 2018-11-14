@@ -1087,7 +1087,9 @@ public class Manager {
     logger.info("PUSH BLOCK, pendingTransactions size: {}", pendingTransactions.size());
     while (iterator.hasNext() || repushTransactions.size() > 0) {
       TransactionCapsule trx;
+      boolean fromPending = false;
       if (iterator.hasNext()) {
+        fromPending = true;
         trx = (TransactionCapsule) iterator.next();
       } else {
         trx = repushTransactions.poll();
@@ -1112,7 +1114,9 @@ public class Manager {
         tmpSeesion.merge();
         // push into block
         blockCapsule.addTransaction(trx);
-        iterator.remove();
+        if (fromPending){
+          iterator.remove();
+        }
       } catch (ContractExeException e) {
         logger.info("contract not processed during execute");
         logger.debug(e.getMessage(), e);

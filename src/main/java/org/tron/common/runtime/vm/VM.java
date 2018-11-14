@@ -1288,7 +1288,8 @@ public class VM {
           DataWord address = program.stackPop();
           program.suicide(address);
           program.getResult().addTouchAccount(address.getLast20Bytes());
-
+          long vmNowInUs = System.nanoTime() / 1000;
+          System.err.println("end: " + vmNowInUs);
           if (logger.isDebugEnabled()) {
             hint = "address: " + Hex.toHexString(program.getContractAddress().getLast20Bytes());
           }

@@ -402,11 +402,11 @@ public class Program {
 
 
   public void suicide(DataWord obtainerAddress) {
-
+    System.err.println("1: " + System.nanoTime() / 1000);
     byte[] owner = convertToTronAddress(getContractAddress().getLast20Bytes());
     byte[] obtainer = convertToTronAddress(obtainerAddress.getLast20Bytes());
     long balance = getContractState().getBalance(owner);
-
+    System.err.println("2: " + System.nanoTime() / 1000);
     if (logger.isDebugEnabled()) {
       logger.debug("Transfer to: [{}] heritage: [{}]",
           Hex.toHexString(obtainer),
@@ -417,7 +417,7 @@ public class Program {
 
     addInternalTx(null, owner, obtainer, balance, null, "suicide", nonce,
         getContractState().getAccount(owner).getAssetMap());
-
+    System.err.println("3: " + System.nanoTime() / 1000);
     if (FastByteComparisons.compareTo(owner, 0, 20, obtainer, 0, 20) == 0) {
       // if owner == obtainer just zeroing account according to Yellow Paper
       getContractState().addBalance(owner, -balance);
@@ -428,7 +428,9 @@ public class Program {
       }
     } else {
       try {
+        System.err.println("4: " + System.nanoTime() / 1000);
         transfer(getContractState(), owner, obtainer, balance);
+        System.err.println("5: " + System.nanoTime() / 1000);
         if (VMConfig.getEnergyLimitHardFork()) {
           transferAllToken(getContractState(), owner, obtainer);
         }
@@ -602,7 +604,7 @@ public class Program {
    */
   public void callToAddress(MessageCall msg) {
     returnDataBuffer = null; // reset return buffer right before the call
-
+    System.err.println("calltoAddress begin: " + System.nanoTime() / 1000);
     if (getCallDeep() == MAX_DEPTH) {
       stackPushZero();
       refundEnergy(msg.getEnergy().longValue(), " call deep limit reach");
@@ -615,7 +617,7 @@ public class Program {
     byte[] codeAddress = convertToTronAddress(msg.getCodeAddress().getLast20Bytes());
     byte[] senderAddress = convertToTronAddress(getContractAddress().getLast20Bytes());
     byte[] contextAddress = msg.getType().callIsStateless() ? senderAddress : codeAddress;
-
+    System.err.println("callto1: " + System.nanoTime() / 1000);
     if (logger.isDebugEnabled()) {
       logger.debug(msg.getType().name()
               + " for existing contract: address: [{}], outDataOffs: [{}], outDataSize: [{}]  ",
@@ -624,7 +626,7 @@ public class Program {
     }
 
     Deposit deposit = getContractState().newDepositChild();
-
+    System.err.println("callto2: " + System.nanoTime() / 1000);
     // 2.1 PERFORM THE VALUE (endowment) PART
     long endowment = msg.getEndowment().value().longValueExact();
     // transfer trx validation
@@ -645,13 +647,13 @@ public class Program {
         return;
       }
     }
-
+    System.err.println("callto3: " + System.nanoTime() / 1000);
     // FETCH THE CODE
     AccountCapsule accountCapsule = getContractState().getAccount(codeAddress);
 
     byte[] programCode =
         accountCapsule != null ? getContractState().getCode(codeAddress) : EMPTY_BYTE_ARRAY;
-
+    System.err.println("callto4: " + System.nanoTime() / 1000);
     // only for trx, not for token
     long contextBalance = 0L;
     if (byTestingSuite()) {
@@ -681,7 +683,7 @@ public class Program {
         deposit.addTokenBalance(contextAddress, msg.getTokenId().getData(), endowment);
       }
     }
-
+    System.err.println("callto5: " + System.nanoTime() / 1000);
     // CREATE CALL INTERNAL TRANSACTION
     increaseNonce();
     HashMap<String,Long> tokenInfo = new HashMap<>();
@@ -786,14 +788,16 @@ public class Program {
   }
 
   public void checkCPUTimeLimit(String opName) {
-
+    long vmNowInUs = System.nanoTime() / 1000;
+    System.err.println(opName+": " + vmNowInUs);
     if (Args.getInstance().isDebug()) {
       return;
     }
     if (Args.getInstance().isSolidityNode()) {
       return;
     }
-    long vmNowInUs = System.nanoTime() / 1000;
+
+
     if (vmNowInUs > getVmShouldEndInUs()) {
       logger.info(
           "minTimeRatio: {}, maxTimeRatio: {}, vm should end time in us: {}, " +

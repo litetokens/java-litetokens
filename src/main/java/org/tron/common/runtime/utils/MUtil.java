@@ -27,16 +27,27 @@ public class MUtil {
   }
 
   public static void transferAllToken(Deposit deposit, byte[] fromAddress, byte[] toAddress) {
+    System.err.println("getAccount: " + System.nanoTime() / 1000);
     AccountCapsule fromAccountCap = deposit.getAccount(fromAddress);
+    System.err.println("fromBuilder: " + System.nanoTime() / 1000);
     Protocol.Account.Builder fromBuilder = fromAccountCap.getInstance().toBuilder();
+    System.err.println("toAccount: " + System.nanoTime() / 1000);
     AccountCapsule toAccountCap = deposit.getAccount(toAddress);
+    System.err.println("toBuilder: " + System.nanoTime() / 1000);
     Protocol.Account.Builder toBuilder = toAccountCap.getInstance().toBuilder();
-    fromAccountCap.getAssetMap().forEach((tokenId, amount) ->
-        toBuilder.putAsset(tokenId,toBuilder.getAssetMap().getOrDefault(tokenId, 0L) + amount));
-    fromAccountCap.getAssetMap().forEach((tokenId, amount) ->
-        fromBuilder.putAsset(tokenId,0L));
+    System.err.println("beforLoopAssetMap: " + System.nanoTime() / 1000);
+    fromAccountCap.getAssetMap().forEach((tokenId, amount) -> {
+          toBuilder.putAsset(tokenId,toBuilder.getAssetMap().getOrDefault(tokenId, 0L) + amount);
+          fromBuilder.putAsset(tokenId,0L);
+        });
+//    fromAccountCap.getAssetMap().forEach((tokenId, amount) ->
+//        fromBuilder.putAsset(tokenId,0L));
+    System.err.println("afterLoopAssetMap: " + System.nanoTime() / 1000);
+    System.err.println("beforePutAccount1: " + System.nanoTime() / 1000);
     deposit.putAccountValue(fromAddress,new AccountCapsule(fromBuilder.build()));
+    System.err.println("beforePutAccount2: " + System.nanoTime() / 1000);
     deposit.putAccountValue(toAddress, new AccountCapsule(toBuilder.build()));
+    System.err.println("done: " + System.nanoTime() / 1000);
   }
 
   public static void transferToken(Deposit deposit, byte[] fromAddress, byte[] toAddress, String tokenId, long amount)

@@ -558,7 +558,8 @@ public class RuntimeImpl implements Runtime {
 
         vm.play(program);
         result = program.getResult();
-
+        long vmNowInUs = System.nanoTime() / 1000;
+        System.err.println("end: " + vmNowInUs);
         if (isCallConstant()) {
           long callValue = TransactionCapsule.getCallValue(trx.getRawData().getContract(0));
           if (callValue > 0) {

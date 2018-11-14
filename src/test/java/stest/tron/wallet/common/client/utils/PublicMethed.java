@@ -829,6 +829,7 @@ public class PublicMethed {
     Protocol.Transaction transaction = blockingStubFull.transferAsset(contract);
 
     if (transaction == null || transaction.getRawData().getContractCount() == 0) {
+      System.err.println(transaction);
       if (transaction == null) {
         logger.info("transaction == null");
       } else {

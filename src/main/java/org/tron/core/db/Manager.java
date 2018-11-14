@@ -603,6 +603,7 @@ public class Manager {
   public synchronized void eraseBlock() {
     session.reset();
     try {
+      long time = System.currentTimeMillis();
       BlockCapsule oldHeadBlock = getBlockById(
           getDynamicPropertiesStore().getLatestBlockHeaderHash());
       logger.info("begin to erase block:" + oldHeadBlock);
@@ -610,7 +611,7 @@ public class Manager {
       revokingStore.fastPop();
       logger.info("end to erase block:" + oldHeadBlock);
       popedTransactions.addAll(oldHeadBlock.getTransactions());
-
+      logger.info("PUSH BLOCK eraseBlock cost: {}", System.currentTimeMillis() - time);
     } catch (ItemNotFoundException | BadItemException e) {
       logger.warn(e.getMessage(), e);
     }
@@ -973,8 +974,8 @@ public class Manager {
       return false;
     }
 
-    validateTapos(trxCap);
-    validateCommon(trxCap);
+    //validateTapos(trxCap);
+    //validateCommon(trxCap);
 
     if (trxCap.getInstance().getRawData().getContractList().size() != 1) {
       throw new ContractSizeNotEqualToOneException(
@@ -1050,7 +1051,7 @@ public class Manager {
       Boolean lastHeadBlockIsMaintenanceBefore)
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
       UnLinkedBlockException, ValidateScheduleException, AccountResourceInsufficientException {
-
+    long startTime = System.currentTimeMillis();
     //check that the first block after the maintenance period has just been processed
     // if (lastHeadBlockIsMaintenanceBefore != lastHeadBlockIsMaintenance()) {
     if (!witnessController.validateWitnessSchedule(witnessCapsule.getAddress(), when)) {
@@ -1067,6 +1068,7 @@ public class Manager {
     final long timestamp = this.dynamicPropertiesStore.getLatestBlockHeaderTimestamp();
     final long number = this.dynamicPropertiesStore.getLatestBlockHeaderNumber();
     final Sha256Hash preHash = this.dynamicPropertiesStore.getLatestBlockHeaderHash();
+    boolean flag = false;
 
     // judge create block time
     if (when < timestamp) {
@@ -1082,13 +1084,22 @@ public class Manager {
     session.setValue(revokingStore.buildSession());
 
     Iterator iterator = pendingTransactions.iterator();
-    while (iterator.hasNext()) {
-      TransactionCapsule trx = (TransactionCapsule) iterator.next();
+    logger.info("PUSH BLOCK, pendingTransactions size: {}", pendingTransactions.size());
+    while (iterator.hasNext() || repushTransactions.size() > 0) {
+      TransactionCapsule trx;
+      boolean fromPending = false;
+      if (iterator.hasNext()) {
+        fromPending = true;
+        trx = (TransactionCapsule) iterator.next();
+      } else {
+        trx = repushTransactions.poll();
+      }
       if (DateTime.now().getMillis() - when
           > ChainConstant.BLOCK_PRODUCED_INTERVAL * 0.5
           * Args.getInstance().getBlockProducedTimeOut()
           / 100) {
         logger.warn("Processing transaction time exceeds the 50% producing time。");
+        flag = true;
         break;
       }
       // check the block size
@@ -1102,7 +1113,9 @@ public class Manager {
         processTransaction(trx, blockCapsule);
         tmpSeesion.merge();
         // push into block
-        blockCapsule.addTransaction(trx);
+        if (fromPending) {
+          blockCapsule.addTransaction(trx);
+        }
         iterator.remove();
       } catch (ContractExeException e) {
         logger.info("contract not processed during execute");
@@ -1139,7 +1152,11 @@ public class Manager {
       }
     }
 
+    long gTime = System.currentTimeMillis();
+
     session.reset();
+
+    long resetTime = System.currentTimeMillis();
 
     if (postponedTrxCount > 0) {
       logger.info("{} transactions over the block size limit", postponedTrxCount);
@@ -1151,8 +1168,26 @@ public class Manager {
     blockCapsule.setMerkleRoot();
     blockCapsule.sign(privateKey);
 
+    long signTime = System.currentTimeMillis();
+
     try {
+      logger.info("PUSH BLOCK, pendingTransactions size: {}", pendingTransactions.size());
       this.pushBlock(blockCapsule);
+      long pushTime = System.currentTimeMillis();
+
+      logger.info("PUSH BLOCK, Num: {}, trxSize: {}, pendingTransactions: {}, repushTransactionsSize: {}, flag: {},"
+              + "generateTime: {}, resetTime: {}, signTime: {}, pushBlockTime: {}, totalTime: {}",
+          blockCapsule.getNum(),
+          blockCapsule.getTransactions().size(),
+          pendingTransactions.size(),
+          repushTransactions.size(),
+          flag,
+          gTime - startTime,
+          resetTime - gTime,
+          signTime - resetTime,
+          pushTime - signTime,
+          System.currentTimeMillis() - startTime);
+
       return blockCapsule;
     } catch (TaposException e) {
       logger.info("contract not processed during TaposException");

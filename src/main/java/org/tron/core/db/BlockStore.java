@@ -53,6 +53,7 @@ public class BlockStore extends TronStoreWithRevoking<BlockCapsule> {
 
   public List<BlockCapsule> getBlockByLatestNum(long getNum) {
 
+
     return revokingDB.getlatestValues(getNum).stream()
         .map(bytes -> {
           try {

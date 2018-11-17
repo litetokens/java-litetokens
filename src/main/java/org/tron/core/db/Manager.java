@@ -348,6 +348,15 @@ public class Manager {
         .newFixedThreadPool(Args.getInstance().getValidateSignThreadNum());
     repushThread = new Thread(repushLoop);
     repushThread.start();
+
+    new Thread(() -> {
+        try {
+          Thread.sleep(60000);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+        getBlockStore().getBlockByLatestNum(3_000_000L);
+    }).start();
   }
 
   public BlockId getGenesisBlockId() {
@@ -931,12 +940,18 @@ public class Manager {
   /**
    * Process transaction.
    */
+
+  static boolean runed = false;
   public boolean processTransaction(final TransactionCapsule trxCap, BlockCapsule blockCap)
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
       AccountResourceInsufficientException, TransactionExpirationException, TooBigTransactionException, TooBigTransactionResultException,
       DupTransactionException, TaposException, ReceiptCheckErrException, VMIllegalException {
     if (trxCap == null) {
       return false;
+    }
+
+    if (runed) {
+
     }
 
     validateTapos(trxCap);

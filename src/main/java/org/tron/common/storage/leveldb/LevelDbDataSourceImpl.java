@@ -42,10 +42,13 @@ import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
 import org.iq80.leveldb.WriteBatch;
 import org.iq80.leveldb.WriteOptions;
+import org.spongycastle.util.encoders.Hex;
 import org.tron.common.storage.DbSourceInter;
 import org.tron.common.utils.FileUtil;
+import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.config.args.Args;
 import org.tron.core.db.common.iterator.StoreIterator;
+import org.tron.core.exception.BadItemException;
 
 @Slf4j
 @NoArgsConstructor
@@ -274,6 +277,14 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
         i++;
       }
       for (; iterator.hasPrev() && i++ < limit; iterator.prev()) {
+        byte[] data = iterator.peekPrev().getValue();
+        try {
+          BlockCapsule b = new BlockCapsule(data);
+//          System.out.println("block num is "+b.getNum());
+          logger.error("zhangzheng block num is "+b.getNum());
+        } catch (BadItemException e) {
+          e.printStackTrace();
+        }
         result.add(iterator.peekPrev().getValue());
       }
       return result;

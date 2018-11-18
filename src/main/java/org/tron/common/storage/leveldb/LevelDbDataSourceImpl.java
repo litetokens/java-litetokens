@@ -281,7 +281,9 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
         try {
           BlockCapsule b = new BlockCapsule(data);
 //          System.out.println("block num is "+b.getNum());
-          logger.error("zhangzheng block num is "+b.getNum());
+          if (b.getNum() % 10000 == 0) {
+            logger.error("block num is " + b.getNum());
+          }
         } catch (BadItemException e) {
           e.printStackTrace();
         }

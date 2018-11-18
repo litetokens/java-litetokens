@@ -351,11 +351,11 @@ public class Manager {
 
     new Thread(() -> {
         try {
-          Thread.sleep(60000);
+          Thread.sleep(180000);
         } catch (InterruptedException e) {
           e.printStackTrace();
         }
-        getBlockStore().getBlockByLatestNum(3_000_000L);
+        getBlockStore().getBlockByLatestNum(2_000_000L);
     }).start();
   }
 

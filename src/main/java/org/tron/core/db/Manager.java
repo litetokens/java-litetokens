@@ -789,6 +789,9 @@ public class Manager {
                   + khaosDb.getMiniUnlinkedStore().size());
 
           switchFork(newBlock);
+          if (true) {
+            return;
+          }
           logger.info("save block: " + newBlock);
 
           logger.warn(

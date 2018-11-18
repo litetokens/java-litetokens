@@ -733,6 +733,10 @@ public class Manager {
       ReceiptCheckErrException, VMIllegalException {
     try (PendingManager pm = new PendingManager(this)) {
 
+      if (true) {
+        logger.error("not push block");
+        return;
+      }
       if (!block.generatedByMyself) {
         if (!block.validateSignature()) {
           logger.warn("The signature is not validated.");
@@ -789,9 +793,7 @@ public class Manager {
                   + khaosDb.getMiniUnlinkedStore().size());
 
           switchFork(newBlock);
-          if (true) {
-            return;
-          }
+
           logger.info("save block: " + newBlock);
 
           logger.warn(

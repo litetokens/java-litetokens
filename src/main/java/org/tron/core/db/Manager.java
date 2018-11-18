@@ -351,7 +351,7 @@ public class Manager {
 
     new Thread(() -> {
         try {
-          Thread.sleep(180000);
+          Thread.sleep(60000);
         } catch (InterruptedException e) {
           e.printStackTrace();
         }

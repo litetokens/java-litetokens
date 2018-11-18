@@ -66,9 +66,9 @@ public class ForkController {
     if (logger.isDebugEnabled()) {
       logger.debug("*****hardFork:" + hardFork);
     }
-    if (!hardFork) {
-      throw new ContractExeException("not yet hard forked");
-    }
+//    if (!hardFork) {
+//      throw new ContractExeException("not yet hard forked");
+//    }
   }
 
   public synchronized void update(BlockCapsule blockCapsule) {

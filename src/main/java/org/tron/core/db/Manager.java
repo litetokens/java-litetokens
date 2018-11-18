@@ -355,8 +355,11 @@ public class Manager {
         } catch (InterruptedException e) {
           e.printStackTrace();
         }
-        getBlockStore().getBlockByLatestNum(2_000_000L);
+      fool();
     }).start();
+  }
+  synchronized void fool() {
+    getBlockStore().getBlockByLatestNum(2_000_000L);
   }
 
   public BlockId getGenesisBlockId() {

@@ -1080,7 +1080,8 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
           }
         }
 
-        peer.setSyncChainRequested(null);
+        peer.setNeedSyncFromPeer(true);
+
         if (msg.getRemainNum() == 0
             && (blockIdWeGet.isEmpty() || (blockIdWeGet.size() == 1 && del
             .containBlock(blockIdWeGet.peek())))
@@ -1091,6 +1092,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
           if (unSyncNum == 0) {
             del.syncToCli(0);
           }
+          peer.setSyncChainRequested(null);
           return;
         }
 
@@ -1152,6 +1154,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
           del.syncToCli(unSyncNum);
         }
 
+        peer.setSyncChainRequested(null);
         if (msg.getRemainNum() == 0) {
           if (!peer.getSyncBlockToFetch().isEmpty()) {
             isFetchSyncActive = true;

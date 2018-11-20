@@ -65,6 +65,7 @@ import org.tron.core.actuator.ActuatorFactory;
 import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.AssetIssueCapsule;
 import org.tron.core.capsule.BlockCapsule;
+import org.tron.core.capsule.BlockCapsule.BlockId;
 import org.tron.core.capsule.ContractCapsule;
 import org.tron.core.capsule.ExchangeCapsule;
 import org.tron.core.capsule.ProposalCapsule;
@@ -363,19 +364,20 @@ public class Wallet {
     }
 
     try {
-      BlockCapsule headBlock = null;
-      List<BlockCapsule> blockList = dbManager.getBlockStore().getBlockByLatestNum(1);
-      if (CollectionUtils.isEmpty(blockList)) {
-        throw new HeaderNotFound("latest block not found");
-      } else {
-        headBlock = blockList.get(0);
-      }
-      trx.setReference(headBlock.getNum(), headBlock.getBlockId().getBytes());
-      long expiration = headBlock.getTimeStamp() + Constant.TRANSACTION_DEFAULT_EXPIRATION_TIME;
+//      BlockCapsule headBlock = null;
+//      List<BlockCapsule> blockList = dbManager.getBlockStore().getBlockByLatestNum(1);
+//      if (CollectionUtils.isEmpty(blockList)) {
+//        throw new HeaderNotFound("latest block not found");
+//      } else {
+//        headBlock = blockList.get(0);
+//      }
+      BlockId solidBlockId = dbManager.getSolidBlockId();
+      trx.setReference(solidBlockId.getNum(), solidBlockId.getBytes());
+      long expiration = dbManager.getHeadBlockTimeStamp() + Constant.TRANSACTION_DEFAULT_EXPIRATION_TIME;
       trx.setExpiration(expiration);
       trx.setTimestamp();
-    } catch (HeaderNotFound headerNotFound) {
-      headerNotFound.printStackTrace();
+    } catch (Exception e) {
+      e.printStackTrace();
     }
     return trx;
   }

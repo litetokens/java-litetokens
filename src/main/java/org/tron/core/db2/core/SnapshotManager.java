@@ -287,7 +287,7 @@ public class SnapshotManager implements RevokingDatabase {
 
     // debug begin
     for (int i = 0; i < debugBlockHashs.size(); ++i) {
-      DBChecker.check(debugBlockHashs.get(i), accounts.get(i));
+      DBChecker.check(debugBlockHashs.get(0), accounts.get(i));
     }
     // debug end
   }

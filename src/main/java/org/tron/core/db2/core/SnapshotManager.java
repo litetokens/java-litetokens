@@ -273,6 +273,10 @@ public class SnapshotManager implements RevokingDatabase {
           debugDumpDatas.add(v.getBytes());
         }
       }
+      if ("account".equals(dbName)) {
+        accounts.add(debugDumpDatas);
+      }
+
     }
 
     root.merge(snapshots);
@@ -285,9 +289,12 @@ public class SnapshotManager implements RevokingDatabase {
       root.setNext(next.getNext());
     }
 
-    // debug begin
     for (int i = 0; i < debugBlockHashs.size(); ++i) {
-      DBChecker.check(debugBlockHashs.get(0), accounts.get(i));
+       System.out.println("===block id" + debugBlockHashs.get(i));
+    }
+    // debug begin
+    for (int i = 0; i < accounts.size(); ++i) {
+      DBChecker.check( accounts.get(i));
     }
     // debug end
   }

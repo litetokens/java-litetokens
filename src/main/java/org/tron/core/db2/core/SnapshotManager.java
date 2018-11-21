@@ -3,6 +3,7 @@ package org.tron.core.db2.core;
 import com.google.common.collect.Maps;
 import com.google.common.primitives.Bytes;
 import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -24,6 +25,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.iq80.leveldb.WriteOptions;
 import org.tron.common.storage.leveldb.LevelDbDataSourceImpl;
+import org.tron.common.utils.ByteUtil;
 import org.tron.core.config.args.Args;
 import org.tron.core.db.RevokingDatabase;
 import org.tron.core.db.common.WrappedByteArray;
@@ -246,6 +248,8 @@ public class SnapshotManager implements RevokingDatabase {
     if (Snapshot.isRoot(db.getHead())) {
       return;
     }
+    List<List<byte[]>> accounts = new ArrayList<>();
+    List<String> debugBlockHashs = new ArrayList<>();
 
     List<Snapshot> snapshots = new ArrayList<>();
 
@@ -254,6 +258,21 @@ public class SnapshotManager implements RevokingDatabase {
     for (int i = 0; i < flushCount; ++i) {
       next = next.getNext();
       snapshots.add(next);
+
+      List<byte[]> debugDumpDatas = new ArrayList<>();
+      String dbName = db.getDbName();
+      SnapshotImpl snapshot = (SnapshotImpl) next;
+      DB<Key, Value> keyValueDB = snapshot.getDb();
+      for (Map.Entry<Key, Value> e : keyValueDB) {
+        Key k = e.getKey();
+        Value v = e.getValue();
+        if ("block".equals(dbName)) {
+          debugBlockHashs.add(Longs.fromByteArray(k.getBytes()) + ":" + ByteUtil.toHexString(k.getBytes()));
+        }
+        if ("account".equals(dbName) && v.getBytes() != null) {
+          debugDumpDatas.add(v.getBytes());
+        }
+      }
     }
 
     root.merge(snapshots);
@@ -265,6 +284,12 @@ public class SnapshotManager implements RevokingDatabase {
       next.getNext().setPrevious(root);
       root.setNext(next.getNext());
     }
+
+    // debug begin
+    for (int i = 0; i < debugBlockHashs.size(); ++i) {
+      DBChecker.check(debugBlockHashs.get(i), accounts.get(i));
+    }
+    // debug end
   }
 
   public void flush() {

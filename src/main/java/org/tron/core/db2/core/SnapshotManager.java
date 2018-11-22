@@ -110,6 +110,9 @@ public class SnapshotManager implements RevokingDatabase {
     --size;
   }
 
+  @Override
+  public void checkDB(){}
+
   public void merge() {
     if (activeSession <= 0) {
       throw new RevokingStoreIllegalStateException("activeDialog has to be greater than 0");
@@ -352,7 +355,7 @@ public class SnapshotManager implements RevokingDatabase {
     Map <byte[], byte[]> hmap = new HashMap<byte[], byte[]>();
    if (!tmpLevelDbDataSource.allKeys().isEmpty()) {
      for (Map.Entry<byte[], byte[]> e : tmpLevelDbDataSource) {
-       hmap.put(e.getKey(), e.getValue());
+       hmap.put(e.getKey(), null);
      }
    }
 

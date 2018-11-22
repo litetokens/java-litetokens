@@ -69,7 +69,10 @@ public class NodeDelegateImpl implements NodeDelegate {
     try {
       dbManager.preValidateTransactionSign(block);
 
-      System.out.println("====" + block.getNum());
+      //System.out.println("====" + block.getNum());
+      if (block.getNum() >= 4000000) {
+        System.exit(0);
+      }
       dbManager.pushBlock(block);
       if (!syncMode) {
         List<TransactionCapsule> trx = null;

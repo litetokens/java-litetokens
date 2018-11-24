@@ -127,7 +127,7 @@ public class ContinueFreezeUnfreezeforEnergy {
         .assertTrue(PublicMethed.sendcoin(store001Address, 1000000L, fromAddress,
             testKey002, blockingStubFull));
 
-    while (true) {
+    for (int ii = 0; ii < 100000000; ii++) {
       count.getAndAdd(4);
       if (count.get() % 100 == 0) {
         long cost = (System.currentTimeMillis() - startTime) / 1000;

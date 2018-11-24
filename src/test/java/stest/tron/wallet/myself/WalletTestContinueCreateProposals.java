@@ -109,7 +109,7 @@ public class WalletTestContinueCreateProposals {
 
   @Test(enabled = true)
   public void testApproveProposal() {
-    while (true) {
+    for (int ii = 0; ii < 1000000000; ii++) {
       for (int i = 1; i <= PROPOSAL_COUNT; i++) {
         HashMap<Long, Long> proposalMap = new HashMap<Long, Long>();
         int[] approvalArray = randomArray(0, PROPOSAL_COUNT, i);

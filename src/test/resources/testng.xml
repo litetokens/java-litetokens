@@ -9,6 +9,10 @@
           <packages>
        <package name="stest.tron.wallet.transfer">
        </package>
+            <package name="stest.tron.wallet.assetissue">
+            </package>
+            <package name="stest.tron.wallet.manual">
+            </package>
      </packages>
    </test>
    <test name="Stest account">
@@ -21,8 +25,6 @@
        </package>
        <package name="stest.tron.wallet.block">
        </package>
-       <package name="stest.tron.wallet.exchangeAndToken">
-       </package>
        <package name="stest.tron.wallet.committee">
        </package>
      </packages>
@@ -34,21 +36,10 @@
      </packages>
    </test>
    <test name="Stest contract">
-     <packages>
-       <package name="stest.tron.wallet.contract.exceptionfee">
-       </package>
-       <package name="stest.tron.wallet.contract.grammar">
-       </package>
-       <package name="stest.tron.wallet.contract.scenario">
-       </package>
+     <classes>
+       <class name="stest.tron.wallet.myself.ContinueFreezeUnfreezeforEnergy"/>
+       <!--<class name="stest.tron.wallet.myself.WalletTestContinueCreateProposals"/>-->
+     </classes>
 
-     </packages>
-<!--      <classes>
-            <class name="stest.tron.wallet.exchange.WalletExchange001"/>
-          </classes>-->
-<!--               <packages>
-            <package name="stest.tron.wallet.account">
-            </package>
-          </packages>-->
-  </test>
+   </test>
 </suite>

@@ -1081,7 +1081,7 @@ public class Manager {
           if (!StringUtils.equalsIgnoreCase(EventEncoder.encode(event), eventHexString)) {
             return;
           }
-
+          logger.info("------ {}",log.getData().toString());
           String rawLogData = ByteArray.toHexString(log.getData().toByteArray());
           List<Type> nonIndexedValues = FunctionReturnDecoder.decode(rawLogData, event.getNonIndexedParameters());
 

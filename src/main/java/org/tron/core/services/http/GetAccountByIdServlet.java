@@ -12,19 +12,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.tron.common.utils.ByteArray;
 import org.tron.core.Wallet;
-import org.tron.core.db.Manager;
+import org.tron.protos.Contract.AssetIssueContract;
 import org.tron.protos.Protocol.Account;
-
 
 @Component
 @Slf4j
-public class GetAccountServlet extends HttpServlet {
+public class GetAccountByIdServlet extends HttpServlet {
 
   @Autowired
   private Wallet wallet;
-
-  @Autowired
-  private Manager dbManager;
 
   private String convertOutput(Account account) {
     // convert asset id
@@ -42,13 +38,13 @@ public class GetAccountServlet extends HttpServlet {
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
-      String address = request.getParameter("address");
+      String accountId = request.getParameter("accountId");
       Account.Builder build = Account.newBuilder();
       JSONObject jsonObject = new JSONObject();
-      jsonObject.put("address", address);
+      jsonObject.put("accountId", accountId);
       JsonFormat.merge(jsonObject.toJSONString(), build);
 
-      Account reply = wallet.getAccount(build.build());
+      Account reply = wallet.getAccountById(build.build());
       if (reply != null) {
         response.getWriter().println(convertOutput(reply));
       } else {
@@ -71,7 +67,7 @@ public class GetAccountServlet extends HttpServlet {
       Account.Builder build = Account.newBuilder();
       JsonFormat.merge(account, build);
 
-      Account reply = wallet.getAccount(build.build());
+      Account reply = wallet.getAccountById(build.build());
       if (reply != null) {
         response.getWriter().println(convertOutput(reply));
       } else {

@@ -57,6 +57,8 @@ public class SnapshotManager implements RevokingDatabase {
 
   private Map<String, ListeningExecutorService> flushServices = new HashMap<>();
 
+  @Setter
+  @Getter
   private LevelDbDataSourceImpl tmpLevelDbDataSource;
 
   @Setter

@@ -219,7 +219,7 @@ public class WitnessController {
         + ", currentActiveWitnesses size:" + numberActiveWitness);
 
     final ByteString scheduledWitness = this.getActiveWitnesses().get(witnessIndex);
-    logger.info("scheduledWitness:" + ByteArray.toHexString(scheduledWitness.toByteArray())
+    logger.debug("scheduledWitness:" + ByteArray.toHexString(scheduledWitness.toByteArray())
         + ", currentSlot:" + currentSlot);
 
     return scheduledWitness;

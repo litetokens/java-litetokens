@@ -818,7 +818,7 @@ public class Manager {
           throw throwable;
         }
       }
-      logger.info("save block: " + newBlock);
+      logger.debug("save block: " + newBlock);
     }
   }
 
@@ -834,7 +834,7 @@ public class Manager {
                 .getUnchecked(StringUtil.createDbKey(witnessController.getScheduledWitness(i)));
         w.setTotalMissed(w.getTotalMissed() + 1);
         this.witnessStore.put(w.createDbKey(), w);
-        logger.info(
+        logger.debug(
             "{} miss a block. totalMissed = {}", w.createReadableString(), w.getTotalMissed());
       }
       this.dynamicPropertiesStore.applyBlock(false);
@@ -1254,7 +1254,7 @@ public class Manager {
       return;
     }
     getDynamicPropertiesStore().saveLatestSolidifiedBlockNum(latestSolidifiedBlockNum);
-    logger.info("update solid block, num = {}", latestSolidifiedBlockNum);
+    logger.debug("update solid block, num = {}", latestSolidifiedBlockNum);
   }
 
   public void updateFork() {
@@ -1463,7 +1463,7 @@ public class Manager {
 
   public synchronized void preValidateTransactionSign(BlockCapsule block)
       throws InterruptedException, ValidateSignatureException {
-    logger.info("PreValidate Transaction Sign, size:" + block.getTransactions().size()
+    logger.debug("PreValidate Transaction Sign, size:" + block.getTransactions().size()
         + ",block num:" + block.getNum());
     int transSize = block.getTransactions().size();
     CountDownLatch countDownLatch = new CountDownLatch(transSize);

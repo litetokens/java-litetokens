@@ -1099,7 +1099,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
    * save timestamp of creating global latest block.
    */
   public void saveLatestBlockHeaderTimestamp(long t) {
-    logger.info("update latest block header timestamp = {}", t);
+    logger.debug("update latest block header timestamp = {}", t);
     this.put(LATEST_BLOCK_HEADER_TIMESTAMP, new BytesCapsule(ByteArray.fromLong(t)));
   }
 
@@ -1107,7 +1107,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
    * save number of global latest block.
    */
   public void saveLatestBlockHeaderNumber(long n) {
-    logger.info("update latest block header number = {}", n);
+    logger.debug("update latest block header number = {}", n);
     this.put(LATEST_BLOCK_HEADER_NUMBER, new BytesCapsule(ByteArray.fromLong(n)));
   }
 
@@ -1115,14 +1115,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
    * save id of global latest block.
    */
   public void saveLatestBlockHeaderHash(ByteString h) {
-    logger.info("update latest block header id = {}", ByteArray.toHexString(h.toByteArray()));
+    logger.debug("update latest block header id = {}", ByteArray.toHexString(h.toByteArray()));
     this.put(LATEST_BLOCK_HEADER_HASH, new BytesCapsule(h.toByteArray()));
     if (revokingDB.getUnchecked(LATEST_BLOCK_HEADER_HASH).length == 32) {
     }
   }
 
   public void saveStateFlag(int n) {
-    logger.info("update state flag = {}", n);
+    logger.debug("update state flag = {}", n);
     this.put(STATE_FLAG, new BytesCapsule(ByteArray.fromInt(n)));
   }
 

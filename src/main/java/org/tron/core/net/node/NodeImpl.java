@@ -765,7 +765,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
         Thread.currentThread().interrupt();
       }
       freshBlockId.offer(block.getBlockId());
-      logger.info("Success handle block {}", block.getBlockId().getString());
+      logger.debug("Success handle block {}", block.getBlockId().getString());
       isAccept = true;
     } catch (BadBlockException e) {
       logger.error("We get a bad block {}, reason is {} ", block.getBlockId().getString(),
@@ -1236,7 +1236,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
   }
 
   private void updateBlockWeBothHave(PeerConnection peer, BlockCapsule block) {
-    logger.info("update peer {} block both we have {}", peer.getNode().getHost(),
+    logger.debug("update peer {} block both we have {}", peer.getNode().getHost(),
         block.getBlockId().getString());
     peer.setHeadBlockWeBothHave(block.getBlockId());
     peer.setHeadBlockTimeWeBothHave(block.getTimeStamp());
@@ -1244,7 +1244,7 @@ public class NodeImpl extends PeerConnectionDelegate implements Node {
 
   private void updateBlockWeBothHave(PeerConnection peer, BlockId blockId)
       throws StoreException {
-    logger.info("update peer {} block both we have, {}", peer.getNode().getHost(),
+    logger.debug("update peer {} block both we have, {}", peer.getNode().getHost(),
         blockId.getString());
     peer.setHeadBlockWeBothHave(blockId);
     long time = ((BlockMessage) del.getData(blockId, MessageTypes.BLOCK)).getBlockCapsule()

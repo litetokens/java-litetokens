@@ -1,11 +1,19 @@
 package org.tron.core.db2.common;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 public class HashDB implements DB<Key, Value> {
   private Map<Key, Value> db = new HashMap<>();
+
+  public HashDB() {
+  }
+
+  public HashDB(HashDB db) {
+    putAll(db.db);
+  }
 
   @Override
   public Value get(Key key) {
@@ -15,6 +23,16 @@ public class HashDB implements DB<Key, Value> {
   @Override
   public void put(Key key, Value value) {
     db.put(key, value);
+  }
+
+  @Override
+  public void putAll(Map<Key, Value> map) {
+    db.putAll(map);
+  }
+
+  @Override
+  public Map<Key, Value> asMap() {
+    return ImmutableMap.copyOf(db);
   }
 
   @Override

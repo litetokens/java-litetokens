@@ -4,19 +4,16 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Streams;
-import java.lang.ref.WeakReference;
-import lombok.Getter;
-import org.tron.core.db.common.WrappedByteArray;
-import org.tron.core.db2.common.HashDB;
-import org.tron.core.db2.common.Key;
-import org.tron.core.db2.common.Value;
-
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import lombok.Getter;
+import org.tron.core.db.common.WrappedByteArray;
+import org.tron.core.db2.common.HashDB;
+import org.tron.core.db2.common.Key;
+import org.tron.core.db2.common.Value;
 
 public class SnapshotImpl extends AbstractSnapshot<Key, Value> {
   @Getter
@@ -27,6 +24,9 @@ public class SnapshotImpl extends AbstractSnapshot<Key, Value> {
     previous = snapshot;
     snapshot.setNext(this);
     db = new HashDB();
+    if (Snapshot.isImpl(snapshot)) {
+      db.putAll(((SnapshotImpl) snapshot).db.asMap());
+    }
   }
 
   @Override
@@ -59,80 +59,23 @@ public class SnapshotImpl extends AbstractSnapshot<Key, Value> {
   }
 
   private byte[] get(Snapshot head, byte[] key) {
-    Snapshot snapshot = head;
-    Value value;
-    while (Snapshot.isImpl(snapshot)) {
-      if ((value = ((SnapshotImpl) snapshot).db.get(Key.of(key))) != null) {
-        return value.getBytes();
-      }
-
-      snapshot = snapshot.getPrevious();
+    if (head == null) {
+      return null;
     }
 
-    return snapshot == null ? null : snapshot.get(key);
+    byte[] v;
+    if ((v = head.get(key)) == null) {
+      v = head.getRoot().get(key);
+    }
+
+    return v;
   }
 
-  // we have a 4x4 matrix of all possibilities when merging previous snapshot and current snapshot :
-  //                  --------------------- snapshot ------------------
-  //                 /                                                 \
-  //                +------------+------------+------------+------------+
-  //                | new(Y)     | upd(Y)     | del        | nop        |
-  //   +------------+------------+------------+------------+------------+
-  // / | new(X)     | N/A        | new(Y)     | nop        | new(X)     |
-  // | +------------+------------+------------+------------+------------+
-  // p | upd(X)     | N/A        | upd(Y)     | del        | upd(X)     |
-  // r +------------+------------+------------+------------+------------+
-  // e | del        | upd(Y)     | N/A        | N/A        | del        |
-  // | +------------+------------+------------+------------+------------+
-  // \ | nop        | new(Y)     | upd(Y)     | del        | nop        |
-  //   +------------+------------+------------+------------+------------+
   @Override
   public void merge(Snapshot from) {
     SnapshotImpl fromImpl = (SnapshotImpl) from;
 
-    Streams.stream(fromImpl.db)
-        .filter(e -> e.getValue().getOperator() == Value.Operator.CREATE)
-        .forEach(e -> {
-          Key k = e.getKey();
-          Value v = e.getValue();
-          Value value = db.get(k);
-          if (value == null) {
-            db.put(k, v);
-          } else if (value.getOperator() == Value.Operator.DELETE) {
-            db.put(k, Value.copyOf(Value.Operator.MODIFY, v.getBytes()));
-          } else {
-            throw new IllegalStateException();
-          }
-        });
-
-    Streams.stream(fromImpl.db)
-        .filter(e -> e.getValue().getOperator() == Value.Operator.MODIFY)
-        .forEach(e -> {
-          Key k = e.getKey();
-          Value v = e.getValue();
-          Value value = db.get(k);
-          if (value == null || value.getOperator() == Value.Operator.MODIFY) {
-            db.put(k, v);
-          } else if (value.getOperator() == Value.Operator.CREATE) {
-            db.put(k, Value.copyOf(Value.Operator.CREATE, v.getBytes()));
-          } else {
-            throw new IllegalStateException();
-          }
-        });
-
-    Streams.stream(fromImpl.db)
-        .filter(e -> e.getValue().getOperator() == Value.Operator.DELETE)
-        .map(Map.Entry::getKey)
-        .forEach(k -> {
-          Value value = db.get(k);
-          if (value == null || value.getOperator() == Value.Operator.MODIFY) {
-            db.put(k, Value.of(Value.Operator.DELETE, null));
-          } else if (value.getOperator() == Value.Operator.CREATE) {
-            db.remove(k);
-          } else {
-            throw new IllegalStateException();
-          }
-  });
+    db.putAll(fromImpl.db.asMap());
   }
 
   @Override

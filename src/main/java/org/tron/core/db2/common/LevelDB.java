@@ -30,6 +30,16 @@ public class LevelDB implements DB<byte[], byte[]> {
   }
 
   @Override
+  public void putAll(Map<Key, Value> map) {
+
+  }
+
+  @Override
+  public Map<Key, Value> asMap() {
+    return null;
+  }
+
+  @Override
   public long size() {
     return db.getTotal();
   }

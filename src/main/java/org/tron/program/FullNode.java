@@ -54,11 +54,7 @@ public class FullNode {
     shutdown(appT);
 
     // grpc api server
-    RpcApiService rpcApiService = context.getBean(RpcApiService.class);
-    appT.addService(rpcApiService);
-    if (cfgArgs.isWitness()) {
-      appT.addService(new WitnessService(appT, context));
-    }
+
 
     // http api server
     FullNodeHttpApiService httpApiService = context.getBean(FullNodeHttpApiService.class);
@@ -68,7 +64,6 @@ public class FullNode {
     appT.startServices();
     appT.startup();
 
-    rpcApiService.blockUntilShutdown();
   }
 
   public static void shutdown(final Application app) {

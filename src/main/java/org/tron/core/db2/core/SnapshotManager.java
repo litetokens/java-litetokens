@@ -356,7 +356,7 @@ public class SnapshotManager implements RevokingDatabase {
     tmpLevelDbDataSource.updateByBatch(batch.entrySet().stream()
             .map(e -> Maps.immutableEntry(e.getKey().getBytes(), e.getValue().getBytes()))
             .collect(HashMap::new, (m, k) -> m.put(k.getKey(), k.getValue()), HashMap::putAll),
-        new WriteOptions().sync(true));
+        new WriteOptions().sync(false));
   }
 
   private void deleteCheckPoint() {
@@ -367,7 +367,7 @@ public class SnapshotManager implements RevokingDatabase {
      }
    }
 
-   tmpLevelDbDataSource.updateByBatch(hmap,  new WriteOptions().sync(true));
+   tmpLevelDbDataSource.updateByBatch(hmap,  new WriteOptions().sync(false));
   }
 
   // ensure run this method first after process start.

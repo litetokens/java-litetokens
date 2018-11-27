@@ -20,6 +20,6 @@ public class DBChecker {
       .sorted(String::compareTo)
       .collect(Collectors.toList());
     String sha256Hash = Sha256Hash.of(hashs.toString().getBytes()).toString();
-    logger.info("check account hash, block:{}, account hash:{}" ,blockId, sha256Hash);
+    System.out.println("check account hash, block:{"+blockId+"}, account hash:{"+sha256Hash+"}" );
   }
 }

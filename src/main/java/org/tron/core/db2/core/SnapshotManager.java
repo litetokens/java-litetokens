@@ -68,6 +68,9 @@ public class SnapshotManager implements RevokingDatabase {
   @Setter
   private volatile int maxFlushCount = DEFAULT_MIN_FLUSH_COUNT;
 
+  List<List<byte[]>> accounts = new ArrayList<>();
+  List<String> debugBlockHashs = new ArrayList<>();
+
   public ISession buildSession() {
     return buildSession(false);
   }
@@ -241,6 +244,11 @@ public class SnapshotManager implements RevokingDatabase {
     Future<?> future = Futures.allAsList(futures);
     try {
       future.get();
+
+      // debug begin
+      for (int i = 0; i < debugBlockHashs.size(); ++i) {
+         DBChecker.check(debugBlockHashs.get(i), accounts.get(i));
+      }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     } catch (ExecutionException e) {
@@ -252,8 +260,15 @@ public class SnapshotManager implements RevokingDatabase {
     if (Snapshot.isRoot(db.getHead())) {
       return;
     }
-    List<List<byte[]>> accounts = new ArrayList<>();
-    List<String> debugBlockHashs = new ArrayList<>();
+
+    String name = db.getDbName();
+    if ("block".equals(name)) {
+      debugBlockHashs = new ArrayList<>();
+    }
+
+    if ("account".equals(name)) {
+      accounts = new ArrayList<>();
+    }
 
     List<Snapshot> snapshots = new ArrayList<>();
 
@@ -292,10 +307,7 @@ public class SnapshotManager implements RevokingDatabase {
       root.setNext(next.getNext());
     }
 
-    // debug begin
-    for (int i = 0; i < accounts.size(); ++i) {
-      DBChecker.check( accounts.get(i));
-    }
+
   }
 
   public void flush() {

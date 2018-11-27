@@ -1301,7 +1301,7 @@ public class Manager {
         tmpSeesion.merge();
         // push into block
         blockCapsule.addTransaction(trx);
-        if (fromPending){
+        if (fromPending) {
           iterator.remove();
         }
       } catch (ContractExeException e) {
@@ -1674,6 +1674,8 @@ public class Manager {
     closeOneStore(transactionHistoryStore);
     closeOneStore(votesStore);
     closeOneStore(delegatedResourceStore);
+    closeOneStore(assetIssueV2Store);
+    closeOneStore(exchangeV2Store);
     logger.info("******** end to close db ********");
   }
 

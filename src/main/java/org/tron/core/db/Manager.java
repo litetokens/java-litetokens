@@ -505,6 +505,7 @@ public class Manager {
                       account.getBalance());
               this.accountStore.put(account.getAddress(), accountCapsule);
               this.accountIdIndexStore.put(accountCapsule);
+              this.accountIndexStore.put(accountCapsule);
             });
   }
 
@@ -1301,7 +1302,7 @@ public class Manager {
         tmpSeesion.merge();
         // push into block
         blockCapsule.addTransaction(trx);
-        if (fromPending){
+        if (fromPending) {
           iterator.remove();
         }
       } catch (ContractExeException e) {
@@ -1674,6 +1675,8 @@ public class Manager {
     closeOneStore(transactionHistoryStore);
     closeOneStore(votesStore);
     closeOneStore(delegatedResourceStore);
+    closeOneStore(assetIssueV2Store);
+    closeOneStore(exchangeV2Store);
     logger.info("******** end to close db ********");
   }
 

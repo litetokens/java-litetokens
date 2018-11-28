@@ -12,7 +12,7 @@ import org.tron.core.db.common.iterator.DBIterator;
 public class LevelDB implements DB<byte[], byte[]> {
   @Getter
   private LevelDbDataSourceImpl db;
-  private WriteOptions writeOptions = new WriteOptions().sync(false);
+  private WriteOptions writeOptions = new WriteOptions().sync(true);
 
   public LevelDB(String parentName, String name) {
     db = new LevelDbDataSourceImpl(parentName, name);

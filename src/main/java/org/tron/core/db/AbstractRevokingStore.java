@@ -46,7 +46,7 @@ public abstract class AbstractRevokingStore implements RevokingDatabase {
   private boolean disabled = true;
   private int activeDialog = 0;
   private AtomicInteger maxSize = new AtomicInteger(DEFAULT_STACK_MAX_SIZE);
-  private WriteOptions writeOptions = new WriteOptions().sync(false);
+  private WriteOptions writeOptions = new WriteOptions().sync(true);
   private List<LevelDbDataSourceImpl> dbs = new ArrayList<>();
 
   @Override
@@ -93,9 +93,9 @@ public abstract class AbstractRevokingStore implements RevokingDatabase {
 
         byte[] realValue = value.length == 1 ? null : Arrays.copyOfRange(value, 1, value.length);
         if (realValue != null) {
-          dbMap.get(db).putData(realKey, realValue, new WriteOptions().sync(false));
+          dbMap.get(db).putData(realKey, realValue, new WriteOptions().sync(true));
         } else {
-          dbMap.get(db).deleteData(realKey, new WriteOptions().sync(false));
+          dbMap.get(db).deleteData(realKey, new WriteOptions().sync(true));
         }
       }
     }

@@ -45,7 +45,7 @@ public class SnapshotRoot extends AbstractSnapshot<byte[], byte[]> {
     ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
     service.scheduleWithFixedDelay(() -> {
       try {
-        double ratio = missMap.getOrDefault(dbName, 0L) * 1.0 / hitMap.getOrDefault(dbName, 1L) * 100;
+        double ratio = missMap.getOrDefault(dbName, 0L) * 1.0 / hitMap.getOrDefault(dbName, 1L) ;
 
         logger.error("db:" + dbName + " miss-rate:" + nt.format(ratio) + "% hit:" + hitMap.get(dbName) + " miss:"+missMap.get(dbName) + " access:" + accessMap.get(dbName));
       } catch (Throwable t) {

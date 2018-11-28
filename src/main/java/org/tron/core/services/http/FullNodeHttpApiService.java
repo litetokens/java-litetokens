@@ -22,6 +22,8 @@ public class FullNodeHttpApiService implements Service {
   @Autowired
   private GenerateShieldAddressServlet generateShieldAddressServlet;
   @Autowired
+  private ReceiveShieldTransactionByIdServlet receiveShieldTransactionByIdServlet;
+  @Autowired
   private TransferServlet transferServlet;
   @Autowired
   private BroadcastServlet broadcastServlet;
@@ -149,6 +151,7 @@ public class FullNodeHttpApiService implements Service {
       server.setHandler(context);
       context.addServlet(new ServletHolder(accountServlet), "/getaccount");
       context.addServlet(new ServletHolder(generateShieldAddressServlet), "/generateshieldaddress");
+      context.addServlet(new ServletHolder(receiveShieldTransactionByIdServlet), "/receiveshieldtransactionbyid");
       context.addServlet(new ServletHolder(transferServlet), "/createtransaction");
       context.addServlet(new ServletHolder(broadcastServlet), "/broadcasttransaction");
       context.addServlet(new ServletHolder(transactionSignServlet), "/gettransactionsign");

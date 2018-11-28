@@ -28,11 +28,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
 import com.google.common.primitives.Longs;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
@@ -58,6 +60,7 @@ import org.tron.api.GrpcAPI.TransactionExtention.Builder;
 import org.tron.api.GrpcAPI.WitnessList;
 import org.tron.common.crypto.ECKey;
 import org.tron.common.crypto.Hash;
+import org.tron.common.crypto.zksnark.ZksnarkUtils;
 import org.tron.common.overlay.discover.node.NodeHandler;
 import org.tron.common.overlay.discover.node.NodeManager;
 import org.tron.common.overlay.message.Message;
@@ -118,6 +121,7 @@ import org.tron.protos.Contract.MerklePath;
 import org.tron.protos.Contract.ShieldAddress;
 import org.tron.protos.Contract.TransferContract;
 import org.tron.protos.Contract.TriggerSmartContract;
+import org.tron.protos.Contract.ZksnarkV0TransferContract;
 import org.tron.protos.Protocol;
 import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Block;
@@ -127,6 +131,7 @@ import org.tron.protos.Protocol.SmartContract;
 import org.tron.protos.Protocol.SmartContract.ABI;
 import org.tron.protos.Protocol.SmartContract.ABI.Entry.StateMutabilityType;
 import org.tron.protos.Protocol.Transaction;
+import org.tron.protos.Protocol.Transaction.Contract;
 import org.tron.protos.Protocol.Transaction.Contract.ContractType;
 import org.tron.protos.Protocol.Transaction.Result.code;
 import org.tron.protos.Protocol.TransactionSign;
@@ -227,7 +232,7 @@ public class Wallet {
     return Base58.encode(inputCheck);
   }
 
-  private static byte[] decode58Check(String input) {
+  public static byte[] decode58Check(String input) {
     byte[] decodeCheck = Base58.decode(input);
     if (decodeCheck.length <= 4) {
       return null;
@@ -871,6 +876,26 @@ public class Wallet {
     }
 
     return null;
+  }
+
+  public boolean receiveShieldTransactionById(ByteString transactionId, int index, byte[] address)
+      throws InvalidProtocolBufferException {
+
+    Transaction transaction = getTransactionById(transactionId);
+
+    if (transaction != null) {
+      Contract contract = transaction.getRawData().getContract(0);
+      if (contract.getType() != ContractType.ZksnarkV0TransferContract) {
+        System.out.println("Is not shield transaction.");
+        return false;
+      }
+      ZksnarkV0TransferContract zkContract = contract.getParameter()
+          .unpack(ZksnarkV0TransferContract.class);
+      return ZksnarkUtils.saveShieldCoin(zkContract, address, index);
+    } else {
+      return false;
+    }
+
   }
 
   public NodeList listNodes() {

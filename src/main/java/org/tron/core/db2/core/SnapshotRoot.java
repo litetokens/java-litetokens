@@ -42,7 +42,7 @@ public class SnapshotRoot extends AbstractSnapshot<byte[], byte[]> {
       } catch (Throwable t) {
         logger.error("Exception in log worker", t);
       }
-    }, 10, 10, TimeUnit.SECONDS);
+    }, 10, 30, TimeUnit.SECONDS);
   }
 
   Map<String, Long> hitMap = new ConcurrentHashMap<>();

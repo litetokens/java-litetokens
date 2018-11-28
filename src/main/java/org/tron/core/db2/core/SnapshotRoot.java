@@ -9,22 +9,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.spongycastle.util.encoders.Hex;
 import org.tron.core.db.common.WrappedByteArray;
 import org.tron.core.db2.common.LevelDB;
 
+@Slf4j(topic = "io")
 public class SnapshotRoot extends AbstractSnapshot<byte[], byte[]> {
 
   @Getter
   private Snapshot solidity;
 
+  private String dbName;
+
   public SnapshotRoot(String parentName, String name) {
     db = new LevelDB(parentName, name);
+    dbName = name;
     solidity = this;
   }
 
   @Override
   public byte[] get(byte[] key) {
-    return db.get(key);
+    byte[] val = db.get(key);
+    logger.error("db:" + dbName + " key:" + key.length + " val:" + val.length);
+    return val;
   }
 
   @Override

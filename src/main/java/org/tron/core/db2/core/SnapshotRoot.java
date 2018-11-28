@@ -4,6 +4,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Streams;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Array;
+import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -29,16 +30,24 @@ public class SnapshotRoot extends AbstractSnapshot<byte[], byte[]> {
 
   private String dbName;
 
+  //获取格式化对象
+  NumberFormat nt = NumberFormat.getPercentInstance();
+
+
+
   public SnapshotRoot(String parentName, String name) {
     db = new LevelDB(parentName, name);
     dbName = name;
     solidity = this;
+    //设置百分数精确度2即保留两位小数
+    nt.setMinimumFractionDigits(2);
 
     ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
     service.scheduleWithFixedDelay(() -> {
       try {
         double ratio = missMap.getOrDefault(dbName, 0L) * 1.0 / hitMap.getOrDefault(dbName, 1L) * 100;
-        logger.error("db:" + dbName + "miss-rate:" + ratio + "% hit:" + hitMap.get(dbName) + " miss:"+missMap.get(dbName) + " access:" + accessMap.get(dbName));
+
+        logger.error("db:" + dbName + " miss-rate:" + nt.format(ratio) + "% hit:" + hitMap.get(dbName) + " miss:"+missMap.get(dbName) + " access:" + accessMap.get(dbName));
       } catch (Throwable t) {
         logger.error("Exception in log worker", t);
       }

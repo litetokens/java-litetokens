@@ -37,7 +37,8 @@ public class SnapshotRoot extends AbstractSnapshot<byte[], byte[]> {
     ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
     service.scheduleWithFixedDelay(() -> {
       try {
-        logger.error("db:" + dbName + " hit:" + hitMap.get(dbName) + " miss:"+missMap.get(dbName) + " access:" + accessMap.get(dbName));
+        double ratio = missMap.getOrDefault(dbName, 0L) * 1.0 / hitMap.getOrDefault(dbName, 1L) * 100;
+        logger.error("db:" + dbName + "miss-rate:" + ratio + "% hit:" + hitMap.get(dbName) + " miss:"+missMap.get(dbName) + " access:" + accessMap.get(dbName));
       } catch (Throwable t) {
         logger.error("Exception in log worker", t);
       }

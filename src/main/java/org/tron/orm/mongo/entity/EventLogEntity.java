@@ -1,6 +1,7 @@
 package org.tron.orm.mongo.entity;
 
 import com.alibaba.fastjson.JSONObject;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.annotation.Id;

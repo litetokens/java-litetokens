@@ -25,6 +25,11 @@ public class EventLogServiceImpl implements EventLogService {
   }
 
   @Override
+  public void insertEventLogCollection(EventLogEntity eventLog, String collectionName){
+    eventLogMongoDao.insert(eventLog, collectionName);
+  }
+
+  @Override
   public List<EventLogEntity> findAll(String contractAddress) {
     return eventLogMongoDao.findAll(contractAddress, COLLECTION_EVENT_LOG_CENTER);
   }

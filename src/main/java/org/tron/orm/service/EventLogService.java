@@ -11,6 +11,8 @@ public interface EventLogService {
 
   public void insertEventLog(EventLogEntity eventLog);
 
+  public void insertEventLogCollection(EventLogEntity eventLog, String collectionName);
+
   public List<EventLogEntity> findAll(String contractAddressHexString);
 
   public EventLogEntity findOne(String contractAddressHexString);

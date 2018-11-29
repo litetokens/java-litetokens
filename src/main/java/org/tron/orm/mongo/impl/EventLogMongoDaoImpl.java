@@ -3,7 +3,9 @@ package org.tron.orm.mongo.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
@@ -33,11 +35,27 @@ public class EventLogMongoDaoImpl<T> implements EventLogMongoDao<T> {
       entityClass = (Class<T>) ((ParameterizedType) superType).getActualTypeArguments()[0];
     }
 
+
+  }
+
+  private boolean checkCollection(String collection){
+    return mongoTemplate.collectionExists(collection);
+  }
+
+  private void createIndex(String index, String collection){
+    mongoTemplate.indexOps(collection).ensureIndex(new Index().on("event_name", Sort.Direction.DESC));
   }
 
   @Override
   public void insert(Object object, String collectionName) {
+    boolean newCollection = this.checkCollection(collectionName);
     mongoTemplate.insert(object, collectionName);
+    if (newCollection) {
+      this.createIndex("event_name", collectionName);
+      this.createIndex("transaction_id", collectionName);
+      this.createIndex("block_timestamp", collectionName);
+      this.createIndex("block_number", collectionName);
+    }
   }
 
   @Override

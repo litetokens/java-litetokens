@@ -12,7 +12,6 @@ import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +21,7 @@ import java.util.List;
 public class MongoDBConf {
   @Autowired
   private Environment environment;
+
 
   @Bean
   public MongoClient mongoClient() {

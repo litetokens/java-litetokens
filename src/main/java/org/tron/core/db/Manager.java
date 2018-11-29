@@ -1212,6 +1212,7 @@ public class Manager {
                   Wallet.encode58Check(contractAddress), entryName, resultJsonObject,rawJsonObject,
                   Hex.toHexString(transactionInfoCapsule.getId()), resultParamType, this.resource.toString(), idx);
           // 事件日志写入MongoDB
+          eventLogService.insertEventLogCollection(eventLogEntity,Wallet.encode58Check(contractAddress));
           eventLogService.insertEventLog(eventLogEntity);
         });
       });

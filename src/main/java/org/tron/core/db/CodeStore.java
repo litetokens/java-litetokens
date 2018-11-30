@@ -1,17 +1,24 @@
 package org.tron.core.db;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Streams;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.tron.common.utils.Sha256Hash;
 import org.tron.core.capsule.CodeCapsule;
 
 @Slf4j
 @Component
 public class CodeStore extends TronStoreWithRevoking<CodeCapsule> {
+  @Getter
+  private Cache<byte[], CodeCapsule> codeCache = CacheBuilder
+      .newBuilder().maximumSize(1000_000).recordStats().build();
 
   @Autowired
   private CodeStore(@Value("code") String dbName) {
@@ -20,7 +27,12 @@ public class CodeStore extends TronStoreWithRevoking<CodeCapsule> {
 
   @Override
   public CodeCapsule get(byte[] key) {
-    return getUnchecked(key);
+    CodeCapsule ret = codeCache.getIfPresent(key);
+    if (ret == null) {
+      ret = getUnchecked(key);
+      codeCache.put(key, ret);
+    }
+    return ret;
   }
 
   public long getTotalCodes() {

@@ -3,6 +3,10 @@ package org.tron.core.db;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Streams;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
@@ -16,6 +20,20 @@ import org.tron.protos.Protocol.SmartContract;
 @Slf4j
 @Component
 public class ContractStore extends TronStoreWithRevoking<ContractCapsule> {
+  AtomicLong hitCnt = new AtomicLong(0);
+  AtomicLong accessCnt = new AtomicLong(0);
+  ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+
+  {
+    service.scheduleWithFixedDelay(() -> {
+      try {
+        double rate = hitCnt.get() * 1.0 * 100 / accessCnt.get();
+        logger.error("contract hitrate:" + " access:" + (long)(rate) + "% hit:" + hitCnt.get() + "");
+      } catch (Throwable t) {
+        logger.error("Exception in log worker", t);
+      }
+    }, 10, 10, TimeUnit.SECONDS);
+  }
   @Getter
   private Cache<ByteArrayWrapper, ContractCapsule> codeCache = CacheBuilder
       .newBuilder().maximumSize(100_000).recordStats().build();
@@ -39,6 +57,8 @@ public class ContractStore extends TronStoreWithRevoking<ContractCapsule> {
     if (ret == null) {
       ret = getUnchecked(key);
       codeCache.put(new ByteArrayWrapper(key), ret);
+    } else {
+      hitCnt.incrementAndGet();
     }
     return ret;
   }

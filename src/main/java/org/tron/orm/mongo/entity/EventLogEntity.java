@@ -5,6 +5,8 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.annotation.Id;
+import java.util.Map;
+import java.util.HashMap;
 import org.springframework.data.mongodb.repository.Query;
 import java.io.Serializable;
 
@@ -68,6 +70,21 @@ public class EventLogEntity implements Serializable {
 
     public static long getSerialVersionUID() {
         return serialVersionUID;
+    }
+
+    public static String toJSONString(EventLogEntity event_data){
+        Map<String, String> hm = new HashMap<>();
+        hm.put("block_number", String.valueOf(event_data.getBlockNumber()));
+        hm.put("block_timestamp", String.valueOf(event_data.getBlockTimestamp()));
+        hm.put("contract_address", event_data.getContractAddress());
+        hm.put("event_name", event_data.getEntryName());
+        hm.put("event_index", String.valueOf(event_data.getEventIdx()));
+        hm.put("transaction_id", event_data.getTransactionId());
+        hm.put("resource_Node", event_data.getResourceNode());
+        hm.put("result", event_data.getResultJsonObject().toString());
+        hm.put("result_type", event_data.getResultType().toString());
+        hm.put("raw_data", event_data.getRawJsonObject().toString());
+        return JSONObject.toJSONString(hm);
     }
 
     public long getBlockNumber() {

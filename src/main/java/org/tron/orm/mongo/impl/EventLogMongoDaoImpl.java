@@ -43,14 +43,14 @@ public class EventLogMongoDaoImpl<T> implements EventLogMongoDao<T> {
   }
 
   private void createIndex(String index, String collection){
-    mongoTemplate.indexOps(collection).ensureIndex(new Index().on("event_name", Sort.Direction.DESC));
+    mongoTemplate.indexOps(collection).ensureIndex(new Index().on(index, Sort.Direction.DESC));
   }
 
   @Override
   public void insert(Object object, String collectionName) {
-    boolean newCollection = this.checkCollection(collectionName);
+    boolean collectionExists = this.checkCollection(collectionName);
     mongoTemplate.insert(object, collectionName);
-    if (newCollection) {
+    if (!collectionExists) {
       this.createIndex("event_name", collectionName);
       this.createIndex("transaction_id", collectionName);
       this.createIndex("block_timestamp", collectionName);

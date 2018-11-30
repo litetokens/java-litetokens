@@ -26,6 +26,9 @@ apply plugin: 'maven-publish'
 //apply plugin: 'org.springframework.boot'
 //apply plugin: 'io.spring.dependency-management'
 
+jar.enabled = false
+shadowJar.enabled = false
+
 sourceCompatibility = 1.8
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 mainClassName = 'org.tron.program.FullNode'

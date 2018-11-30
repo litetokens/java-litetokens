@@ -41,7 +41,13 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 import org.tron.abi.EventEncoder;
 import org.tron.abi.FunctionReturnDecoder;
 import org.tron.abi.TypeReference;
@@ -1146,6 +1152,7 @@ public class Manager {
               logger.error("Unable parse abi entry. {}", e.getMessage());
             }
           });
+
           JSONObject resultParamType = new JSONObject();
           JSONObject resultJsonObject = new JSONObject();
           JSONObject rawJsonObject = new JSONObject();
@@ -1202,21 +1209,28 @@ public class Manager {
 
           long blockNumber = block.getBlockHeader().getRawData().getNumber();
           long blockTimestamp = block.getBlockHeader().getRawData().getTimestamp();
-//          logger.info("Event blockNumber:{} blockTimestamp:{} contractAddress:{} eventName:{} returnValues:{} raw:{} txId:{}",
-//                  blockNumber, blockTimestamp,
-//                  Wallet.encode58Check(contractAddress), entryName, resultJsonObject, rawJsonObject,
-//                  Hex.toHexString(transactionInfoCapsule.getId()));
-//          logger.info("types: {}", resultParamType);
 
           EventLogEntity eventLogEntity = new EventLogEntity(blockNumber, blockTimestamp,
                   Wallet.encode58Check(contractAddress), entryName, resultJsonObject,rawJsonObject,
                   Hex.toHexString(transactionInfoCapsule.getId()), resultParamType, this.resource.toString(), idx);
           // 事件日志写入MongoDB
+          // depreciate in future release
           eventLogService.insertEventLogCollection(eventLogEntity,Wallet.encode58Check(contractAddress));
           eventLogService.insertEventLog(eventLogEntity);
+
+          // send event log to event server
+          HttpHeaders headers = new HttpHeaders();
+          MultiValueMap<String, String> map= new LinkedMultiValueMap<String, String>();
+          map.add("data", EventLogEntity.toJSONString(eventLogEntity));
+          map.add("key", "some secret key");
+          HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
+          RestTemplate restTemplate = new RestTemplate();
+          ResponseEntity<String> response = restTemplate.postForEntity( "http://127.0.0.1:18891/send", request , String.class );
+
         });
       });
     } catch (org.springframework.dao.DuplicateKeyException e){
+      logger.error("data is already there!!!");
 
     } catch (Exception e) {
       logger.error("sendEventLog Failed {}", e);

@@ -1,4 +1,4 @@
-package stest.tron.wallet.manual;
+package stest.tron.wallet.account;
 
 import com.google.protobuf.ByteString;
 import io.grpc.ManagedChannel;

@@ -18,7 +18,7 @@ import org.tron.core.capsule.CodeCapsule;
 public class CodeStore extends TronStoreWithRevoking<CodeCapsule> {
   @Getter
   private Cache<ByteArrayWrapper, CodeCapsule> codeCache = CacheBuilder
-      .newBuilder().maximumSize(1000_000).recordStats().build();
+      .newBuilder().maximumSize(100_000).recordStats().build();
 
   @Autowired
   private CodeStore(@Value("code") String dbName) {

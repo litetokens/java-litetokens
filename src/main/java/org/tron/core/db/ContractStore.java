@@ -28,7 +28,7 @@ public class ContractStore extends TronStoreWithRevoking<ContractCapsule> {
     service.scheduleWithFixedDelay(() -> {
       try {
         double rate = hitCnt.get() * 1.0 * 100 / accessCnt.get();
-        logger.error("contract hitrate:" +  (long)(rate) + " access:" +accessCnt.get() + "% hit:" + hitCnt.get() + "");
+        logger.error("contract hitrate:" +  (long)(rate) + "% access:" +accessCnt.get() + " hit:" + hitCnt.get() + "");
       } catch (Throwable t) {
         logger.error("Exception in log worker", t);
       }

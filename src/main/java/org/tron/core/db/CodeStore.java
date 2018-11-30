@@ -17,7 +17,7 @@ import org.tron.core.capsule.CodeCapsule;
 @Component
 public class CodeStore extends TronStoreWithRevoking<CodeCapsule> {
   @Getter
-  private Cache<byte[], CodeCapsule> codeCache = CacheBuilder
+  private Cache<ByteArrayWrapper, CodeCapsule> codeCache = CacheBuilder
       .newBuilder().maximumSize(1000_000).recordStats().build();
 
   @Autowired
@@ -27,10 +27,10 @@ public class CodeStore extends TronStoreWithRevoking<CodeCapsule> {
 
   @Override
   public CodeCapsule get(byte[] key) {
-    CodeCapsule ret = codeCache.getIfPresent(key);
+    CodeCapsule ret = codeCache.getIfPresent(new ByteArrayWrapper(key));
     if (ret == null) {
       ret = getUnchecked(key);
-      codeCache.put(key, ret);
+      codeCache.put(new ByteArrayWrapper(key), ret);
     }
     return ret;
   }

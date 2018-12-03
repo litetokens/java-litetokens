@@ -1062,10 +1062,10 @@ public class Manager {
     }
     transactionStore.put(trxCap.getTransactionId().getBytes(), trxCap);
 
-    TransactionInfoCapsule transactionInfo = TransactionInfoCapsule
-        .buildInstance(trxCap, blockCap, trace);
-
-    transactionHistoryStore.put(trxCap.getTransactionId().getBytes(), transactionInfo);
+//    TransactionInfoCapsule transactionInfo = TransactionInfoCapsule
+//        .buildInstance(trxCap, blockCap, trace);
+//
+//    transactionHistoryStore.put(trxCap.getTransactionId().getBytes(), transactionInfo);
 
     return true;
   }

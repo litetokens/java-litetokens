@@ -36,6 +36,7 @@ import org.tron.core.Wallet;
 import org.tron.protos.Contract;
 import org.tron.protos.Contract.CreateSmartContract;
 import org.tron.protos.Contract.CreateSmartContract.Builder;
+import org.tron.protos.Contract.UpdateEnergyLimitContract;
 import org.tron.protos.Contract.UpdateSettingContract;
 import org.tron.protos.Protocol;
 import org.tron.protos.Protocol.Account;
@@ -119,7 +120,8 @@ public class PublicMethed {
   }
 
   public static Boolean createAssetIssue(byte[] address, String name, Long totalSupply,
-      Integer trxNum, Integer icoNum, int precision,Long startTime, Long endTime, Integer voteScore,
+      Integer trxNum, Integer icoNum, int precision, Long startTime, Long endTime,
+      Integer voteScore,
       String description, String url, Long freeAssetNetLimit, Long publicFreeAssetNetLimit,
       Long fronzenAmount, Long frozenDay, String priKey,
       WalletGrpc.WalletBlockingStub blockingStubFull) {
@@ -604,7 +606,7 @@ public class PublicMethed {
     }
 
     Contract.UnfreezeBalanceContract contract = builder.build();
-    Transaction transaction =  blockingStubFull.unfreezeBalance(contract);
+    Transaction transaction = blockingStubFull.unfreezeBalance(contract);
     transaction = signTransaction(ecKey, transaction);
     GrpcAPI.Return response = blockingStubFull.broadcastTransaction(transaction);
     if (response.getResult() == false) {
@@ -1303,7 +1305,7 @@ public class PublicMethed {
     return true;
   }
 
-  public static ArrayList<String>  getAddressInfo(String key) {
+  public static ArrayList<String> getAddressInfo(String key) {
     Wallet.setAddressPreFixByte(CommonConstant.ADD_PRE_FIX_BYTE_MAINNET);
     ArrayList<String> accountList = new ArrayList<String>();
     accountList.add(key);
@@ -2267,7 +2269,6 @@ public class PublicMethed {
   }
 
 
-
   public static Optional<Exchange> getExchange(String id, WalletSolidityGrpc
       .WalletSolidityBlockingStub blockingStubSolidity) {
     BytesMessage request = BytesMessage.newBuilder().setValue(ByteString.copyFrom(
@@ -2549,7 +2550,7 @@ public class PublicMethed {
   }
 
   public static Boolean freezeBalanceForReceiver(byte[] addRess, long freezeBalance,
-      long freezeDuration, int resourceCode, ByteString receiverAddressBytes,String priKey,
+      long freezeDuration, int resourceCode, ByteString receiverAddressBytes, String priKey,
       WalletGrpc.WalletBlockingStub blockingStubFull) {
     Wallet.setAddressPreFixByte(CommonConstant.ADD_PRE_FIX_BYTE_MAINNET);
     byte[] address = addRess;
@@ -2640,8 +2641,63 @@ public class PublicMethed {
     return blockingStubFull.getAssetIssueById(request);
   }
 
+  public static boolean updateEnergyLimit(byte[] contractAddress, long originEnergyLimit,
+      String priKey, byte[] ownerAddress, WalletGrpc
+      .WalletBlockingStub blockingStubFull) {
+    Wallet.setAddressPreFixByte(CommonConstant.ADD_PRE_FIX_BYTE_MAINNET);
+    ECKey temKey = null;
+    try {
+      BigInteger priK = new BigInteger(priKey, 16);
+      temKey = ECKey.fromPrivate(priK);
+    } catch (Exception ex) {
+      ex.printStackTrace();
+    }
+    final ECKey ecKey = temKey;
 
+    byte[] owner = ownerAddress;
+    Contract.UpdateEnergyLimitContract.Builder builder = Contract.UpdateEnergyLimitContract
+        .newBuilder();
+    builder.setOwnerAddress(ByteString.copyFrom(owner));
+    builder.setContractAddress(ByteString.copyFrom(contractAddress));
+    builder.setOriginEnergyLimit(originEnergyLimit);
 
+    UpdateEnergyLimitContract updateEnergyLimitContract = builder.build();
+    TransactionExtention transactionExtention = blockingStubFull
+        .updateEnergyLimit(updateEnergyLimitContract);
+    if (transactionExtention == null || !transactionExtention.getResult().getResult()) {
+      System.out.println("RPC create trx failed!");
+      if (transactionExtention != null) {
+        System.out.println("Code = " + transactionExtention.getResult().getCode());
+        System.out
+            .println("Message = " + transactionExtention.getResult().getMessage().toStringUtf8());
+      }
+      return false;
+    }
+    if (transactionExtention == null) {
+      return false;
+    }
+    Return ret = transactionExtention.getResult();
+    if (!ret.getResult()) {
+      System.out.println("Code = " + ret.getCode());
+      System.out.println("Message = " + ret.getMessage().toStringUtf8());
+      return false;
+    }
+    Transaction transaction = transactionExtention.getTransaction();
+    if (transaction == null || transaction.getRawData().getContractCount() == 0) {
+      System.out.println("Transaction is empty");
+      return false;
+    }
+    System.out.println(
+        "Receive txid = " + ByteArray.toHexString(transactionExtention.getTxid().toByteArray()));
+    transaction = signTransaction(ecKey, transaction);
+    GrpcAPI.Return response = blockingStubFull.broadcastTransaction(transaction);
+    if (response.getResult() == false) {
+      logger.info(ByteArray.toStr(response.getMessage().toByteArray()));
+      return false;
+    } else {
+      return true;
+    }
+  }
 
 
 }

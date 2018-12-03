@@ -187,7 +187,8 @@ public class TransactionInfoCapsule implements ProtoCapsule<TransactionInfo> {
 
     builder.setReceipt(traceReceipt.getReceipt());
 
-    if (null != programResult.getInternalTransactions()) {
+    boolean t = false;
+    if (null != programResult.getInternalTransactions() && t) {
       for (InternalTransaction internalTransaction : programResult
           .getInternalTransactions()) {
         Protocol.InternalTransaction.Builder internalTrxBuilder = Protocol.InternalTransaction
@@ -218,6 +219,8 @@ public class TransactionInfoCapsule implements ProtoCapsule<TransactionInfo> {
         internalTrxBuilder.setRejected(internalTransaction.isRejected());
         builder.addInternalTransactions(internalTrxBuilder);
       }
+
+
     }
 
     return new TransactionInfoCapsule(builder.build());

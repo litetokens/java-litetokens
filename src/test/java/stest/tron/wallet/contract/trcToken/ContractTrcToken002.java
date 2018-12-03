@@ -477,6 +477,12 @@ public class ContractTrcToken002 {
     Assert.assertEquals(energyUsage, userEnergyUsageAfter - userEnergyUsageBefore);
     Assert.assertEquals(energyFee, userBalanceBefore - userBalanceAfter);
     Assert.assertEquals(receiveAssetAfter - receiveAssetBefore, transferAssetBefore + 2L - transferAssetAfter);
+
+    Assert.assertEquals(1, infoById.get().getInternalTransactionsCount());
+    Assert.assertEquals(1,
+        infoById.get().getInternalTransactions(0).getCallValueInfo(0).getCallValue());
+    Assert.assertEquals(assetAccountId.toStringUtf8(),
+        infoById.get().getInternalTransactions(0).getCallValueInfo(0).getTokenId());
   }
 
   @AfterClass

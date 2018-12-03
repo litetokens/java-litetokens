@@ -28,7 +28,7 @@ import stest.tron.wallet.common.client.utils.PublicMethed;
 import stest.tron.wallet.myself.DebugUtils;
 
 @Slf4j
-public class ContractOriginEnergyLimit010 {
+public class ContractOriginEnergyLimit014 {
 
   private final String testKey002 = Configuration.getByPath("testng.conf")
       .getString("foundationAccount.key2");
@@ -214,15 +214,13 @@ public class ContractOriginEnergyLimit010 {
     PublicMethed.printAddress(dev001Key);
     PublicMethed.printAddress(user001Key);
 
-//    A2B2C1
-
     //dev balance and Energy
     long devTargetBalance = 10_000_000;
-    long devTargetEnergy = 60000;
+    long devTargetEnergy = 70000;
 
     // deploy contract parameters
     long deployFeeLimit = maxFeeLimit;
-    long consumeUserResourcePercent = 75;
+    long consumeUserResourcePercent = 0;
     long originEnergyLimit = 100;
 
     //dev balance and Energy
@@ -235,9 +233,9 @@ public class ContractOriginEnergyLimit010 {
 
     // trigger contract parameter, maxFeeLimit 10000000
     long triggerFeeLimit = maxFeeLimit;
-    boolean expectRet = true;
+    boolean expectRet = false;
 
-    //A2B2C2
+    //A2B2C3
 
     // count dev energy, balance
     long devFreezeBalanceSUN = getFreezeBalanceCount(dev001Address, dev001Key,
@@ -310,7 +308,7 @@ public class ContractOriginEnergyLimit010 {
 
     Assert.assertTrue(devEnergyLimitAfter > 0);
     Assert.assertTrue(devEnergyUsageAfter > 0);
-    Assert.assertTrue(devBalanceBefore - devBalanceAfter > 0);
+    Assert.assertEquals(devBalanceBefore, devBalanceAfter);
 
     // count dev energy, balance
     devFreezeBalanceSUN = getFreezeBalanceCount(dev001Address, dev001Key,
@@ -330,14 +328,14 @@ public class ContractOriginEnergyLimit010 {
     // get balance
     Assert.assertTrue(PublicMethed.sendcoin(dev001Address, devNeedBalance, fromAddress,
         testKey002, blockingStubFull));
-    Assert.assertTrue(PublicMethed.sendcoin(user001Address, userNeedBalance, fromAddress,
-        testKey002, blockingStubFull));
 
     // get energy
     Assert.assertTrue(PublicMethed.freezeBalanceGetEnergy(dev001Address, devFreezeBalanceSUN,
         3, 1, dev001Key, blockingStubFull));
-    Assert.assertTrue(PublicMethed.freezeBalanceGetEnergy(user001Address, userFreezeBalanceSUN,
-        3, 1, user001Key, blockingStubFull));
+
+    // freeze balance for net
+    Assert.assertTrue(PublicMethed.freezeBalance(user001Address, 1000000,
+        3, user001Key, blockingStubFull));
 
     logger.info("Debug: before trigger, check dev account resource:");
     DebugUtils.printAccountResource(dev001Address, blockingStubFull);
@@ -371,7 +369,8 @@ public class ContractOriginEnergyLimit010 {
     logger.info("==================================");
 
     String param = "\"" + 0 + "\"";
-    String triggerTxid = PublicMethed.triggerContract(contractAddress, "findArgsByIndexTest(uint256)",
+    String triggerTxid = PublicMethed
+        .triggerContract(contractAddress, "findArgsByIndexTest(uint256)",
         param, false, 0, triggerFeeLimit, user001Address, user001Key, blockingStubFull);
 
     accountResource = PublicMethed.getAccountResource(dev001Address, blockingStubFull);
@@ -438,11 +437,9 @@ public class ContractOriginEnergyLimit010 {
     Assert.assertTrue(devEnergyLimitAfter > 0);
     Assert.assertEquals(devBalanceBefore, devBalanceAfter);
 
-    // DEV is NOT enough to pay
-    Assert.assertEquals(originEnergyUsage, devMax);
-    userExpectCost = userExpectCost + devExpectCost - devMax;
-    logger.info("new userExpectCost: " + userExpectCost );
-    Assert.assertEquals(devEnergyUsageAfter, devEnergyUsageBefore + devMax);
+    // DEV is enough to pay;
+    Assert.assertEquals(originEnergyUsage, devExpectCost);
+    Assert.assertTrue(devEnergyUsageAfter == devExpectCost + devEnergyUsageBefore);
 
     // User Energy + Balance is enough to pay
     Assert.assertEquals(userExpectCost, energyUsage + energyFee/100);

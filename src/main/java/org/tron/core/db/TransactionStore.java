@@ -1,8 +1,6 @@
 package org.tron.core.db;
 
 import java.util.Objects;
-
-import com.google.common.collect.Streams;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +17,10 @@ public class TransactionStore extends TronStoreWithRevoking<TransactionCapsule> 
   @Autowired
   private TransactionStore(@Value("trans") String dbName) {
     super(dbName);
+  }
+
+  public TransactionStore(TransactionStore transactionStore) {
+    super(transactionStore);
   }
 
   @Override

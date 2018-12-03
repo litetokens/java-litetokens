@@ -17,6 +17,10 @@ public class DelegatedResourceStore extends TronStoreWithRevoking<DelegatedResou
     super(dbName);
   }
 
+  public DelegatedResourceStore(DelegatedResourceStore delegatedResourceStore) {
+    super(delegatedResourceStore);
+  }
+
   @Override
   public DelegatedResourceCapsule get(byte[] key) {
 

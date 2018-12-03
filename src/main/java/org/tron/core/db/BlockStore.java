@@ -38,6 +38,10 @@ public class BlockStore extends TronStoreWithRevoking<BlockCapsule> {
     super(dbName);
   }
 
+  public BlockStore(BlockStore blockStore) {
+    super(blockStore);
+  }
+
   public List<BlockCapsule> getLimitNumber(long startNumber, long limit) {
     BlockId startBlockId = new BlockId(Sha256Hash.ZERO_HASH, startNumber);
     return revokingDB.getValuesNext(startBlockId.getBytes(), limit).stream()

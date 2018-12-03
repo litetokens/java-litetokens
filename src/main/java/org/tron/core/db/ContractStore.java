@@ -18,6 +18,10 @@ public class ContractStore extends TronStoreWithRevoking<ContractCapsule> {
     super(dbName);
   }
 
+  public ContractStore(ContractStore contractStore) {
+    super(contractStore);
+  }
+
   @Override
   public ContractCapsule get(byte[] key) {
     return getUnchecked(key);

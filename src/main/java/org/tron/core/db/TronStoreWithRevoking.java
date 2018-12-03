@@ -35,6 +35,15 @@ public abstract class TronStoreWithRevoking<T extends ProtoCapsule> implements I
   @Getter
   private String dbName;
 
+  protected TronStoreWithRevoking(TronStoreWithRevoking tronStoreWithRevoking) {
+    this.dbName = tronStoreWithRevoking.dbName;
+    this.indexHelper = tronStoreWithRevoking.indexHelper;
+    this.token = tronStoreWithRevoking.token;
+    this.revokingDatabase = tronStoreWithRevoking.revokingDatabase;
+    this.revokingDB = new RevokingDBWithCachingNewValue(
+        (RevokingDBWithCachingNewValue) tronStoreWithRevoking.revokingDB);
+  }
+
   protected TronStoreWithRevoking(String dbName) {
     this.dbName = dbName;
     int dbVersion = Args.getInstance().getStorage().getDbVersion();

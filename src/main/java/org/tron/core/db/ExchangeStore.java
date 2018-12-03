@@ -18,6 +18,10 @@ public class ExchangeStore extends TronStoreWithRevoking<ExchangeCapsule> {
     super(dbName);
   }
 
+  public ExchangeStore(ExchangeStore exchangeStore) {
+    super(exchangeStore);
+  }
+
   @Override
   public ExchangeCapsule get(byte[] key) throws ItemNotFoundException {
     byte[] value = revokingDB.get(key);

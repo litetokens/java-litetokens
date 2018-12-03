@@ -14,6 +14,10 @@ public class VotesStore extends TronStoreWithRevoking<VotesCapsule> {
     super(dbName);
   }
 
+  public VotesStore(VotesStore votesStore) {
+    super(votesStore);
+  }
+
   @Override
   public VotesCapsule get(byte[] key) {
     byte[] value = revokingDB.getUnchecked(key);

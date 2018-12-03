@@ -15,6 +15,11 @@ public class DelegatedResourceAccountIndexStore extends
     super(dbName);
   }
 
+  public DelegatedResourceAccountIndexStore(DelegatedResourceAccountIndexStore
+      delegatedResourceAccountIndexStore) {
+    super(delegatedResourceAccountIndexStore);
+  }
+
   @Override
   public DelegatedResourceAccountIndexCapsule get(byte[] key) {
 

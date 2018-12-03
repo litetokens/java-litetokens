@@ -21,6 +21,9 @@ public class AssetIssueStore extends TronStoreWithRevoking<AssetIssueCapsule> {
     super(dbName);
   }
 
+  public AssetIssueStore(AssetIssueStore assetIssueStore) {
+    super(assetIssueStore);
+  }
 
   @Override
   public AssetIssueCapsule get(byte[] key) {

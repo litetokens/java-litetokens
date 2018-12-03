@@ -14,4 +14,8 @@ public class AssetIssueV2Store extends AssetIssueStore {
     super(dbName);
   }
 
+  public AssetIssueV2Store(AssetIssueV2Store assetIssueV2Store) {
+    super(assetIssueV2Store);
+  }
+
 }

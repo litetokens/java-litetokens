@@ -12,4 +12,8 @@ public class ExchangeV2Store extends ExchangeStore {
     super(dbName);
   }
 
+  public ExchangeV2Store(ExchangeV2Store exchangeV2Store) {
+    super(exchangeV2Store);
+  }
+
 }

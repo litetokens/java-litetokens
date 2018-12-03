@@ -13,6 +13,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.Getter;
+import lombok.Setter;
 import org.tron.common.utils.ByteUtil;
 import org.tron.core.config.args.Args;
 import org.tron.core.db.common.WrappedByteArray;
@@ -26,7 +27,13 @@ public class RevokingDBWithCachingNewValue implements IRevokingDB {
 
   private Snapshot head;
   @Getter
+  @Setter
   private String dbName;
+
+  public RevokingDBWithCachingNewValue(RevokingDBWithCachingNewValue that) {
+    this.dbName = that.dbName;
+    this.head = that.head.getRoot();
+  }
 
   public RevokingDBWithCachingNewValue(String dbName) {
     this.dbName = dbName;

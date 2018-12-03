@@ -18,6 +18,10 @@ public class ProposalStore extends TronStoreWithRevoking<ProposalCapsule> {
     super(dbName);
   }
 
+  public ProposalStore(ProposalStore proposalStore) {
+    super(proposalStore);
+  }
+
   @Override
   public ProposalCapsule get(byte[] key) throws ItemNotFoundException {
     byte[] value = revokingDB.get(key);

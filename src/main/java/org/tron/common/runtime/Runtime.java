@@ -1,5 +1,6 @@
 package org.tron.common.runtime;
 
+import java.util.ArrayList;
 import org.tron.common.runtime.vm.program.InternalTransaction.TrxType;
 import org.tron.common.runtime.vm.program.ProgramResult;
 import org.tron.core.exception.ContractExeException;

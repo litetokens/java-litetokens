@@ -37,17 +37,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.tron.common.overlay.discover.node.Node;
 import org.tron.common.runtime.config.VMConfig;
+import org.tron.common.runtime.utils.PerformanceHelper;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.ForkController;
 import org.tron.common.utils.SessionOptional;
 import org.tron.common.utils.Sha256Hash;
 import org.tron.common.utils.StringUtil;
 import org.tron.core.Constant;
+import org.tron.core.Wallet;
 import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.AssetIssueCapsule;
 import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.capsule.BlockCapsule.BlockId;
 import org.tron.core.capsule.BytesCapsule;
+import org.tron.core.capsule.ContractCapsule;
 import org.tron.core.capsule.ExchangeCapsule;
 import org.tron.core.capsule.TransactionCapsule;
 import org.tron.core.capsule.TransactionInfoCapsule;
@@ -86,7 +89,11 @@ import org.tron.core.exception.ValidateSignatureException;
 import org.tron.core.services.WitnessService;
 import org.tron.core.witness.ProposalController;
 import org.tron.core.witness.WitnessController;
+import org.tron.protos.Protocol;
 import org.tron.protos.Protocol.AccountType;
+import org.tron.protos.Protocol.SmartContract;
+import org.tron.protos.Protocol.Transaction.Contract;
+import org.tron.protos.Protocol.Transaction.Contract.ContractType;
 
 
 @Slf4j
@@ -1001,9 +1008,7 @@ public class Manager {
     return blockStore.iterator().hasNext() || this.khaosDb.hasData();
   }
 
-  /**
-   * Process transaction.
-   */
+
   public boolean processTransaction(final TransactionCapsule trxCap, BlockCapsule blockCap)
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
       AccountResourceInsufficientException, TransactionExpirationException, TooBigTransactionException, TooBigTransactionResultException,
@@ -1011,6 +1016,42 @@ public class Manager {
     if (trxCap == null) {
       return false;
     }
+
+    // 区块号、交易类型、交易index、交易总耗时、owner_address
+    // 如果是智能合约的话，加上
+    // 合约地址、调用的函数(如果是trigger的话)、commit每个库的时间、(opcode、耗时)列表
+
+    PerformanceHelper.singleTxBaseInfo.clear();
+    PerformanceHelper.singleTxOpcodeInfo.clear();
+
+    // ArrayList<String> singleTxBaseInfo = new ArrayList<String>();
+    // ArrayList<String> singleTxOpcodeInfo = new ArrayList<String>();
+    PerformanceHelper.singleTxBaseInfo.add(String.valueOf(blockCap.getNum()));
+    PerformanceHelper.singleTxBaseInfo.add(String.valueOf(PerformanceHelper.txIndex));
+    PerformanceHelper.singleTxOpcodeInfo.add(String.valueOf(blockCap.getNum()));
+    PerformanceHelper.singleTxOpcodeInfo.add(String.valueOf(PerformanceHelper.txIndex));
+    Contract.ContractType txType = trxCap.getInstance().getRawData().getContract(0).getType();
+    PerformanceHelper.singleTxBaseInfo.add(String.valueOf(txType));
+
+    if (txType == ContractType.TriggerSmartContract) {
+      org.tron.protos.Contract.TriggerSmartContract contract = ContractCapsule
+          .getTriggerContractFromTransaction(trxCap.getInstance());
+      byte[] contractAddress = contract.getContractAddress().toByteArray();
+      PerformanceHelper.singleTxBaseInfo.add(Wallet.encode58Check(contractAddress));
+
+      SmartContract.ABI abi = contractStore.getABI(contractAddress);
+      byte[] selector = Wallet.getSelector(contract.getData().toByteArray());
+      PerformanceHelper.singleTxBaseInfo.add(Wallet.getCalledFunctionName(abi, selector));
+    } else {
+      PerformanceHelper.singleTxBaseInfo.add("NoContractAddress");
+      PerformanceHelper.singleTxBaseInfo.add("NoFunctionName");
+    }
+
+    PerformanceHelper.singleTxBaseInfo.add(Wallet.encode58Check(
+        TransactionCapsule.getOwner(trxCap.getInstance().getRawData().getContract(0))));
+
+    long txStartMs = System.nanoTime() / 1000;
+    long preMs = txStartMs;
 
     validateTapos(trxCap);
     validateCommon(trxCap);
@@ -1030,6 +1071,10 @@ public class Manager {
     trxCap.setTrxTrace(trace);
 
     consumeBandwidth(trxCap, trace);
+
+    long now = System.nanoTime() / 1000;
+    PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
+    preMs = now;
 
     VMConfig.initVmHardFork();
     VMConfig.initAllowTvmTransferTrc10(dynamicPropertiesStore.getAllowTvmTransferTrc10());
@@ -1060,16 +1105,30 @@ public class Manager {
         trxCap.setResult(trace.getRuntime());
       }
     }
+
+    now = System.nanoTime() / 1000;
+    PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
+    preMs = now;
+
     transactionStore.put(trxCap.getTransactionId().getBytes(), trxCap);
+
+    now = System.nanoTime() / 1000;
+    PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
+    preMs = now;
 
     TransactionInfoCapsule transactionInfo = TransactionInfoCapsule
         .buildInstance(trxCap, blockCap, trace);
 
     transactionHistoryStore.put(trxCap.getTransactionId().getBytes(), transactionInfo);
 
+    now = System.nanoTime() / 1000;
+    PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
+    PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - txStartMs));
+    PerformanceHelper.txBaseInfo.add(new ArrayList<>(PerformanceHelper.singleTxBaseInfo)); // NOTE: need copy?
+    PerformanceHelper.txOpcodeInfo.add(new ArrayList<>(PerformanceHelper.singleTxOpcodeInfo)); // NOTE: need copy?
+
     return true;
   }
-
 
   /**
    * Get the block id from the number.
@@ -1255,21 +1314,41 @@ public class Manager {
       ReceiptCheckErrException, VMIllegalException, TooBigTransactionResultException {
     // todo set revoking db max size.
 
+    // 区块号、区块总耗时、交易类型、交易index、交易总耗时、owner_address
+    // 如果是智能合约的话，加上
+    // 合约地址、deploy/trigger、调用的函数(如果是trigger的话)、commit每个库的时间、(opcode、耗时)列表
+
+    PerformanceHelper.txBaseInfo.clear();
+    PerformanceHelper.txOpcodeInfo.clear();
+    PerformanceHelper.blockInfo.clear();
+
+    PerformanceHelper.blockInfo.add(String.valueOf(block.getNum()));
+    PerformanceHelper.blockInfo.add(String.valueOf(block.getTransactions().size()));
+
+    long blockStartMs = System.nanoTime() / 1000; // us
+    long preMs = blockStartMs;
+
     if (witnessService != null) {
       witnessService.processBlock(block);
     }
-
     // checkWitness
     if (!witnessController.validateWitnessSchedule(block)) {
       throw new ValidateScheduleException("validateWitnessSchedule error");
     }
 
+    long now = System.nanoTime() / 1000; // us
+    PerformanceHelper.blockInfo.add(String.valueOf(now - preMs));
+
+    PerformanceHelper.txIndex = -1;
     for (TransactionCapsule transactionCapsule : block.getTransactions()) {
+      PerformanceHelper.txIndex += 1;
       if (block.generatedByMyself) {
         transactionCapsule.setVerified(true);
       }
       processTransaction(transactionCapsule, block);
     }
+
+    preMs = System.nanoTime() / 1000; // us
 
     boolean needMaint = needMaintenance(block.getTimeStamp());
     if (needMaint) {
@@ -1288,6 +1367,11 @@ public class Manager {
     this.updateTransHashCache(block);
     updateMaintenanceState(needMaint);
     updateRecentBlock(block);
+
+    now = System.nanoTime() / 1000; // us
+    PerformanceHelper.blockInfo.add(String.valueOf(now - preMs));
+    PerformanceHelper.blockInfo.add(String.valueOf(now - blockStartMs));
+
   }
 
   public void updateAdaptiveTotalEnergyLimit() {

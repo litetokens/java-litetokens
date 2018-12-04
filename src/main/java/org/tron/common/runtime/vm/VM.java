@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.util.StringUtils;
 import org.tron.common.runtime.config.VMConfig;
+import org.tron.common.runtime.utils.PerformanceHelper;
 import org.tron.common.runtime.vm.program.Program;
 import org.tron.common.runtime.vm.program.Program.JVMStackOverFlowException;
 import org.tron.common.runtime.vm.program.Program.OutOfEnergyException;
@@ -706,7 +707,7 @@ public class VM {
 
           program.stackPush(tokenValue);
           program.step();
-        break;
+          break;
         case CALLTOKENID:
           DataWord _tokenId = program.getTokenId();
 
@@ -716,7 +717,7 @@ public class VM {
 
           program.stackPush(_tokenId);
           program.step();
-        break;
+          break;
         case CALLDATALOAD: {
           DataWord dataOffs = program.stackPop();
           DataWord value = program.getDataValue(dataOffs);
@@ -1335,24 +1336,43 @@ public class VM {
   }
 
   public void play(Program program) {
+    long preMs = 0;
+    long now = 0;
+    String opName = "";
     try {
       if (program.byTestingSuite()) {
         return;
       }
 
       while (!program.isStopped()) {
+        opName = OpCode.code(program.getCurrentOp()).name();
+        preMs = System.nanoTime() / 1000;
         this.step(program);
+        now = System.nanoTime() / 1000;
+        PerformanceHelper.singleTxOpcodeInfo.add(opName + "\t" + String.valueOf(now - preMs));
       }
 
     } catch (JVMStackOverFlowException | OutOfTimeException e) {
+
+      now = System.nanoTime() / 1000;
+      PerformanceHelper.singleTxOpcodeInfo.add(opName + "\t" + String.valueOf(now - preMs));
+
       throw e;
     } catch (RuntimeException e) {
+
+      now = System.nanoTime() / 1000;
+      PerformanceHelper.singleTxOpcodeInfo.add(opName + "\t" + String.valueOf(now - preMs));
+
       if (StringUtils.isEmpty(e.getMessage())) {
         program.setRuntimeFailure(new RuntimeException("Unknown Exception"));
       } else {
         program.setRuntimeFailure(e);
       }
     } catch (StackOverflowError soe) {
+
+      now = System.nanoTime() / 1000;
+      PerformanceHelper.singleTxOpcodeInfo.add(opName + "\t" + String.valueOf(now - preMs));
+
       logger
           .info("\n !!! StackOverflowError: update your java run command with -Xss !!!\n", soe);
       throw new JVMStackOverFlowException();

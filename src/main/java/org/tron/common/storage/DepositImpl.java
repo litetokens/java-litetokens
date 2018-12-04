@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.spongycastle.util.Strings;
 import org.spongycastle.util.encoders.Hex;
 import org.tron.common.runtime.config.VMConfig;
+import org.tron.common.runtime.utils.PerformanceHelper;
 import org.tron.common.runtime.vm.DataWord;
 import org.tron.common.runtime.vm.program.Storage;
 import org.tron.common.utils.ByteArray;
@@ -760,16 +761,88 @@ public class DepositImpl implements Deposit {
       deposit = parent;
     }
 
+    long now = System.nanoTime() / 1000;
+    long preMs = now;
+
     commitAccountCache(deposit);
+
+    now = System.nanoTime() / 1000;
+    if (deposit == null) {
+      PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
+    }
+    preMs = now;
+
     commitTransactionCache(deposit);
+
+    now = System.nanoTime() / 1000;
+    if (deposit == null) {
+      PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
+    }
+    preMs = now;
+
     commitBlockCache(deposit);
+
+    now = System.nanoTime() / 1000;
+    if (deposit == null) {
+      PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
+    }
+    preMs = now;
+
     commitWitnessCache(deposit);
+
+    now = System.nanoTime() / 1000;
+    if (deposit == null) {
+      PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
+    }
+    preMs = now;
+
     commitCodeCache(deposit);
+
+    now = System.nanoTime() / 1000;
+    if (deposit == null) {
+      PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
+    }
+    preMs = now;
+
     commitContractCache(deposit);
+
+    now = System.nanoTime() / 1000;
+    if (deposit == null) {
+      PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
+    }
+    preMs = now;
+
     commitStorageCache(deposit);
+
+    now = System.nanoTime() / 1000;
+    if (deposit == null) {
+      PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
+    }
+    preMs = now;
+
     commitVoteCache(deposit);
+
+    now = System.nanoTime() / 1000;
+    if (deposit == null) {
+      PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
+    }
+    preMs = now;
+
     commitProposalCache(deposit);
+
+    now = System.nanoTime() / 1000;
+    if (deposit == null) {
+      PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
+    }
+    preMs = now;
+
     commitDynamicPropertiesCache(deposit);
+
+    now = System.nanoTime() / 1000;
+    if (deposit == null) {
+      PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
+    }
+
   }
 
 

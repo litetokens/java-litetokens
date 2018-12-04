@@ -4,6 +4,7 @@ import static org.tron.common.runtime.vm.program.InternalTransaction.TrxType.TRX
 import static org.tron.common.runtime.vm.program.InternalTransaction.TrxType.TRX_CONTRACT_CREATION_TYPE;
 import static org.tron.common.runtime.vm.program.InternalTransaction.TrxType.TRX_PRECOMPILED_TYPE;
 
+import java.util.ArrayList;
 import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import org.tron.common.runtime.Runtime;
 import org.tron.common.runtime.RuntimeImpl;
+import org.tron.common.runtime.utils.PerformanceHelper;
 import org.tron.common.runtime.vm.program.InternalTransaction;
 import org.tron.common.runtime.vm.program.Program.BadJumpDestinationException;
 import org.tron.common.runtime.vm.program.Program.IllegalOperationException;
@@ -128,8 +130,20 @@ public class TransactionTrace {
   public void exec()
       throws ContractExeException, ContractValidateException, VMIllegalException {
     /*  VM execute  */
+
+    long now = System.nanoTime() / 1000;
+    long preMs = now;
+
     runtime.execute();
+
+    now = System.nanoTime() / 1000;
+    PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
+    preMs = now;
+
     runtime.go();
+
+    now = System.nanoTime() / 1000;
+    PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
 
     if (TRX_PRECOMPILED_TYPE != runtime.getTrxType()) {
       if (contractResult.OUT_OF_TIME

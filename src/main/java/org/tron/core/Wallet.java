@@ -381,11 +381,12 @@ public class Wallet {
 
     try {
       BlockId blockId = dbManager.getHeadBlockId();
-      if (Args.getInstance().getTrxReferenceBlock().equals("solid")){
+      if (Args.getInstance().getTrxReferenceBlock().equals("solid")) {
         blockId = dbManager.getSolidBlockId();
       }
       trx.setReference(blockId.getNum(), blockId.getBytes());
-      long expiration = dbManager.getHeadBlockTimeStamp() + Constant.TRANSACTION_DEFAULT_EXPIRATION_TIME;
+      long expiration =
+          dbManager.getHeadBlockTimeStamp() + Constant.TRANSACTION_DEFAULT_EXPIRATION_TIME;
       trx.setExpiration(expiration);
       trx.setTimestamp();
     } catch (Exception e) {
@@ -1058,7 +1059,7 @@ public class Wallet {
     return null;
   }
 
-  private static byte[] getSelector(byte[] data) {
+  public static byte[] getSelector(byte[] data) {
     if (data == null ||
         data.length < 4) {
       return null;
@@ -1107,6 +1108,40 @@ public class Wallet {
     }
 
     return false;
+  }
+
+  public static String getCalledFunctionName(SmartContract.ABI abi, byte[] selector) {
+
+    if (abi == null || selector == null || selector.length != 4 || abi.getEntrysList().size() == 0) {
+      return "NoFunctionName";
+    }
+
+    for (int i = 0; i < abi.getEntrysCount(); i++) {
+      ABI.Entry entry = abi.getEntrys(i);
+      if (entry.getType() != ABI.Entry.EntryType.Function) {
+        continue;
+      }
+
+      int inputCount = entry.getInputsCount();
+      StringBuffer sb = new StringBuffer();
+      sb.append(entry.getName());
+      sb.append("(");
+      for (int k = 0; k < inputCount; k++) {
+        ABI.Entry.Param param = entry.getInputs(k);
+        sb.append(param.getType());
+        if (k + 1 < inputCount) {
+          sb.append(",");
+        }
+      }
+      sb.append(")");
+
+      byte[] funcSelector = new byte[4];
+      System.arraycopy(Hash.sha3(sb.toString().getBytes()), 0, funcSelector, 0, 4);
+      if (Arrays.equals(funcSelector, selector)) {
+        return sb.toString();
+      }
+    }
+    return "NoFunctionName";
   }
 
   /*

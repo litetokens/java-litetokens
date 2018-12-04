@@ -448,7 +448,8 @@ public class RuntimeImpl implements Runtime {
     }
     if (VMConfig.allowTvmTransferTrc10()) {
       if (tokenValue > 0) {
-        transferToken(this.deposit, callerAddress, contractAddress, String.valueOf(tokenId), tokenValue);
+        transferToken(this.deposit, callerAddress, contractAddress, String.valueOf(tokenId),
+            tokenValue);
       }
     }
 
@@ -544,11 +545,13 @@ public class RuntimeImpl implements Runtime {
     }
     if (VMConfig.allowTvmTransferTrc10()) {
       if (tokenValue > 0) {
-        transferToken(this.deposit, callerAddress, contractAddress, String.valueOf(tokenId), tokenValue);
+        transferToken(this.deposit, callerAddress, contractAddress, String.valueOf(tokenId),
+            tokenValue);
       }
     }
 
   }
+
 
   public void go() {
     try {
@@ -644,6 +647,7 @@ public class RuntimeImpl implements Runtime {
     }
     trace.setBill(result.getEnergyUsed());
   }
+
 
   private static long getEnergyFee(long callerEnergyUsage, long callerEnergyFrozen,
       long callerEnergyTotal) {

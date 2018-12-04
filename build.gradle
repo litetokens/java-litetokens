@@ -29,6 +29,9 @@ apply plugin: 'maven-publish'
 jar.enabled = false
 shadowJar.enabled = false
 
+jar.enabled = false
+shadowJar.enabled = false
+
 sourceCompatibility = 1.8
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 mainClassName = 'org.tron.program.FullNode'

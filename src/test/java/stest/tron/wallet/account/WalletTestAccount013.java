@@ -1,4 +1,4 @@
-//test travis on osx
+//test travis on osx os
 package stest.tron.wallet.account;
 
 import com.google.protobuf.ByteString;

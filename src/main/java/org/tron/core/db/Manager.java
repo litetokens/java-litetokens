@@ -1219,13 +1219,15 @@ public class Manager {
           eventLogService.insertEventLog(eventLogEntity);
 
           // send event log to event server
-          HttpHeaders headers = new HttpHeaders();
-          MultiValueMap<String, String> map= new LinkedMultiValueMap<String, String>();
-          map.add("data", EventLogEntity.toJSONString(eventLogEntity));
-          map.add("key", "some secret key");
-          HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
-          RestTemplate restTemplate = new RestTemplate();
-          ResponseEntity<String> response = restTemplate.postForEntity( "http://127.0.0.1:18891/send", request , String.class );
+          if (1 == 2) {
+            HttpHeaders headers = new HttpHeaders();
+            MultiValueMap<String, String> map = new LinkedMultiValueMap<String, String>();
+            map.add("data", EventLogEntity.toJSONString(eventLogEntity));
+            map.add("key", "some secret key");
+            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<String> response = restTemplate.postForEntity("http://127.0.0.1:18891/send", request, String.class);
+          }
 
         });
       });

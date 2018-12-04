@@ -1044,7 +1044,8 @@ public class Manager {
 
     // ArrayList<String> singleTxBaseInfo = new ArrayList<String>();
     // ArrayList<String> singleTxOpcodeInfo = new ArrayList<String>();
-    if (blockCap != null) {
+    if (blockCap != null && !blockCap.getInstance().getBlockHeader().getWitnessSignature()
+        .isEmpty()) {
       PerformanceHelper.singleTxBaseInfo.add(String.valueOf(blockCap.getNum()));
       PerformanceHelper.singleTxBaseInfo.add(String.valueOf(PerformanceHelper.txIndex));
       PerformanceHelper.singleTxOpcodeInfo.add(String.valueOf(blockCap.getNum()));
@@ -1148,11 +1149,14 @@ public class Manager {
     now = System.nanoTime() / 1000;
     PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
     PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - txStartMs));
-    PerformanceHelper.txBaseInfo
-        .add(new ArrayList<>(PerformanceHelper.singleTxBaseInfo)); // NOTE: need copy?
-    PerformanceHelper.txOpcodeInfo
-        .add(new ArrayList<>(PerformanceHelper.singleTxOpcodeInfo)); // NOTE: need copy?
 
+    if (blockCap != null && !blockCap.getInstance().getBlockHeader().getWitnessSignature()
+        .isEmpty()) {
+      PerformanceHelper.txBaseInfo
+          .add(new ArrayList<>(PerformanceHelper.singleTxBaseInfo)); // NOTE: need copy?
+      PerformanceHelper.txOpcodeInfo
+          .add(new ArrayList<>(PerformanceHelper.singleTxOpcodeInfo)); // NOTE: need copy?
+    }
     return true;
   }
 
@@ -1344,14 +1348,13 @@ public class Manager {
     // 如果是智能合约的话，加上
     // 合约地址、deploy/trigger、调用的函数(如果是trigger的话)、commit每个库的时间、(opcode、耗时)列表
 
-    // blockInfo:
+    // singleBlockInfo:
     // block num, tx size, consume time before processtxs, consume time after processtxs, consume time of this block
-    PerformanceHelper.txBaseInfo.clear();
-    PerformanceHelper.txOpcodeInfo.clear();
-    PerformanceHelper.blockInfo.clear();
 
-    PerformanceHelper.blockInfo.add(String.valueOf(block.getNum()));
-    PerformanceHelper.blockInfo.add(String.valueOf(block.getTransactions().size()));
+    PerformanceHelper.singleBlockInfo.clear();
+
+    PerformanceHelper.singleBlockInfo.add(String.valueOf(block.getNum()));
+    PerformanceHelper.singleBlockInfo.add(String.valueOf(block.getTransactions().size()));
 
     long blockStartMs = System.nanoTime() / 1000; // us
     long preMs = blockStartMs;
@@ -1365,7 +1368,7 @@ public class Manager {
     }
 
     long now = System.nanoTime() / 1000; // us
-    PerformanceHelper.blockInfo.add(String.valueOf(now - preMs));
+    PerformanceHelper.singleBlockInfo.add(String.valueOf(now - preMs));
 
     PerformanceHelper.txIndex = -1;
     for (TransactionCapsule transactionCapsule : block.getTransactions()) {
@@ -1398,20 +1401,23 @@ public class Manager {
     updateRecentBlock(block);
 
     now = System.nanoTime() / 1000; // us
-    PerformanceHelper.blockInfo.add(String.valueOf(now - preMs));
-    PerformanceHelper.blockInfo.add(String.valueOf(now - blockStartMs));
+    PerformanceHelper.singleBlockInfo.add(String.valueOf(now - preMs));
+    PerformanceHelper.singleBlockInfo.add(String.valueOf(now - blockStartMs));
+    PerformanceHelper.blockInfo.add(new ArrayList<>(PerformanceHelper.singleBlockInfo));
 
-    PerformanceHelper.writeList(PerformanceHelper.blockInfo,
-        "blockInfo/" + String.valueOf(block.getNum()) + ".txt");
-    PerformanceHelper.write2DList(PerformanceHelper.txBaseInfo,
-        "txBaseInfo/" + String.valueOf(block.getNum()) + ".txt");
-    PerformanceHelper.write2DList(PerformanceHelper.txOpcodeInfo,
-        "txOpcodeInfo/" + String.valueOf(block.getNum()) + ".txt");
+    if (block.getNum() % 1000 == 0) {
+      PerformanceHelper.write2DList(PerformanceHelper.blockInfo,
+          "blockInfo/" + String.valueOf(block.getNum()) + ".txt");
+      PerformanceHelper.write2DList(PerformanceHelper.txBaseInfo,
+          "txBaseInfo/" + String.valueOf(block.getNum()) + ".txt");
+      PerformanceHelper.write2DList(PerformanceHelper.txOpcodeInfo,
+          "txOpcodeInfo/" + String.valueOf(block.getNum()) + ".txt");
 
-    PerformanceHelper.txBaseInfo.clear();
-    PerformanceHelper.txOpcodeInfo.clear();
-    PerformanceHelper.blockInfo.clear();
-    PerformanceHelper.txIndex = -1;
+      PerformanceHelper.blockInfo.clear();
+      PerformanceHelper.txBaseInfo.clear();
+      PerformanceHelper.txOpcodeInfo.clear();
+
+    }
   }
 
   public void updateAdaptiveTotalEnergyLimit() {

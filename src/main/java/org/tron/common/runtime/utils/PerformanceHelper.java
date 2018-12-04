@@ -18,11 +18,12 @@ public class PerformanceHelper {
   public static ArrayList<ArrayList<String>> txBaseInfo = new ArrayList<ArrayList<String>>();
   public static ArrayList<ArrayList<String>> txOpcodeInfo = new ArrayList<ArrayList<String>>();
   public static ArrayList<ArrayList<String>> txCommitInfo = new ArrayList<ArrayList<String>>();
-  public static List<String> blockInfo = new ArrayList<String>();
+  public static ArrayList<ArrayList<String>> blockInfo = new ArrayList<ArrayList<String>>();
   public static int txIndex = -1;
 
   public static ArrayList<String> singleTxBaseInfo = new ArrayList<String>();
   public static ArrayList<String> singleTxOpcodeInfo = new ArrayList<String>();
+  public static ArrayList<String> singleBlockInfo = new ArrayList<String>();
   public static ArrayList<String> singleTxCommitInfo = new ArrayList<String>();
 
   public static void writeList(List<String> l, String fileName) {

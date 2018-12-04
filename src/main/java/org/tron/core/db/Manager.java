@@ -46,7 +46,6 @@ import org.tron.common.utils.StringUtil;
 import org.tron.core.Constant;
 import org.tron.core.Wallet;
 import org.tron.core.capsule.AccountCapsule;
-import org.tron.core.capsule.AssetIssueCapsule;
 import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.capsule.BlockCapsule.BlockId;
 import org.tron.core.capsule.BytesCapsule;
@@ -476,6 +475,7 @@ public class Manager {
                       account.getBalance());
               this.accountStore.put(account.getAddress(), accountCapsule);
               this.accountIdIndexStore.put(accountCapsule);
+              this.accountIndexStore.put(accountCapsule);
             });
   }
 
@@ -1362,6 +1362,7 @@ public class Manager {
     PerformanceHelper.txIndex = -1;
     for (TransactionCapsule transactionCapsule : block.getTransactions()) {
       PerformanceHelper.txIndex += 1;
+      transactionCapsule.setBlockNum(block.getNum());
       if (block.generatedByMyself) {
         transactionCapsule.setVerified(true);
       }
@@ -1752,6 +1753,10 @@ public class Manager {
     } catch (TooBigTransactionResultException e) {
       logger.debug("too big transaction result");
     }
+  }
+
+  public void setMode(boolean mode) {
+    revokingStore.setMode(mode);
   }
 
 }

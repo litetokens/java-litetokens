@@ -1032,39 +1032,43 @@ public class Manager {
     // consume time of runtime.go(),
     // maybe retry [end]
 
-    // consume time of exec, consume time of put transactionStore(after exec), consume time of put transactionHistoryStore(after exec),
+    // consume time of exec, consume time of finalize,
+    // consume time of put transactionStore(after exec), consume time of put transactionHistoryStore(after exec),
     // consume time of total tx
 
     // singleTxOpcodeInfo:
     // block num, tx index,
+
     PerformanceHelper.singleTxBaseInfo.clear();
     PerformanceHelper.singleTxOpcodeInfo.clear();
 
     // ArrayList<String> singleTxBaseInfo = new ArrayList<String>();
     // ArrayList<String> singleTxOpcodeInfo = new ArrayList<String>();
-    PerformanceHelper.singleTxBaseInfo.add(String.valueOf(blockCap.getNum()));
-    PerformanceHelper.singleTxBaseInfo.add(String.valueOf(PerformanceHelper.txIndex));
-    PerformanceHelper.singleTxOpcodeInfo.add(String.valueOf(blockCap.getNum()));
-    PerformanceHelper.singleTxOpcodeInfo.add(String.valueOf(PerformanceHelper.txIndex));
-    Contract.ContractType txType = trxCap.getInstance().getRawData().getContract(0).getType();
-    PerformanceHelper.singleTxBaseInfo.add(String.valueOf(txType));
+    if (blockCap != null) {
+      PerformanceHelper.singleTxBaseInfo.add(String.valueOf(blockCap.getNum()));
+      PerformanceHelper.singleTxBaseInfo.add(String.valueOf(PerformanceHelper.txIndex));
+      PerformanceHelper.singleTxOpcodeInfo.add(String.valueOf(blockCap.getNum()));
+      PerformanceHelper.singleTxOpcodeInfo.add(String.valueOf(PerformanceHelper.txIndex));
+      Contract.ContractType txType = trxCap.getInstance().getRawData().getContract(0).getType();
+      PerformanceHelper.singleTxBaseInfo.add(String.valueOf(txType));
 
-    if (txType == ContractType.TriggerSmartContract) {
-      org.tron.protos.Contract.TriggerSmartContract contract = ContractCapsule
-          .getTriggerContractFromTransaction(trxCap.getInstance());
-      byte[] contractAddress = contract.getContractAddress().toByteArray();
-      PerformanceHelper.singleTxBaseInfo.add(Wallet.encode58Check(contractAddress));
+      if (txType == ContractType.TriggerSmartContract) {
+        org.tron.protos.Contract.TriggerSmartContract contract = ContractCapsule
+            .getTriggerContractFromTransaction(trxCap.getInstance());
+        byte[] contractAddress = contract.getContractAddress().toByteArray();
+        PerformanceHelper.singleTxBaseInfo.add(Wallet.encode58Check(contractAddress));
 
-      SmartContract.ABI abi = contractStore.getABI(contractAddress);
-      byte[] selector = Wallet.getSelector(contract.getData().toByteArray());
-      PerformanceHelper.singleTxBaseInfo.add(Wallet.getCalledFunctionName(abi, selector));
-    } else {
-      PerformanceHelper.singleTxBaseInfo.add("NoContractAddress");
-      PerformanceHelper.singleTxBaseInfo.add("NoFunctionName");
+        SmartContract.ABI abi = contractStore.getABI(contractAddress);
+        byte[] selector = Wallet.getSelector(contract.getData().toByteArray());
+        PerformanceHelper.singleTxBaseInfo.add(Wallet.getCalledFunctionName(abi, selector));
+      } else {
+        PerformanceHelper.singleTxBaseInfo.add("NoContractAddress");
+        PerformanceHelper.singleTxBaseInfo.add("NoFunctionName");
+      }
+
+      PerformanceHelper.singleTxBaseInfo.add(Wallet.encode58Check(
+          TransactionCapsule.getOwner(trxCap.getInstance().getRawData().getContract(0))));
     }
-
-    PerformanceHelper.singleTxBaseInfo.add(Wallet.encode58Check(
-        TransactionCapsule.getOwner(trxCap.getInstance().getRawData().getContract(0))));
 
     long txStartMs = System.nanoTime() / 1000;
     long preMs = txStartMs;
@@ -1114,6 +1118,10 @@ public class Manager {
         trace.check();
       }
     }
+
+    now = System.nanoTime() / 1000;
+    PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
+    preMs = now;
 
     trace.finalization();
     if (Objects.nonNull(blockCap)) {

@@ -1021,6 +1021,22 @@ public class Manager {
     // 如果是智能合约的话，加上
     // 合约地址、调用的函数(如果是trigger的话)、commit每个库的时间、(opcode、耗时)列表
 
+    // singleTxBaseInfo:
+    // block num, tx index, tx type, contract address, function name, owner address, consume time before exec,
+
+    // maybe retry [begin]:
+    // consume time of runtime.execute(),
+    // commitAccountCache, commitTransactionCache, commitBlockCache
+    // commitWitnessCache, commitCodeCache, commitContractCache, commitStorageCache
+    // commitVoteCache, commitProposalCache, commitDynamicPropertiesCache
+    // consume time of runtime.go(),
+    // maybe retry [end]
+
+    // consume time of exec, consume time of put transactionStore(after exec), consume time of put transactionHistoryStore(after exec),
+    // consume time of total tx
+
+    // singleTxOpcodeInfo:
+    // block num, tx index,
     PerformanceHelper.singleTxBaseInfo.clear();
     PerformanceHelper.singleTxOpcodeInfo.clear();
 
@@ -1124,8 +1140,10 @@ public class Manager {
     now = System.nanoTime() / 1000;
     PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
     PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - txStartMs));
-    PerformanceHelper.txBaseInfo.add(new ArrayList<>(PerformanceHelper.singleTxBaseInfo)); // NOTE: need copy?
-    PerformanceHelper.txOpcodeInfo.add(new ArrayList<>(PerformanceHelper.singleTxOpcodeInfo)); // NOTE: need copy?
+    PerformanceHelper.txBaseInfo
+        .add(new ArrayList<>(PerformanceHelper.singleTxBaseInfo)); // NOTE: need copy?
+    PerformanceHelper.txOpcodeInfo
+        .add(new ArrayList<>(PerformanceHelper.singleTxOpcodeInfo)); // NOTE: need copy?
 
     return true;
   }
@@ -1318,6 +1336,8 @@ public class Manager {
     // 如果是智能合约的话，加上
     // 合约地址、deploy/trigger、调用的函数(如果是trigger的话)、commit每个库的时间、(opcode、耗时)列表
 
+    // blockInfo:
+    // block num, tx size, consume time before processtxs, consume time after processtxs, consume time of this block
     PerformanceHelper.txBaseInfo.clear();
     PerformanceHelper.txOpcodeInfo.clear();
     PerformanceHelper.blockInfo.clear();
@@ -1372,6 +1392,17 @@ public class Manager {
     PerformanceHelper.blockInfo.add(String.valueOf(now - preMs));
     PerformanceHelper.blockInfo.add(String.valueOf(now - blockStartMs));
 
+    PerformanceHelper.writeList(PerformanceHelper.blockInfo,
+        "blockInfo/" + String.valueOf(block.getNum()) + ".txt");
+    PerformanceHelper.write2DList(PerformanceHelper.txBaseInfo,
+        "txBaseInfo/" + String.valueOf(block.getNum()) + ".txt");
+    PerformanceHelper.write2DList(PerformanceHelper.txOpcodeInfo,
+        "txOpcodeInfo/" + String.valueOf(block.getNum()) + ".txt");
+
+    PerformanceHelper.txBaseInfo.clear();
+    PerformanceHelper.txOpcodeInfo.clear();
+    PerformanceHelper.blockInfo.clear();
+    PerformanceHelper.txIndex = -1;
   }
 
   public void updateAdaptiveTotalEnergyLimit() {

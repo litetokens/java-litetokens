@@ -1345,11 +1345,16 @@ public class VM {
       }
 
       while (!program.isStopped()) {
-        opName = OpCode.code(program.getCurrentOp()).name();
+        OpCode op = OpCode.code(program.getCurrentOp());
+        if (op == null) {
+          opName = "IllegalOP";
+        } else {
+          opName = op.name();
+        }
         preMs = System.nanoTime() / 1000;
         this.step(program);
         now = System.nanoTime() / 1000;
-        PerformanceHelper.singleTxOpcodeInfo.add(opName + "\t" + String.valueOf(now - preMs));
+        PerformanceHelper.singleTxOpcodeInfo.add(opName + "\1" + String.valueOf(now - preMs));
       }
 
     } catch (JVMStackOverFlowException | OutOfTimeException e) {

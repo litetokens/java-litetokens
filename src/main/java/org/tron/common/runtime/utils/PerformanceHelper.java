@@ -51,18 +51,18 @@ public class PerformanceHelper {
 
   public static void write2DList(ArrayList<ArrayList<String>> l, String fileName) {
     StringBuffer content = new StringBuffer();
-    logger.info("length of 2D list: {}", l.size());
+    // logger.info("length of 2D list: {}", l.size());
     for (int i = 0; i < l.size(); i++) {
-      long preMs = System.nanoTime() / 1000;
+      // long preMs = System.nanoTime() / 1000;
       String c = String.join("\t", l.get(i));
-      long now = System.nanoTime() / 1000;
-      logger.info("index:{}, join consume: {}", i, now - preMs);
-      preMs = now;
+      // long now = System.nanoTime() / 1000;
+      // logger.info("index:{}, join consume: {}", i, now - preMs);
+      // preMs = now;
       content.append(c + "\n");
-      now = System.nanoTime() / 1000;
-      logger.info("index:{}, append consume: {}", i, now - preMs);
+      // now = System.nanoTime() / 1000;
+      // logger.info("index:{}, append consume: {}", i, now - preMs);
     }
-    logger.info("length of 2D list: {}", l.size());
+    // logger.info("length of 2D list: {}", l.size());
     File file = new File(fileName);
 
     try {
@@ -76,13 +76,13 @@ public class PerformanceHelper {
       logger.info(e.getMessage());
     }
 
-    long now = System.nanoTime() / 1000;
+    // long now = System.nanoTime() / 1000;
     try (Writer writer = new FileWriter(file)) {
       writer.write(content.toString());
     } catch (IOException e) {
       logger.info(e.getMessage());
     }
-    logger.info("write consume: {}", System.nanoTime() / 1000 - now);
+    // logger.info("write consume: {}", System.nanoTime() / 1000 - now);
 
   }
 

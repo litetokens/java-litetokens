@@ -1351,22 +1351,22 @@ public class VM {
         } else {
           opName = op.name();
         }
-        preMs = System.nanoTime() / 1000;
+        // preMs = System.nanoTime() / 1000;
         this.step(program);
-        now = System.nanoTime() / 1000;
-        PerformanceHelper.singleTxOpcodeInfo.add(opName + "\1" + String.valueOf(now - preMs));
+        // now = System.nanoTime() / 1000;
+        // PerformanceHelper.singleTxOpcodeInfo.add(opName + "\1" + String.valueOf(now - preMs));
       }
 
     } catch (JVMStackOverFlowException | OutOfTimeException e) {
 
-      now = System.nanoTime() / 1000;
-      PerformanceHelper.singleTxOpcodeInfo.add(opName + "\t" + String.valueOf(now - preMs));
+      // now = System.nanoTime() / 1000;
+      // PerformanceHelper.singleTxOpcodeInfo.add(opName + "\t" + String.valueOf(now - preMs));
 
       throw e;
     } catch (RuntimeException e) {
 
-      now = System.nanoTime() / 1000;
-      PerformanceHelper.singleTxOpcodeInfo.add(opName + "\t" + String.valueOf(now - preMs));
+      // now = System.nanoTime() / 1000;
+      // PerformanceHelper.singleTxOpcodeInfo.add(opName + "\t" + String.valueOf(now - preMs));
 
       if (StringUtils.isEmpty(e.getMessage())) {
         program.setRuntimeFailure(new RuntimeException("Unknown Exception"));
@@ -1375,8 +1375,8 @@ public class VM {
       }
     } catch (StackOverflowError soe) {
 
-      now = System.nanoTime() / 1000;
-      PerformanceHelper.singleTxOpcodeInfo.add(opName + "\t" + String.valueOf(now - preMs));
+      // now = System.nanoTime() / 1000;
+      // PerformanceHelper.singleTxOpcodeInfo.add(opName + "\t" + String.valueOf(now - preMs));
 
       logger
           .info("\n !!! StackOverflowError: update your java run command with -Xss !!!\n", soe);

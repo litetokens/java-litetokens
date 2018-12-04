@@ -1040,7 +1040,7 @@ public class Manager {
     // block num, tx index,
 
     PerformanceHelper.singleTxBaseInfo.clear();
-    PerformanceHelper.singleTxOpcodeInfo.clear();
+    // PerformanceHelper.singleTxOpcodeInfo.clear();
 
     // ArrayList<String> singleTxBaseInfo = new ArrayList<String>();
     // ArrayList<String> singleTxOpcodeInfo = new ArrayList<String>();
@@ -1048,8 +1048,8 @@ public class Manager {
         .isEmpty()) {
       PerformanceHelper.singleTxBaseInfo.add(String.valueOf(blockCap.getNum()));
       PerformanceHelper.singleTxBaseInfo.add(String.valueOf(PerformanceHelper.txIndex));
-      PerformanceHelper.singleTxOpcodeInfo.add(String.valueOf(blockCap.getNum()));
-      PerformanceHelper.singleTxOpcodeInfo.add(String.valueOf(PerformanceHelper.txIndex));
+      // PerformanceHelper.singleTxOpcodeInfo.add(String.valueOf(blockCap.getNum()));
+      // PerformanceHelper.singleTxOpcodeInfo.add(String.valueOf(PerformanceHelper.txIndex));
       Contract.ContractType txType = trxCap.getInstance().getRawData().getContract(0).getType();
       PerformanceHelper.singleTxBaseInfo.add(String.valueOf(txType));
 
@@ -1154,8 +1154,8 @@ public class Manager {
         .isEmpty()) {
       PerformanceHelper.txBaseInfo
           .add(new ArrayList<>(PerformanceHelper.singleTxBaseInfo)); // NOTE: need copy?
-      PerformanceHelper.txOpcodeInfo
-          .add(new ArrayList<>(PerformanceHelper.singleTxOpcodeInfo)); // NOTE: need copy?
+      // PerformanceHelper.txOpcodeInfo
+      //     .add(new ArrayList<>(PerformanceHelper.singleTxOpcodeInfo)); // NOTE: need copy?
     }
     return true;
   }
@@ -1410,8 +1410,8 @@ public class Manager {
           "blockInfo/" + String.valueOf(block.getNum()) + ".txt");
       PerformanceHelper.write2DList(PerformanceHelper.txBaseInfo,
           "txBaseInfo/" + String.valueOf(block.getNum()) + ".txt");
-      PerformanceHelper.write2DList(PerformanceHelper.txOpcodeInfo,
-          "txOpcodeInfo/" + String.valueOf(block.getNum()) + ".txt");
+      // PerformanceHelper.write2DList(PerformanceHelper.txOpcodeInfo,
+      //     "txOpcodeInfo/" + String.valueOf(block.getNum()) + ".txt");
 
       PerformanceHelper.blockInfo.clear();
       PerformanceHelper.txBaseInfo.clear();

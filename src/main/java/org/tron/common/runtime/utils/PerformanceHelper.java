@@ -50,9 +50,9 @@ public class PerformanceHelper {
   }
 
   public static void write2DList(ArrayList<ArrayList<String>> l, String fileName) {
-    String content = "";
+    StringBuffer content = new StringBuffer();
     for (int i = 0; i < l.size(); i++) {
-      content += String.join("\t", l.get(i)) + "\n";
+      content.append(String.join("\t", l.get(i)) + "\n");
 
     }
     File file = new File(fileName);
@@ -69,7 +69,7 @@ public class PerformanceHelper {
     }
 
     try (Writer writer = new FileWriter(file)) {
-      writer.write(content);
+      writer.write(content.toString());
     } catch (IOException e) {
       logger.info(e.getMessage());
     }

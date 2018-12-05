@@ -31,6 +31,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.joda.time.DateTime;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1060,6 +1061,7 @@ public class Manager {
         trxCap.setResult(trace.getRuntime());
       }
     }
+
     transactionStore.put(trxCap.getTransactionId().getBytes(), trxCap);
 
     TransactionInfoCapsule transactionInfo = TransactionInfoCapsule

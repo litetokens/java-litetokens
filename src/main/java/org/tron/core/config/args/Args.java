@@ -452,6 +452,7 @@ public class Args {
     INSTANCE.minTimeRatio = 0.0;
     INSTANCE.maxTimeRatio = 5.0;
     INSTANCE.longRunningTime = 10;
+    INSTANCE.saveInternalTx = false;
   }
 
   /**
@@ -762,8 +763,10 @@ public class Args {
         config.hasPath("vm.vmTrace") ? config
             .getBoolean("vm.vmTrace") : false;
 
-    INSTANCE.saveInternalTx =
-        config.hasPath("vm.saveInternalTx") && config.getBoolean("vm.saveInternalTx");
+    if (!INSTANCE.saveInternalTx) {
+      INSTANCE.saveInternalTx =
+          config.hasPath("vm.saveInternalTx") && config.getBoolean("vm.saveInternalTx");
+    }
 
     initBackupProperty(config);
 

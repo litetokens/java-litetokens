@@ -28,7 +28,6 @@ public class TransactionHistoryStore extends TronStoreWithRevoking<TransactionIn
   @Override
   public void put(byte[] key, TransactionInfoCapsule item) {
     if (BooleanUtils.toBoolean(Args.getInstance().getStorage().getTransactionHistoreSwitch())) {
-      logger.error("ysc info put");
       super.put(key, item);
     }
   }

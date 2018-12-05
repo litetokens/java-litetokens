@@ -120,7 +120,13 @@ public class VM {
         case SSTORE:
           // todo: check the reset to 0, refund or not
           DataWord newValue = stack.get(stack.size() - 2);
+
+          long preMs = System.nanoTime() / 1000;
+
           DataWord oldValue = program.storageLoad(stack.peek());
+
+          PerformanceHelper.singleTxOpcodeInfo.add("SLOAD_IN_SSTORE\1" + String.valueOf(System.nanoTime() / 1000 - preMs));
+
           if (oldValue == null && !newValue.isZero()) {
             // set a new not-zero value
             energyCost = energyCosts.getSET_SSTORE();
@@ -1048,7 +1054,12 @@ public class VM {
         break;
         case SLOAD: {
           DataWord key = program.stackPop();
+
+          long preMs = System.nanoTime() / 1000;
+
           DataWord val = program.storageLoad(key);
+
+          PerformanceHelper.singleTxOpcodeInfo.add("SLOAD\1" + String.valueOf(System.nanoTime() / 1000 - preMs));
 
           if (logger.isDebugEnabled()) {
             hint = "key: " + key + " value: " + val;

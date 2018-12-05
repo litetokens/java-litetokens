@@ -158,11 +158,23 @@ public class TransactionTrace {
 
   public void finalization() throws ContractExeException {
     try {
+
+      long preMs = System.nanoTime() / 1000;
+
       pay();
+
+      PerformanceHelper.singleTxBaseInfo.add(String.valueOf(System.nanoTime() / 1000 - preMs));
+
     } catch (BalanceInsufficientException e) {
       throw new ContractExeException(e.getMessage());
     }
+
+    long preMs = System.nanoTime() / 1000;
+
     runtime.finalization();
+
+    PerformanceHelper.singleTxBaseInfo.add(String.valueOf(System.nanoTime() / 1000 - preMs));
+
   }
 
   /**

@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.Getter;
+import org.apache.commons.lang3.ArrayUtils;
 import org.tron.core.db.common.WrappedByteArray;
 import org.tron.core.db2.common.LevelDB;
 
@@ -17,13 +18,21 @@ public class SnapshotRoot extends AbstractSnapshot<byte[], byte[]> {
   @Getter
   private Snapshot solidity;
 
+  private String dbName;
+
   public SnapshotRoot(String parentName, String name) {
     db = new LevelDB(parentName, name);
+    this.dbName = name;
     solidity = this;
   }
 
   @Override
   public byte[] get(byte[] key) {
+    // byte[] ret = db.get(key);
+    //
+    // if (ArrayUtils.isEmpty(ret)) {
+    //   ret.length;
+    // }
     return db.get(key);
   }
 

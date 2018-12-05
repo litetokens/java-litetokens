@@ -1040,16 +1040,14 @@ public class Manager {
     // block num, tx index,
 
     PerformanceHelper.singleTxBaseInfo.clear();
-    // PerformanceHelper.singleTxOpcodeInfo.clear();
+    PerformanceHelper.singleTxOpcodeInfo.clear();
 
-    // ArrayList<String> singleTxBaseInfo = new ArrayList<String>();
-    // ArrayList<String> singleTxOpcodeInfo = new ArrayList<String>();
     if (blockCap != null && !blockCap.getInstance().getBlockHeader().getWitnessSignature()
         .isEmpty()) {
       PerformanceHelper.singleTxBaseInfo.add(String.valueOf(blockCap.getNum()));
       PerformanceHelper.singleTxBaseInfo.add(String.valueOf(PerformanceHelper.txIndex));
-      // PerformanceHelper.singleTxOpcodeInfo.add(String.valueOf(blockCap.getNum()));
-      // PerformanceHelper.singleTxOpcodeInfo.add(String.valueOf(PerformanceHelper.txIndex));
+      PerformanceHelper.singleTxOpcodeInfo.add(String.valueOf(blockCap.getNum()));
+      PerformanceHelper.singleTxOpcodeInfo.add(String.valueOf(PerformanceHelper.txIndex));
       Contract.ContractType txType = trxCap.getInstance().getRawData().getContract(0).getType();
       PerformanceHelper.singleTxBaseInfo.add(String.valueOf(txType));
 
@@ -1084,16 +1082,24 @@ public class Manager {
 
     validateDup(trxCap);
 
+    long now = System.nanoTime() / 1000;
+    PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
+    preMs = now;
+
     if (!trxCap.validateSignature()) {
       throw new ValidateSignatureException("trans sig validate failed");
     }
+
+    now = System.nanoTime() / 1000;
+    PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
+    preMs = now;
 
     TransactionTrace trace = new TransactionTrace(trxCap, this);
     trxCap.setTrxTrace(trace);
 
     consumeBandwidth(trxCap, trace);
 
-    long now = System.nanoTime() / 1000;
+    now = System.nanoTime() / 1000;
     PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
     preMs = now;
 
@@ -1101,6 +1107,11 @@ public class Manager {
     VMConfig.initAllowTvmTransferTrc10(dynamicPropertiesStore.getAllowTvmTransferTrc10());
     trace.init(blockCap);
     trace.checkIsConstant();
+
+    now = System.nanoTime() / 1000;
+    PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
+    preMs = now;
+
     trace.exec();
 
     if (Objects.nonNull(blockCap)) {
@@ -1131,9 +1142,9 @@ public class Manager {
       }
     }
 
-    now = System.nanoTime() / 1000;
-    PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
-    preMs = now;
+    preMs = System.nanoTime() / 1000;
+    // PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
+    // preMs = now;
 
     transactionStore.put(trxCap.getTransactionId().getBytes(), trxCap);
 
@@ -1154,8 +1165,8 @@ public class Manager {
         .isEmpty()) {
       PerformanceHelper.txBaseInfo
           .add(new ArrayList<>(PerformanceHelper.singleTxBaseInfo)); // NOTE: need copy?
-      // PerformanceHelper.txOpcodeInfo
-      //     .add(new ArrayList<>(PerformanceHelper.singleTxOpcodeInfo)); // NOTE: need copy?
+      PerformanceHelper.txOpcodeInfo
+          .add(new ArrayList<>(PerformanceHelper.singleTxOpcodeInfo)); // NOTE: need copy?
     }
     return true;
   }
@@ -1410,8 +1421,8 @@ public class Manager {
           "blockInfo/" + String.valueOf(block.getNum()) + ".txt");
       PerformanceHelper.write2DList(PerformanceHelper.txBaseInfo,
           "txBaseInfo/" + String.valueOf(block.getNum()) + ".txt");
-      // PerformanceHelper.write2DList(PerformanceHelper.txOpcodeInfo,
-      //     "txOpcodeInfo/" + String.valueOf(block.getNum()) + ".txt");
+      PerformanceHelper.write2DList(PerformanceHelper.txOpcodeInfo,
+          "txOpcodeInfo/" + String.valueOf(block.getNum()) + ".txt");
 
       PerformanceHelper.blockInfo.clear();
       PerformanceHelper.txBaseInfo.clear();

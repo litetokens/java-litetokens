@@ -26,28 +26,6 @@ public class PerformanceHelper {
   public static ArrayList<String> singleBlockInfo = new ArrayList<String>();
   public static ArrayList<String> singleTxCommitInfo = new ArrayList<String>();
 
-  public static void writeList(List<String> l, String fileName) {
-
-    String content = String.join("\t", l);
-    File file = new File(fileName);
-
-    try {
-      if (!file.getParentFile().exists() && !file.isDirectory()) {
-        file.getParentFile().mkdirs();
-        file.createNewFile();
-      } else {
-        file.createNewFile();
-      }
-    } catch (IOException e) {
-      logger.info(e.getMessage());
-    }
-
-    try (Writer writer = new FileWriter(file)) {
-      writer.write(content); // need "\n"?
-    } catch (IOException e) {
-      logger.info(e.getMessage());
-    }
-  }
 
   public static void write2DList(ArrayList<ArrayList<String>> l, String fileName) {
     StringBuffer content = new StringBuffer();
@@ -85,19 +63,5 @@ public class PerformanceHelper {
     // logger.info("write consume: {}", System.nanoTime() / 1000 - now);
 
   }
-
-  // public void recordTxBaseInfo(String info, String parameter) {
-  //
-  //   long newTs = System.currentTimeMillis();
-  //
-  //   return ts;
-  // }
-  //
-  // public void recordTxBaseInfo(String info, String parameter) {
-  //
-  //   long newTs = System.currentTimeMillis();
-  //
-  //   return ts;
-  // }
 
 }

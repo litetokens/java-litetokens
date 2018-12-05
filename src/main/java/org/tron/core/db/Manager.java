@@ -1067,7 +1067,7 @@ public class Manager {
     TransactionInfoCapsule transactionInfo = TransactionInfoCapsule
         .buildInstance(trxCap, blockCap, trace);
 
-    transactionHistoryStore.put(trxCap.getTransactionId().getBytes(), transactionInfo);
+//    transactionHistoryStore.put(trxCap.getTransactionId().getBytes(), transactionInfo);
 
     return true;
   }

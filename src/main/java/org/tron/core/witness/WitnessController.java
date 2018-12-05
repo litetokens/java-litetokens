@@ -307,8 +307,6 @@ public class WitnessController {
    * update witness.
    */
   public void updateWitness() {
-    if (1 != 2)
-      return;
     WitnessStore witnessStore = manager.getWitnessStore();
     VotesStore votesStore = manager.getVotesStore();
     AccountStore accountStore = manager.getAccountStore();

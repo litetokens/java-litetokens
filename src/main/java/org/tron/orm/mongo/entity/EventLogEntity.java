@@ -1,14 +1,13 @@
 package org.tron.orm.mongo.entity;
 
 import com.alibaba.fastjson.JSONObject;
-import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.annotation.Id;
-import java.util.Map;
-import java.util.HashMap;
-import org.springframework.data.mongodb.repository.Query;
+
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * MongoDB collection eventLog

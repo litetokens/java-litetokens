@@ -53,8 +53,10 @@ public class FullNode {
     Application appT = ApplicationFactory.create(context);
     shutdown(appT);
 
-    // grpc api server
 
+    if (cfgArgs.isWitness()) {
+      appT.addService(new WitnessService(appT, context));
+    }
 
     // http api server
     FullNodeHttpApiService httpApiService = context.getBean(FullNodeHttpApiService.class);

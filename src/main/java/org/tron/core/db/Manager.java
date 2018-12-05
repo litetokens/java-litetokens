@@ -2,13 +2,13 @@ package org.tron.core.db;
 
 import static org.tron.core.config.Parameter.ChainConstant.SOLIDIFIED_THRESHOLD;
 import static org.tron.core.config.Parameter.NodeConstant.MAX_TRANSACTION_PENDING;
-
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
+import java.util.stream.IntStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,7 +24,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -33,13 +32,11 @@ import javax.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import java.util.stream.IntStream;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.amqp.core.AmqpTemplate;
-import org.springframework.amqp.core.MessageProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -109,14 +106,12 @@ import org.tron.core.witness.WitnessController;
 import org.tron.orm.mongo.entity.EventLogEntity;
 import org.tron.orm.service.impl.EventLogServiceImpl;
 import org.tron.protos.Protocol;
-import org.tron.protos.Protocol.Block;
 import org.tron.protos.Protocol.AccountType;
 
 
 @Slf4j
 @Component
 public class Manager {
-
   enum Resource{
     FullNode, SolidityNode;
   }
@@ -128,9 +123,8 @@ public class Manager {
   private EventLogServiceImpl eventLogService;
 
   private Cache<byte[], Protocol.SmartContract.ABI> abiCache = CacheBuilder.newBuilder()
-      .maximumSize(100_000).expireAfterWrite(1, TimeUnit.HOURS).initialCapacity(100_000)
-      .recordStats().build();
-
+          .maximumSize(100_000).expireAfterWrite(1, TimeUnit.HOURS).initialCapacity(100_000)
+          .recordStats().build();
   // db store
   @Autowired
   private AccountStore accountStore;
@@ -375,7 +369,6 @@ public class Manager {
   }
 
   public void triggerResource() { this.resource = Resource.SolidityNode; }
-
   /**
    * Cycle thread to repush Transactions
    */
@@ -1109,16 +1102,14 @@ public class Manager {
         .buildInstance(trxCap, blockCap, trace);
 
     transactionHistoryStore.put(trxCap.getTransactionId().getBytes(), transactionInfo);
-
     if (Objects.nonNull(blockCap)) {
       sendEventLog(trace.getRuntime().getResult().getContractAddress(),
-          transactionInfo.getInstance().getLogList(), blockCap.getInstance(), transactionInfo);
+              transactionInfo.getInstance().getLogList(), blockCap.getInstance(), transactionInfo);
     }
-
     return true;
   }
 
-  private void sendEventLog(byte[] contractAddress, List<org.tron.protos.Protocol.TransactionInfo.Log> logList, Block block, TransactionInfoCapsule transactionInfoCapsule) {
+  private void sendEventLog(byte[] contractAddress, List<org.tron.protos.Protocol.TransactionInfo.Log> logList, Protocol.Block block, TransactionInfoCapsule transactionInfoCapsule) {
     if (block == null || block.getBlockHeader().getWitnessSignature().isEmpty()) {
       return;
     }
@@ -1165,7 +1156,7 @@ public class Manager {
           if (!StringUtils.equalsIgnoreCase(EventEncoder.encode(event), eventHexString)) {
             return;
           }
-          
+
           String rawLogData = ByteArray.toHexString(log.getData().toByteArray());
           List<Type> nonIndexedValues = FunctionReturnDecoder.decode(rawLogData, event.getNonIndexedParameters());
 
@@ -1185,9 +1176,9 @@ public class Manager {
 
             if(typeReference.isIndexed()) {
               resultJsonObject.put(nameList.get(counter),
-                  (indexedValues.get(indexedCounter) instanceof BytesType)
-                      ? Hex.toHexString((byte[]) indexedValues.get(indexedCounter).getValue())
-                      : indexedValues.get(indexedCounter).getValue());
+                      (indexedValues.get(indexedCounter) instanceof BytesType)
+                              ? Hex.toHexString((byte[]) indexedValues.get(indexedCounter).getValue())
+                              : indexedValues.get(indexedCounter).getValue());
               String [] abiTypearr = event.getIndexedParameters().get(indexedCounter).getType().toString().split("\\.");
               resultParamType.put(nameList.get(counter), abiTypearr[abiTypearr.length-1].toLowerCase());
               indexedCounter++;
@@ -1197,8 +1188,8 @@ public class Manager {
               String [] abiTypearr = event.getNonIndexedParameters().get(nonIndexedCounter).getType().toString().split("\\.");
               resultParamType.put(nameList.get(counter), abiTypearr[abiTypearr.length-1].toLowerCase());
               resultJsonObject.put(nameList.get(counter), (nonIndexedValues.get(nonIndexedCounter) instanceof BytesType)
-                  ? Hex.toHexString((byte[]) nonIndexedValues.get(nonIndexedCounter).getValue())
-                  : nonIndexedValues.get(nonIndexedCounter).getValue());
+                      ? Hex.toHexString((byte[]) nonIndexedValues.get(nonIndexedCounter).getValue())
+                      : nonIndexedValues.get(nonIndexedCounter).getValue());
               nonIndexedCounter++;
             }
             counter++;
@@ -1238,7 +1229,6 @@ public class Manager {
       logger.error("sendEventLog Failed {}", e);
     }
   }
-
   /**
    * Get the block id from the number.
    */
@@ -1578,7 +1568,7 @@ public class Manager {
 
   /**
    * @param block the block update signed witness. set witness who signed block the 1. the latest
-   *              block num 2. pay the trx to witness. 3. the latest slot num.
+   * block num 2. pay the trx to witness. 3. the latest slot num.
    */
   public void updateSignedWitness(BlockCapsule block) {
     // TODO: add verification

@@ -4,7 +4,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.spongycastle.util.encoders.Hex;
 import org.tron.abi.TypeReference;
 import org.tron.abi.datatypes.*;
-import org.tron.common.runtime.utils.MUtil;
 import org.tron.core.Wallet;
 
 /**

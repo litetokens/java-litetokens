@@ -189,9 +189,9 @@ public class TransactionInfoCapsule implements ProtoCapsule<TransactionInfo> {
     builder.setReceipt(traceReceipt.getReceipt());
 
     if (Args.getInstance().isSaveInternalTx()) {
-      logger.error("save inter");
+      logger.error(" save internalTx:" + programResult.getInternalTransactions().size());
     } else {
-      logger.error("not save inter");
+      logger.error("ysc not save internalTx:" + programResult.getInternalTransactions().size());
     }
     if (Args.getInstance().isSaveInternalTx() && null != programResult.getInternalTransactions()) {
       logger.error("ysc save internalTx:" + programResult.getInternalTransactions().size());

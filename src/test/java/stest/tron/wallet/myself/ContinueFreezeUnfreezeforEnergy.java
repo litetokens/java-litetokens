@@ -13,6 +13,9 @@ import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 import org.tron.api.GrpcAPI.AccountResourceMessage;
 import org.tron.api.WalletGrpc;
+import org.tron.common.crypto.ECKey;
+import org.tron.common.utils.ByteArray;
+import org.tron.common.utils.Utils;
 import org.tron.core.Wallet;
 import org.tron.protos.Protocol.Account;
 import stest.tron.wallet.common.client.Configuration;
@@ -108,16 +111,21 @@ public class ContinueFreezeUnfreezeforEnergy {
   @Test(enabled = true, threadPoolSize = 1, invocationCount = 1)
   public void continueRun() {
 
-//    ECKey ecKey1 = new ECKey(DebugUtils.getRandom());
-//    byte[] dev001Address = ecKey1.getAddress();
-//    String dev001Key = ByteArray.toHexString(ecKey1.getPrivKeyBytes());
+    ECKey ecKey1 = new ECKey(Utils.getRandom());
+    byte[] dev001Address = ecKey1.getAddress();
+    String dev001Key = ByteArray.toHexString(ecKey1.getPrivKeyBytes());
+
+    ECKey ecKey2 = new ECKey(Utils.getRandom());
+    byte[] store001Address = ecKey2.getAddress();
+    String store001Key = ByteArray.toHexString(ecKey2.getPrivKeyBytes());
+
 
     // TRxFANjAvztBibiqPRWgG841fVP12BCH7d
-    String dev001Key  = "29c91bd8b27c807d8dc2d2991aa0fbeafe7f54f4de9fac1e1684aa57242e3922";
-    byte[] dev001Address = new WalletClient(dev001Key).getAddress();
-
-    String store001Key  = "2b85002e80e9bec3bcb4aea175f4a0d33abd9b21b976ba57fa7535e192d6ff7f";
-    byte[] store001Address = new WalletClient(store001Key).getAddress();
+//    String dev001Key  = "29c91bd8b27c807d8dc2d2991aa0fbeafe7f54f4de9fac1e1684aa57242e3922";
+//    byte[] dev001Address = new WalletClient(dev001Key).getAddress();
+//
+//    String store001Key  = "2b85002e80e9bec3bcb4aea175f4a0d33abd9b21b976ba57fa7535e192d6ff7f";
+//    byte[] store001Address = new WalletClient(store001Key).getAddress();
 
     Assert
         .assertTrue(PublicMethed.sendcoin(dev001Address, 40480000000L, fromAddress,

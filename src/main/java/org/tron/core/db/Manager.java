@@ -24,22 +24,19 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import javafx.util.Pair;
 import javax.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import java.util.stream.IntStream;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.amqp.core.AmqpTemplate;
-import org.springframework.amqp.core.MessageProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.tron.abi.EventEncoder;
@@ -103,20 +100,17 @@ import org.tron.core.witness.WitnessController;
 import org.tron.orm.mongo.entity.EventLogEntity;
 import org.tron.orm.service.impl.EventLogServiceImpl;
 import org.tron.protos.Protocol;
-import org.tron.protos.Protocol.Block;
 import org.tron.protos.Protocol.AccountType;
+import org.tron.protos.Protocol.Block;
 
 
 @Slf4j
 @Component
 public class Manager {
 
-  enum Resource{
+  enum Resource {
     FullNode, SolidityNode;
   }
-
-  @Autowired
-  private AmqpTemplate amqpTemplate;
 
   @Autowired
   private EventLogServiceImpl eventLogService;
@@ -368,7 +362,9 @@ public class Manager {
     return this.peersStore.get("neighbours".getBytes());
   }
 
-  public void triggerResource() { this.resource = Resource.SolidityNode; }
+  public void triggerResource() {
+    this.resource = Resource.SolidityNode;
+  }
 
   /**
    * Cycle thread to repush Transactions
@@ -1112,7 +1108,9 @@ public class Manager {
     return true;
   }
 
-  private void sendEventLog(byte[] contractAddress, List<org.tron.protos.Protocol.TransactionInfo.Log> logList, Block block, TransactionInfoCapsule transactionInfoCapsule) {
+  private void sendEventLog(byte[] contractAddress,
+      List<org.tron.protos.Protocol.TransactionInfo.Log> logList, Block block,
+      TransactionInfoCapsule transactionInfoCapsule) {
     if (block == null || block.getBlockHeader().getWitnessSignature().isEmpty()) {
       return;
     }
@@ -1127,7 +1125,7 @@ public class Manager {
       }
       Protocol.SmartContract.ABI finalAbi = abi;
 
-      IntStream.range(0,logList.size()).forEach(idx -> {
+      IntStream.range(0, logList.size()).forEach(idx -> {
         org.tron.protos.Protocol.TransactionInfo.Log log = logList.get(idx);
         finalAbi.getEntrysList().forEach(abiEntry -> {
           if (abiEntry.getType() != Protocol.SmartContract.ABI.Entry.EntryType.Event) {
@@ -1160,7 +1158,8 @@ public class Manager {
           }
 
           String rawLogData = ByteArray.toHexString(log.getData().toByteArray());
-          List<Type> nonIndexedValues = FunctionReturnDecoder.decode(rawLogData, event.getNonIndexedParameters());
+          List<Type> nonIndexedValues = FunctionReturnDecoder
+              .decode(rawLogData, event.getNonIndexedParameters());
 
           List<Type> indexedValues = new ArrayList<>();
 
@@ -1168,7 +1167,8 @@ public class Manager {
           for (int i = 0; i < indexedParameters.size(); i++) {
             String topicHexString = Hex.toHexString(log.getTopicsList().get(i + 1).toByteArray());
             rawTopicsJsonArray.add(topicHexString);
-            Type value = FunctionReturnDecoder.decodeIndexedValue(topicHexString, indexedParameters.get(i));
+            Type value = FunctionReturnDecoder
+                .decodeIndexedValue(topicHexString, indexedParameters.get(i));
             indexedValues.add(value);
           }
           int counter = 0;
@@ -1176,22 +1176,27 @@ public class Manager {
           int nonIndexedCounter = 0;
           for (TypeReference<?> typeReference : typeList) {
 
-            if(typeReference.isIndexed()) {
+            if (typeReference.isIndexed()) {
               resultJsonObject.put(nameList.get(counter),
                   (indexedValues.get(indexedCounter) instanceof BytesType)
                       ? Hex.toHexString((byte[]) indexedValues.get(indexedCounter).getValue())
                       : indexedValues.get(indexedCounter).getValue());
-              String [] abiTypearr = event.getIndexedParameters().get(indexedCounter).getType().toString().split("\\.");
-              resultParamType.put(nameList.get(counter), abiTypearr[abiTypearr.length-1].toLowerCase());
+              String[] abiTypearr = event.getIndexedParameters().get(indexedCounter).getType()
+                  .toString().split("\\.");
+              resultParamType
+                  .put(nameList.get(counter), abiTypearr[abiTypearr.length - 1].toLowerCase());
               indexedCounter++;
 
             } else {
 
-              String [] abiTypearr = event.getNonIndexedParameters().get(nonIndexedCounter).getType().toString().split("\\.");
-              resultParamType.put(nameList.get(counter), abiTypearr[abiTypearr.length-1].toLowerCase());
-              resultJsonObject.put(nameList.get(counter), (nonIndexedValues.get(nonIndexedCounter) instanceof BytesType)
-                  ? Hex.toHexString((byte[]) nonIndexedValues.get(nonIndexedCounter).getValue())
-                  : nonIndexedValues.get(nonIndexedCounter).getValue());
+              String[] abiTypearr = event.getNonIndexedParameters().get(nonIndexedCounter).getType()
+                  .toString().split("\\.");
+              resultParamType
+                  .put(nameList.get(counter), abiTypearr[abiTypearr.length - 1].toLowerCase());
+              resultJsonObject.put(nameList.get(counter),
+                  (nonIndexedValues.get(nonIndexedCounter) instanceof BytesType)
+                      ? Hex.toHexString((byte[]) nonIndexedValues.get(nonIndexedCounter).getValue())
+                      : nonIndexedValues.get(nonIndexedCounter).getValue());
               nonIndexedCounter++;
             }
             counter++;
@@ -1209,13 +1214,14 @@ public class Manager {
 //          logger.info("types: {}", resultParamType);
 
           EventLogEntity eventLogEntity = new EventLogEntity(blockNumber, blockTimestamp,
-                  Wallet.encode58Check(contractAddress), entryName, resultJsonObject,rawJsonObject,
-                  Hex.toHexString(transactionInfoCapsule.getId()), resultParamType, this.resource.toString(), idx);
+              Wallet.encode58Check(contractAddress), entryName, resultJsonObject, rawJsonObject,
+              Hex.toHexString(transactionInfoCapsule.getId()), resultParamType,
+              this.resource.toString(), idx);
           // 事件日志写入MongoDB
           eventLogService.insertEventLog(eventLogEntity);
         });
       });
-    } catch (org.springframework.dao.DuplicateKeyException e){
+    } catch (org.springframework.dao.DuplicateKeyException e) {
 
     } catch (Exception e) {
       logger.error("sendEventLog Failed {}", e);
@@ -1561,7 +1567,7 @@ public class Manager {
 
   /**
    * @param block the block update signed witness. set witness who signed block the 1. the latest
-   *              block num 2. pay the trx to witness. 3. the latest slot num.
+   * block num 2. pay the trx to witness. 3. the latest slot num.
    */
   public void updateSignedWitness(BlockCapsule block) {
     // TODO: add verification

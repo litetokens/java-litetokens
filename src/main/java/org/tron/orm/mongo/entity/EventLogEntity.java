@@ -136,4 +136,22 @@ public class EventLogEntity implements Serializable {
     public void setEventIdx(int idx){this.eventIdx = idx;}
 
     public int getEventIdx(){return this.eventIdx;}
+
+
+    @Override
+    public String toString() {
+        return "EventLogEntity{" +
+            "blockNumber=" + blockNumber +
+            ", blockTimestamp=" + blockTimestamp +
+            ", contractAddress='" + contractAddress + '\'' +
+            ", eventIdx=" + eventIdx +
+            ", entryName='" + entryName + '\'' +
+            ", resultJsonObject=" + resultJsonObject +
+            ", rawJsonObject=" + rawJsonObject +
+            ", transactionId='" + transactionId + '\'' +
+            ", resultType=" + resultType +
+            ", resourceNode='" + resourceNode + '\'' +
+            ", id='" + id + '\'' +
+            '}';
+    }
 }

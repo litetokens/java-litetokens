@@ -1,5 +1,6 @@
 package org.tron.core.db;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.tron.core.config.args.Args;
 import org.tron.core.exception.BadItemException;
 
 @Component
+@Slf4j
 public class TransactionHistoryStore extends TronStoreWithRevoking<TransactionInfoCapsule> {
 
   @Autowired
@@ -26,6 +28,7 @@ public class TransactionHistoryStore extends TronStoreWithRevoking<TransactionIn
   @Override
   public void put(byte[] key, TransactionInfoCapsule item) {
     if (BooleanUtils.toBoolean(Args.getInstance().getStorage().getTransactionHistoreSwitch())) {
+      logger.error("ysc info put");
       super.put(key, item);
     }
   }

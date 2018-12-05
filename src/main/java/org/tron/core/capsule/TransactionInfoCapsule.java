@@ -190,9 +190,11 @@ public class TransactionInfoCapsule implements ProtoCapsule<TransactionInfo> {
 
     if (Args.getInstance().isSaveInternalTx()) {
       logger.error("save inter");
+    } else {
+      logger.error("not save inter");
     }
     if (Args.getInstance().isSaveInternalTx() && null != programResult.getInternalTransactions()) {
-      logger.error("ysc save internalTx" + programResult.getInternalTransactions().size());
+      logger.error("ysc save internalTx:" + programResult.getInternalTransactions().size());
       for (InternalTransaction internalTransaction : programResult
           .getInternalTransactions()) {
         Protocol.InternalTransaction.Builder internalTrxBuilder = Protocol.InternalTransaction

@@ -2,14 +2,10 @@ package stest.tron.wallet.onlineStress;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import java.io.File;
-import java.io.IOException;
 import java.util.Optional;
 import java.util.Random;
-//import java.io.FileWriter;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeSuite;
@@ -20,14 +16,14 @@ import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Utils;
 import org.tron.core.Wallet;
 import org.tron.protos.Protocol.Account;
-import org.tron.protos.Protocol.SmartContract;
 import org.tron.protos.Protocol.TransactionInfo;
 import stest.tron.wallet.common.client.Configuration;
 import stest.tron.wallet.common.client.Parameter.CommonConstant;
 import stest.tron.wallet.common.client.utils.Base58;
-//import java.io.BufferedWriter;
-
 import stest.tron.wallet.common.client.utils.PublicMethed;
+
+//import java.io.FileWriter;
+//import java.io.BufferedWriter;
 
 
 
@@ -83,7 +79,7 @@ public class TestMapBigLongAndNumbers {
 
   }
 
-  @Test(enabled = true,threadPoolSize = 10, invocationCount = 10)
+  @Test(enabled = true, threadPoolSize = 5, invocationCount = 5)
   public void deployErc721KittyCore() {
 
     Long maxFeeLimit = 1000000000L;
@@ -139,15 +135,15 @@ public class TestMapBigLongAndNumbers {
       String inputKey = ByteArray.toHexString(ecKey1.getPrivKeyBytes());
       String addresstest = Base58.encode58Check(userAddress);
 
-      String saleContractString = "\"" + data + "\"" + "," + "\""
-          + Base58.encode58Check(userAddress) + "\"";
-
-
-      System.out.println("long string address:" + addresstest);
-
-      txid = PublicMethed.triggerContract(kittyCoreContractAddress,"update2(string,address)",
-          saleContractString,false, 0,1000000000L,fromAddress,testKey002,blockingStubFull);
-      logger.info(txid);
+//      String saleContractString = "\"" + data + "\"" + "," + "\""
+//          + Base58.encode58Check(userAddress) + "\"";
+//
+//
+//      System.out.println("long string address:" + addresstest);
+//
+//      txid = PublicMethed.triggerContract(kittyCoreContractAddress,"update2(string,address)",
+//          saleContractString,false, 0,1000000000L,fromAddress,testKey002,blockingStubFull);
+//      logger.info(txid);
 
 
       String saleContractString1 = "\"" + data5 + "\"" + "," + "\""
@@ -160,10 +156,10 @@ public class TestMapBigLongAndNumbers {
           saleContractString1,false, 0,1000000000L,fromAddress,testKey002,blockingStubFull);
       logger.info(txid);
 
-      System.out.println("time out");
-
-      txid = PublicMethed.triggerContract(kittyCoreContractAddress,"testUseCpu(uint256)",
-          "1000000000",false, 0,1000000000L,fromAddress,testKey002,blockingStubFull);
+//      System.out.println("time out");
+//
+//      txid = PublicMethed.triggerContract(kittyCoreContractAddress,"testUseCpu(uint256)",
+//          "1000000000",false, 0,1000000000L,fromAddress,testKey002,blockingStubFull);
 
       infoById = PublicMethed.getTransactionInfoById(txid,blockingStubFull);
 

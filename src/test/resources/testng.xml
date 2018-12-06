@@ -44,7 +44,7 @@
 
      <!--</packages>-->
      <classes>
-       <class name="stest.tron.wallet.myself.ContinueFreezeUnfreezeforEnergy"/>
+       <class name="stest.tron.wallet.onlineStress.TestMapBigLongAndNumbers"/>
      </classes>
 
 <!--      <classes>

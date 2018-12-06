@@ -3,6 +3,8 @@ package org.tron.core.db;
 import static org.tron.core.config.Parameter.ChainConstant.SOLIDIFIED_THRESHOLD;
 import static org.tron.core.config.Parameter.NodeConstant.MAX_TRANSACTION_PENDING;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
@@ -25,16 +27,25 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import javafx.util.Pair;
 import javax.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.tron.abi.EventEncoder;
+import org.tron.abi.FunctionReturnDecoder;
+import org.tron.abi.TypeReference;
+import org.tron.abi.datatypes.BytesType;
+import org.tron.abi.datatypes.Event;
+import org.tron.abi.datatypes.Type;
+import org.tron.abi.datatypes.generated.AbiTypes;
 import org.tron.common.overlay.discover.node.Node;
 import org.tron.common.runtime.config.VMConfig;
 import org.tron.common.utils.ByteArray;
@@ -43,6 +54,7 @@ import org.tron.common.utils.SessionOptional;
 import org.tron.common.utils.Sha256Hash;
 import org.tron.common.utils.StringUtil;
 import org.tron.core.Constant;
+import org.tron.core.Wallet;
 import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.capsule.BlockCapsule.BlockId;
@@ -85,12 +97,27 @@ import org.tron.core.exception.ValidateSignatureException;
 import org.tron.core.services.WitnessService;
 import org.tron.core.witness.ProposalController;
 import org.tron.core.witness.WitnessController;
+import org.tron.orm.mongo.entity.EventLogEntity;
+import org.tron.orm.service.impl.EventLogServiceImpl;
+import org.tron.protos.Protocol;
 import org.tron.protos.Protocol.AccountType;
+import org.tron.protos.Protocol.Block;
 
 
 @Slf4j
 @Component
 public class Manager {
+
+  enum Resource {
+    FullNode, SolidityNode;
+  }
+
+  @Autowired
+  private EventLogServiceImpl eventLogService;
+
+  private Cache<byte[], Protocol.SmartContract.ABI> abiCache = CacheBuilder.newBuilder()
+      .maximumSize(100_000).expireAfterWrite(1, TimeUnit.HOURS).initialCapacity(100_000)
+      .recordStats().build();
 
   // db store
   @Autowired
@@ -182,6 +209,8 @@ public class Manager {
   private Thread repushThread;
 
   private boolean isRunRepushThread = true;
+
+  private Resource resource = Resource.FullNode;
 
   @Getter
   private Cache<Sha256Hash, Boolean> transactionIdCache = CacheBuilder
@@ -331,6 +360,10 @@ public class Manager {
 
   public Set<Node> readNeighbours() {
     return this.peersStore.get("neighbours".getBytes());
+  }
+
+  public void triggerResource() {
+    this.resource = Resource.SolidityNode;
   }
 
   /**
@@ -1067,9 +1100,133 @@ public class Manager {
 
     transactionHistoryStore.put(trxCap.getTransactionId().getBytes(), transactionInfo);
 
+    if (Objects.nonNull(blockCap)) {
+      sendEventLog(trace.getRuntime().getResult().getContractAddress(),
+          transactionInfo.getInstance().getLogList(), blockCap.getInstance(), transactionInfo);
+    }
+
     return true;
   }
 
+  private void sendEventLog(byte[] contractAddress,
+      List<org.tron.protos.Protocol.TransactionInfo.Log> logList, Block block,
+      TransactionInfoCapsule transactionInfoCapsule) {
+    if (block == null || block.getBlockHeader().getWitnessSignature().isEmpty()) {
+      return;
+    }
+    try {
+      Protocol.SmartContract.ABI abi = abiCache.getIfPresent(contractAddress);
+      if (abi == null) {
+        abi = getContractStore().getABI(contractAddress);
+        if (abi == null) {
+          return;
+        }
+        abiCache.put(contractAddress, abi);
+      }
+      Protocol.SmartContract.ABI finalAbi = abi;
+
+      IntStream.range(0, logList.size()).forEach(idx -> {
+        org.tron.protos.Protocol.TransactionInfo.Log log = logList.get(idx);
+        finalAbi.getEntrysList().forEach(abiEntry -> {
+          if (abiEntry.getType() != Protocol.SmartContract.ABI.Entry.EntryType.Event) {
+            return;
+          }
+          //parse abi
+          String entryName = abiEntry.getName();
+          List<TypeReference<?>> typeList = new ArrayList<>();
+          List<String> nameList = new ArrayList<>();
+          abiEntry.getInputsList().forEach(input -> {
+            try {
+              TypeReference<?> tr = AbiTypes.getTypeReference(input.getType(), input.getIndexed());
+              nameList.add(input.getName());
+              typeList.add(tr);
+            } catch (UnsupportedOperationException e) {
+              logger.error("Unable parse abi entry. {}", e.getMessage());
+            }
+          });
+          JSONObject resultParamType = new JSONObject();
+          JSONObject resultJsonObject = new JSONObject();
+          JSONObject rawJsonObject = new JSONObject();
+
+          String eventHexString = Hex.toHexString(log.getTopicsList().get(0).toByteArray());
+          JSONArray rawTopicsJsonArray = new JSONArray();
+          rawTopicsJsonArray.add(eventHexString);
+
+          Event event = new Event(entryName, typeList);
+          if (!StringUtils.equalsIgnoreCase(EventEncoder.encode(event), eventHexString)) {
+            return;
+          }
+
+          String rawLogData = ByteArray.toHexString(log.getData().toByteArray());
+          List<Type> nonIndexedValues = FunctionReturnDecoder
+              .decode(rawLogData, event.getNonIndexedParameters());
+
+          List<Type> indexedValues = new ArrayList<>();
+
+          List<TypeReference<Type>> indexedParameters = event.getIndexedParameters();
+          for (int i = 0; i < indexedParameters.size(); i++) {
+            String topicHexString = Hex.toHexString(log.getTopicsList().get(i + 1).toByteArray());
+            rawTopicsJsonArray.add(topicHexString);
+            Type value = FunctionReturnDecoder
+                .decodeIndexedValue(topicHexString, indexedParameters.get(i));
+            indexedValues.add(value);
+          }
+          int counter = 0;
+          int indexedCounter = 0;
+          int nonIndexedCounter = 0;
+          for (TypeReference<?> typeReference : typeList) {
+
+            if (typeReference.isIndexed()) {
+              resultJsonObject.put(nameList.get(counter),
+                  (indexedValues.get(indexedCounter) instanceof BytesType)
+                      ? Hex.toHexString((byte[]) indexedValues.get(indexedCounter).getValue())
+                      : indexedValues.get(indexedCounter).getValue());
+              String[] abiTypearr = event.getIndexedParameters().get(indexedCounter).getType()
+                  .toString().split("\\.");
+              resultParamType
+                  .put(nameList.get(counter), abiTypearr[abiTypearr.length - 1].toLowerCase());
+              indexedCounter++;
+
+            } else {
+
+              String[] abiTypearr = event.getNonIndexedParameters().get(nonIndexedCounter).getType()
+                  .toString().split("\\.");
+              resultParamType
+                  .put(nameList.get(counter), abiTypearr[abiTypearr.length - 1].toLowerCase());
+              resultJsonObject.put(nameList.get(counter),
+                  (nonIndexedValues.get(nonIndexedCounter) instanceof BytesType)
+                      ? Hex.toHexString((byte[]) nonIndexedValues.get(nonIndexedCounter).getValue())
+                      : nonIndexedValues.get(nonIndexedCounter).getValue());
+              nonIndexedCounter++;
+            }
+            counter++;
+          }
+
+          rawJsonObject.put("topics", rawTopicsJsonArray);
+          rawJsonObject.put("data", rawLogData);
+
+          long blockNumber = block.getBlockHeader().getRawData().getNumber();
+          long blockTimestamp = block.getBlockHeader().getRawData().getTimestamp();
+//          logger.info("Event blockNumber:{} blockTimestamp:{} contractAddress:{} eventName:{} returnValues:{} raw:{} txId:{}",
+//                  blockNumber, blockTimestamp,
+//                  Wallet.encode58Check(contractAddress), entryName, resultJsonObject, rawJsonObject,
+//                  Hex.toHexString(transactionInfoCapsule.getId()));
+//          logger.info("types: {}", resultParamType);
+
+          EventLogEntity eventLogEntity = new EventLogEntity(blockNumber, blockTimestamp,
+              Wallet.encode58Check(contractAddress), entryName, resultJsonObject, rawJsonObject,
+              Hex.toHexString(transactionInfoCapsule.getId()), resultParamType,
+              this.resource.toString(), idx);
+          // 事件日志写入MongoDB
+          eventLogService.insertEventLog(eventLogEntity);
+        });
+      });
+    } catch (org.springframework.dao.DuplicateKeyException e) {
+
+    } catch (Exception e) {
+      logger.error("sendEventLog Failed {}", e);
+    }
+  }
 
   /**
    * Get the block id from the number.

@@ -67,6 +67,10 @@ public class EventExport {
       AtomicLong latestBlockNumber = new AtomicLong(0);
       AtomicLong count = new AtomicLong(0);
 
+      AtomicLong blockNumLimit = new AtomicLong();
+      if (args.length > 0) {
+        blockNumLimit.set(Long.parseLong(args[0]));
+      }
 
       dataSource.allKeys().parallelStream().forEach(key -> {
         byte[] item = dataSource.getData(key);
@@ -76,15 +80,16 @@ public class EventExport {
           if(transactionInfo.getBlockNumber() > latestBlockNumber.get()) {
             latestBlockNumber.set(transactionInfo.getBlockNumber());
           }
-          eventExport.sendEventLog(
-              collection,
-              transactionInfo.getContractAddress().toByteArray(),
-              transactionInfo.getLogList(),
-              transactionInfo.getBlockNumber(),
-              transactionInfo.getBlockTimeStamp(),
-              new TransactionInfoCapsule(transactionInfo)
-          );
-
+          if(transactionInfo.getBlockNumber() > blockNumLimit.get()) {
+            eventExport.sendEventLog(
+                collection,
+                transactionInfo.getContractAddress().toByteArray(),
+                transactionInfo.getLogList(),
+                transactionInfo.getBlockNumber(),
+                transactionInfo.getBlockTimeStamp(),
+                new TransactionInfoCapsule(transactionInfo)
+            );
+          }
           if(count.getAndIncrement() % 10000 == 0) {
             System.out.println(count.get());
           }

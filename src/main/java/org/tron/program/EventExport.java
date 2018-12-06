@@ -12,6 +12,7 @@ import com.mongodb.util.JSON;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -63,10 +64,14 @@ public class EventExport {
       EventExport eventExport = new EventExport();
       eventExport.initAllContract();
 
+      AtomicLong latestBlockNumber = new AtomicLong(0);
       dataSource.allValues().iterator().forEachRemaining(item -> {
         TransactionInfo transactionInfo = null;
         try {
           transactionInfo = TransactionInfo.parseFrom(item).toBuilder().build();
+          if(transactionInfo.getBlockNumber() > latestBlockNumber.get()) {
+            latestBlockNumber.set(transactionInfo.getBlockNumber());
+          }
           eventExport.sendEventLog(
               collection,
               transactionInfo.getContractAddress().toByteArray(),
@@ -82,6 +87,7 @@ public class EventExport {
 
       System.out.println("End");
       System.out.println(System.currentTimeMillis());
+      System.out.println("latestBlockNumber：" + latestBlockNumber.get());
     }
   }
 

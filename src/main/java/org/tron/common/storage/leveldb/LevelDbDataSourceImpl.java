@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Stream;
@@ -257,10 +258,15 @@ public class LevelDbDataSourceImpl implements DbSourceInter<byte[]>,
   @Override
   public Set<byte[]> allValues() {
     resetDbLock.readLock().lock();
+    AtomicLong keyCount = new AtomicLong(0);
     try (DBIterator iterator = database.iterator()) {
       Set<byte[]> result = Sets.newHashSet();
       for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
         result.add(iterator.peekNext().getValue());
+        keyCount.incrementAndGet();
+        if(keyCount.get() % 10000 == 0) {
+          System.out.println("keyCount:" + keyCount.get());
+        }
       }
       return result;
     } catch (IOException e) {

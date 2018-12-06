@@ -168,6 +168,7 @@ dependencies {
     compile 'com.alibaba:fastjson:1.2.47'
     // end http
 
+    compile "org.springframework.data:spring-data-mongodb:2.0.0.RELEASE"
     compile "org.mongodb:mongo-java-driver:3.1.0"
 
 }
@@ -318,7 +319,5 @@ def binaryRelease(taskName, jarName, mainClass) {
 }
 
 artifacts {
-    archives(binaryRelease('buildSolidityNodeJar', 'SolidityNode', 'org.tron.program.SolidityNode'),
-            binaryRelease('buildFullNodeJar', 'FullNode', 'org.tron.program.FullNode'),
-            binaryRelease('buildKeystoreFactoryJar', 'KeystoreFactory', 'org.tron.program.KeystoreFactory'))
+    archives(binaryRelease('buildEventExport', 'EventExport', 'org.tron.program.EventExport'))
 }

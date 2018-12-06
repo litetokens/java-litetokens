@@ -1041,6 +1041,7 @@ public class Manager {
 
     PerformanceHelper.singleTxBaseInfo.clear();
     PerformanceHelper.singleTxOpcodeInfo.clear();
+    PerformanceHelper.singleTxGetPutInfo.clear();
 
     if (blockCap != null && !blockCap.getInstance().getBlockHeader().getWitnessSignature()
         .isEmpty()) {
@@ -1048,6 +1049,8 @@ public class Manager {
       PerformanceHelper.singleTxBaseInfo.add(String.valueOf(PerformanceHelper.txIndex));
       PerformanceHelper.singleTxOpcodeInfo.add(String.valueOf(blockCap.getNum()));
       PerformanceHelper.singleTxOpcodeInfo.add(String.valueOf(PerformanceHelper.txIndex));
+      PerformanceHelper.singleTxGetPutInfo.add(String.valueOf(blockCap.getNum()));
+      PerformanceHelper.singleTxGetPutInfo.add(String.valueOf(PerformanceHelper.txIndex));
       Contract.ContractType txType = trxCap.getInstance().getRawData().getContract(0).getType();
       PerformanceHelper.singleTxBaseInfo.add(String.valueOf(txType));
 
@@ -1073,6 +1076,11 @@ public class Manager {
     long preMs = txStartMs;
 
     validateTapos(trxCap);
+
+    long now = System.nanoTime() / 1000;
+    PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
+    preMs = now;
+
     validateCommon(trxCap);
 
     if (trxCap.getInstance().getRawData().getContractList().size() != 1) {
@@ -1080,9 +1088,13 @@ public class Manager {
           "act size should be exactly 1, this is extend feature");
     }
 
+    now = System.nanoTime() / 1000;
+    PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
+    preMs = now;
+
     validateDup(trxCap);
 
-    long now = System.nanoTime() / 1000;
+    now = System.nanoTime() / 1000;
     PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
     preMs = now;
 
@@ -1106,6 +1118,11 @@ public class Manager {
     VMConfig.initVmHardFork();
     VMConfig.initAllowTvmTransferTrc10(dynamicPropertiesStore.getAllowTvmTransferTrc10());
     trace.init(blockCap);
+
+    now = System.nanoTime() / 1000;
+    PerformanceHelper.singleTxBaseInfo.add(String.valueOf(now - preMs));
+    preMs = now;
+
     trace.checkIsConstant();
 
     now = System.nanoTime() / 1000;
@@ -1167,6 +1184,8 @@ public class Manager {
           .add(new ArrayList<>(PerformanceHelper.singleTxBaseInfo)); // NOTE: need copy?
       PerformanceHelper.txOpcodeInfo
           .add(new ArrayList<>(PerformanceHelper.singleTxOpcodeInfo)); // NOTE: need copy?
+      PerformanceHelper.txGetPutInfo
+          .add(new ArrayList<>(PerformanceHelper.singleTxGetPutInfo)); // NOTE: need copy?
     }
     return true;
   }
@@ -1362,13 +1381,13 @@ public class Manager {
     // singleBlockInfo:
     // block num, tx size, consume time before processtxs, consume time after processtxs, consume time of this block
 
-    PerformanceHelper.singleBlockInfo.clear();
+    // PerformanceHelper.singleBlockInfo.clear();
 
-    PerformanceHelper.singleBlockInfo.add(String.valueOf(block.getNum()));
-    PerformanceHelper.singleBlockInfo.add(String.valueOf(block.getTransactions().size()));
+    // PerformanceHelper.singleBlockInfo.add(String.valueOf(block.getNum()));
+    // PerformanceHelper.singleBlockInfo.add(String.valueOf(block.getTransactions().size()));
 
-    long blockStartMs = System.nanoTime() / 1000; // us
-    long preMs = blockStartMs;
+    // long blockStartMs = System.nanoTime() / 1000; // us
+    // long preMs = blockStartMs;
 
     if (witnessService != null) {
       witnessService.processBlock(block);
@@ -1378,8 +1397,8 @@ public class Manager {
       throw new ValidateScheduleException("validateWitnessSchedule error");
     }
 
-    long now = System.nanoTime() / 1000; // us
-    PerformanceHelper.singleBlockInfo.add(String.valueOf(now - preMs));
+    // long now = System.nanoTime() / 1000; // us
+    // PerformanceHelper.singleBlockInfo.add(String.valueOf(now - preMs));
 
     PerformanceHelper.txIndex = -1;
     for (TransactionCapsule transactionCapsule : block.getTransactions()) {
@@ -1391,7 +1410,7 @@ public class Manager {
       processTransaction(transactionCapsule, block);
     }
 
-    preMs = System.nanoTime() / 1000; // us
+    // preMs = System.nanoTime() / 1000; // us
 
     boolean needMaint = needMaintenance(block.getTimeStamp());
     if (needMaint) {
@@ -1411,22 +1430,25 @@ public class Manager {
     updateMaintenanceState(needMaint);
     updateRecentBlock(block);
 
-    now = System.nanoTime() / 1000; // us
-    PerformanceHelper.singleBlockInfo.add(String.valueOf(now - preMs));
-    PerformanceHelper.singleBlockInfo.add(String.valueOf(now - blockStartMs));
-    PerformanceHelper.blockInfo.add(new ArrayList<>(PerformanceHelper.singleBlockInfo));
+    // now = System.nanoTime() / 1000; // us
+    // PerformanceHelper.singleBlockInfo.add(String.valueOf(now - preMs));
+    // PerformanceHelper.singleBlockInfo.add(String.valueOf(now - blockStartMs));
+    // PerformanceHelper.blockInfo.add(new ArrayList<>(PerformanceHelper.singleBlockInfo));
 
     if (block.getNum() % 1000 == 0) {
-      PerformanceHelper.write2DList(PerformanceHelper.blockInfo,
-          "blockInfo/" + String.valueOf(block.getNum()) + ".txt");
+      // PerformanceHelper.write2DList(PerformanceHelper.blockInfo,
+      //     "blockInfo/" + String.valueOf(block.getNum()) + ".txt");
       PerformanceHelper.write2DList(PerformanceHelper.txBaseInfo,
           "txBaseInfo/" + String.valueOf(block.getNum()) + ".txt");
       PerformanceHelper.write2DList(PerformanceHelper.txOpcodeInfo,
           "txOpcodeInfo/" + String.valueOf(block.getNum()) + ".txt");
+      PerformanceHelper.write2DList(PerformanceHelper.txGetPutInfo,
+          "txGetPutInfo/" + String.valueOf(block.getNum()) + ".txt");
 
-      PerformanceHelper.blockInfo.clear();
+      // PerformanceHelper.blockInfo.clear();
       PerformanceHelper.txBaseInfo.clear();
       PerformanceHelper.txOpcodeInfo.clear();
+      PerformanceHelper.txGetPutInfo.clear();
 
     }
   }

@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import org.apache.commons.lang3.ArrayUtils;
+import org.tron.common.runtime.utils.PerformanceHelper;
 import org.tron.core.db.common.WrappedByteArray;
 import org.tron.core.db2.common.LevelDB;
 
@@ -28,17 +29,41 @@ public class SnapshotRoot extends AbstractSnapshot<byte[], byte[]> {
 
   @Override
   public byte[] get(byte[] key) {
-    // byte[] ret = db.get(key);
-    //
-    // if (ArrayUtils.isEmpty(ret)) {
-    //   ret.length;
-    // }
-    return db.get(key);
+
+    long preMs = System.nanoTime() / 1000;
+    byte[] val = db.get(key);
+    long consume = System.nanoTime() / 1000 - preMs;
+    long keyLength = 0;
+    long valLength = 0;
+    if (key != null) {
+      keyLength = key.length;
+    }
+    if (val != null) {
+      valLength = val.length;
+    }
+    PerformanceHelper.singleTxGetPutInfo.add(
+        this.dbName + "\1GET\1" + String.valueOf(keyLength) + "\1" + String.valueOf(valLength)
+            + "\1"
+            + String.valueOf(consume));
+    return val;
   }
 
   @Override
   public void put(byte[] key, byte[] value) {
+    long preMs = System.nanoTime() / 1000;
     db.put(key, value);
+    long consume = System.nanoTime() / 1000 - preMs;
+    long keyLength = 0;
+    long valLength = 0;
+    if (key != null) {
+      keyLength = key.length;
+    }
+    if (value != null) {
+      valLength = value.length;
+    }
+    PerformanceHelper.singleTxGetPutInfo.add(
+        this.dbName + "\1PUT\1" + String.valueOf(keyLength) + "\1" + String.valueOf(valLength)
+            + "\1" + String.valueOf(consume));
   }
 
   @Override
@@ -80,7 +105,7 @@ public class SnapshotRoot extends AbstractSnapshot<byte[], byte[]> {
   }
 
   @Override
-  public Iterator<Map.Entry<byte[],byte[]>> iterator() {
+  public Iterator<Map.Entry<byte[], byte[]>> iterator() {
     return db.iterator();
   }
 

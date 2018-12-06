@@ -56,7 +56,7 @@ public class Args {
   private String shellConfFileName = "";
 
   @Parameter(names = {"-d", "--output-directory"}, description = "Directory")
-  private String outputDirectory = "/Users/huzhenyuan/Documents/FullNode/output-directory";
+  private String outputDirectory = "output-directory";
 
   @Getter
   @Parameter(names = {"-h", "--help"}, help = true, description = "HELP message")

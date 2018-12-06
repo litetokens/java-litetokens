@@ -46,10 +46,8 @@ public class EventExport {
   public static void main(String[] args) throws InterruptedException {
     logger.info("Solidity node running.");
     Args.setParam(args, Constant.TESTNET_CONF);
-    Args cfgArgs = Args.getInstance();
 
     if (true) {
-
       System.out.println("Start");
       System.out.println(System.currentTimeMillis());
       MongoClient mongoClient = new MongoClient("localhost", 27017);

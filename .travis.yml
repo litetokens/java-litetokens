@@ -28,7 +28,7 @@ cache:
     - '$HOME/.sonar/cache'
 script:
 - sh tron.sh
-- "cp -f /config/checkstyle/checkStyle.xml /config/checkstyle/checkStyleAll.xml"
+- "cp -f config/checkstyle/checkStyle.xml config/checkstyle/checkStyleAll.xml"
 - "./gradlew build"
 - "./gradlew jacocoTestReport"
 - bash deploy.sh

@@ -39,6 +39,10 @@ public class TransactionIndex extends AbstractIndex<TransactionCapsule, Transact
   public void init() {
     Properties properties = new Properties();
     properties.setProperty("synchronous", "OFF");
+    properties.setProperty("cache_size", "10000");
+    properties.setProperty("page_size", "4096");
+    properties.setProperty("journal_mode", "delete");
+    properties.setProperty("temp_store", "MEMORY");
     initIndex(
         DiskPersistence.onPrimaryKeyInFileWithProperties(Transaction_ID, indexPath, properties));
 //    index.addIndex(DiskIndex.onAttribute(Transaction_ID));

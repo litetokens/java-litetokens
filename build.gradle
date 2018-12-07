@@ -148,7 +148,7 @@ dependencies {
 
     compile group: 'io.dropwizard.metrics', name: 'metrics-core', version: '3.1.2'
 
-    checkstyleConfig "com.puppycrawl.tools:checkstyle:${versions.checkstyle}"
+   // checkstyleConfig "com.puppycrawl.tools:checkstyle:${versions.checkstyle}"
     // google grpc
     compile group: 'io.grpc', name: 'grpc-netty', version: '1.14.0'
     compile group: 'io.grpc', name: 'grpc-protobuf', version: '1.14.0'
@@ -179,9 +179,11 @@ check.dependsOn 'lint'
 //    config = resources.text.fromArchiveEntry(configurations.checkstyleConfig, 'google_checks.xml')
 //
 //}
+//checkstyleTest.exclude "JavadocMethod"
+
 checkstyle {
-//    toolVersion = "${versions.checkstyle}"
-    configFile = file("src/config/checkStyle.xml")
+    toolVersion = "${versions.checkstyle}"
+    configFile = file("config/checkstyle/checkStyle.xml")
 
 }
 
@@ -190,6 +192,7 @@ checkstyleMain {
 }
 
 task lint(type: Checkstyle) {
+    
     // Cleaning the old log because of the creation of the new ones (not sure if totaly needed)
     delete fileTree(dir: "${project.rootDir}/app/build/reports")
     source 'src'

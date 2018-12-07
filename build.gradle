@@ -148,7 +148,7 @@ dependencies {
 
     compile group: 'io.dropwizard.metrics', name: 'metrics-core', version: '3.1.2'
 
-   // checkstyleConfig "com.puppycrawl.tools:checkstyle:${versions.checkstyle}"
+    //checkstyleConfig "com.puppycrawl.tools:checkstyle:${versions.checkstyle}"
     // google grpc
     compile group: 'io.grpc', name: 'grpc-netty', version: '1.14.0'
     compile group: 'io.grpc', name: 'grpc-protobuf', version: '1.14.0'
@@ -176,15 +176,16 @@ check.dependsOn 'lint'
 
 //checkstyle {
 //    toolVersion = "${versions.checkstyle}"
+//    //local build
 //    config = resources.text.fromArchiveEntry(configurations.checkstyleConfig, 'google_checks.xml')
-//
+//    //travis build
+//    configFile = file("config/checkstyle/checkStyle.xml")
 //}
 //checkstyleTest.exclude "JavadocMethod"
 
 checkstyle {
     toolVersion = "${versions.checkstyle}"
-    configFile = file("config/checkstyle/checkStyle.xml")
-
+    configFile = file("config/checkstyle/checkStyleAll.xml")
 }
 
 checkstyleMain {

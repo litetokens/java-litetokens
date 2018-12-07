@@ -67,7 +67,7 @@ public class EventExport {
       AtomicLong latestBlockNumber = new AtomicLong(0);
       AtomicLong count = new AtomicLong(0);
 
-      dataSource.allKeys().parallelStream().limit(8).forEach(key -> {
+      dataSource.allKeys().parallelStream().forEach(key -> {
         byte[] item = dataSource.getData(key);
         TransactionInfo transactionInfo = null;
         try {

@@ -162,12 +162,25 @@ public class FullNodeHttpApiService implements Service {
       context.setContextPath("/wallet/");
       server.setHandler(context);
       context.addServlet(new ServletHolder(accountServlet), "/getaccount");
-
-
+      context.addServlet(new ServletHolder(transferServlet), "/createtransaction");
+      context.addServlet(new ServletHolder(broadcastServlet), "/broadcasttransaction");
       context.addServlet(new ServletHolder(transactionSignServlet), "/gettransactionsign");
+      context.addServlet(new ServletHolder(updateAccountServlet), "/updateaccount");
+      context.addServlet(new ServletHolder(voteWitnessAccountServlet), "/votewitnessaccount");
+      context.addServlet(new ServletHolder(createAssetIssueServlet), "/createassetissue");
+      context.addServlet(new ServletHolder(updateWitnessServlet), "/updatewitness");
+      context.addServlet(new ServletHolder(createAccountServlet), "/createaccount");
+      context.addServlet(new ServletHolder(createWitnessServlet), "/createwitness");
+      context.addServlet(new ServletHolder(transferAssetServlet), "/transferasset");
+      context.addServlet(new ServletHolder(participateAssetIssueServlet), "/participateassetissue");
+      context.addServlet(new ServletHolder(freezeBalanceServlet), "/freezebalance");
+      context.addServlet(new ServletHolder(unFreezeBalanceServlet), "/unfreezebalance");
+      context.addServlet(new ServletHolder(unFreezeAssetServlet), "/unfreezeasset");
+      context.addServlet(new ServletHolder(withdrawBalanceServlet), "/withdrawbalance");
+      context.addServlet(new ServletHolder(updateAssetServlet), "/updateasset");
       context.addServlet(new ServletHolder(listNodesServlet), "/listnodes");
       context.addServlet(
-          new ServletHolder(getAssetIssueByAccountServlet), "/getassetissuebyaccount");
+              new ServletHolder(getAssetIssueByAccountServlet), "/getassetissuebyaccount");
       context.addServlet(new ServletHolder(getAccountNetServlet), "/getaccountnet");
       context.addServlet(new ServletHolder(getAssetIssueByNameServlet), "/getassetissuebyname");
       context.addServlet(new ServletHolder(getAssetIssueListByNameServlet), "/getassetissuelistbyname");
@@ -179,33 +192,48 @@ public class FullNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(getBlockByLatestNumServlet), "/getblockbylatestnum");
       context.addServlet(new ServletHolder(getTransactionByIdServlet), "/gettransactionbyid");
       context.addServlet(
-          new ServletHolder(getTransactionInfoByIdServlet), "/gettransactioninfobyid");
+              new ServletHolder(getTransactionInfoByIdServlet), "/gettransactioninfobyid");
       context.addServlet(
-          new ServletHolder(getTransactionCountByBlockNum), "/gettransactioncountbyblocknum");
+              new ServletHolder(getTransactionCountByBlockNum), "/gettransactioncountbyblocknum");
       context.addServlet(new ServletHolder(listWitnessesServlet), "/listwitnesses");
       context.addServlet(new ServletHolder(getAssetIssueListServlet), "/getassetissuelist");
       context.addServlet(
-          new ServletHolder(getPaginatedAssetIssueListServlet), "/getpaginatedassetissuelist");
+              new ServletHolder(getPaginatedAssetIssueListServlet), "/getpaginatedassetissuelist");
       context.addServlet(
-          new ServletHolder(getPaginatedProposalListServlet), "/getpaginatedproposalist");
+              new ServletHolder(getPaginatedProposalListServlet), "/getpaginatedproposalist");
       context.addServlet(
-          new ServletHolder(getPaginatedExchangeListServlet), "/getpaginatedexchangelist");
+              new ServletHolder(getPaginatedExchangeListServlet), "/getpaginatedexchangelist");
       context.addServlet(new ServletHolder(totalTransactionServlet), "/totaltransaction");
       context.addServlet(
-          new ServletHolder(getNextMaintenanceTimeServlet), "/getnextmaintenancetime");
+              new ServletHolder(getNextMaintenanceTimeServlet), "/getnextmaintenancetime");
+      context.addServlet(new ServletHolder(createAddressServlet), "/createaddress");
+      context.addServlet(new ServletHolder(easyTransferServlet), "/easytransfer");
+      context.addServlet(new ServletHolder(easyTransferByPrivateServlet), "/easytransferbyprivate");
+      context.addServlet(new ServletHolder(generateAddressServlet), "/generateaddress");
+      context.addServlet(new ServletHolder(validateAddressServlet), "/validateaddress");
+      context.addServlet(new ServletHolder(deployContractServlet), "/deploycontract");
+      context.addServlet(new ServletHolder(triggerSmartContractServlet), "/triggersmartcontract");
       context.addServlet(new ServletHolder(getContractServlet), "/getcontract");
-
+      context.addServlet(new ServletHolder(proposalCreateServlet), "/proposalcreate");
+      context.addServlet(new ServletHolder(proposalApproveServlet), "/proposalapprove");
+      context.addServlet(new ServletHolder(proposalDeleteServlet), "/proposaldelete");
       context.addServlet(new ServletHolder(listProposalsServlet), "/listproposals");
       context.addServlet(new ServletHolder(getProposalByIdServlet), "/getproposalbyid");
+      context.addServlet(new ServletHolder(exchangeCreateServlet), "/exchangecreate");
+      context.addServlet(new ServletHolder(exchangeInjectServlet), "/exchangeinject");
+      context.addServlet(new ServletHolder(exchangeTransactionServlet), "/exchangetransaction");
+      context.addServlet(new ServletHolder(exchangeWithdrawServlet), "/exchangewithdraw");
       context.addServlet(new ServletHolder(getExchangeByIdServlet), "/getexchangebyid");
       context.addServlet(new ServletHolder(listExchangesServlet), "/listexchanges");
       context.addServlet(new ServletHolder(getChainParametersServlet), "/getchainparameters");
       context.addServlet(new ServletHolder(getAccountResourceServlet), "/getaccountresource");
       context.addServlet(new ServletHolder(getNodeInfoServlet), "/getnodeinfo");
+      context.addServlet(new ServletHolder(updateSettingServlet), "/updatesetting");
+      context.addServlet(new ServletHolder(updateEnergyLimitServlet), "/updateenergylimit");
       context.addServlet(new ServletHolder(getDelegatedResourceServlet), "/getdelegatedresource");
       context.addServlet(
-          new ServletHolder(getDelegatedResourceAccountIndexServlet),
-          "/getdelegatedresourceaccountindex");
+              new ServletHolder(getDelegatedResourceAccountIndexServlet),
+              "/getdelegatedresourceaccountindex");
       server.start();
     } catch (Exception e) {
       logger.debug("IOException: {}", e.getMessage());

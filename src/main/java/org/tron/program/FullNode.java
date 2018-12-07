@@ -46,14 +46,16 @@ public class FullNode {
     DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
     beanFactory.setAllowCircularReferences(false);
     TronApplicationContext context =
-        new TronApplicationContext(beanFactory);
+            new TronApplicationContext(beanFactory);
     context.register(DefaultConfig.class);
 
     context.refresh();
     Application appT = ApplicationFactory.create(context);
     shutdown(appT);
 
-
+    // grpc api server
+    RpcApiService rpcApiService = context.getBean(RpcApiService.class);
+    appT.addService(rpcApiService);
     if (cfgArgs.isWitness()) {
       appT.addService(new WitnessService(appT, context));
     }
@@ -66,6 +68,7 @@ public class FullNode {
     appT.startServices();
     appT.startup();
 
+    rpcApiService.blockUntilShutdown();
   }
 
   public static void shutdown(final Application app) {

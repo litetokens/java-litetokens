@@ -72,7 +72,7 @@ public class EventExport {
         blockNumLimit.set(Long.parseLong(args[0]));
       }
 
-      dataSource.allKeys().parallelStream().forEach(key -> {
+      dataSource.allKeys().parallelStream().limit(8).forEach(key -> {
         byte[] item = dataSource.getData(key);
         TransactionInfo transactionInfo = null;
         try {

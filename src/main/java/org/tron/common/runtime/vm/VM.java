@@ -1061,7 +1061,7 @@ public class VM {
           DataWord val = program.storageLoad(key);
 
           PerformanceHelper.singleTxOpcodeInfo
-              .add("SLOAD\1" + String.valueOf(System.nanoTime() / 1000 - preMs));
+              .add("SLOAD\1" + key.toHexString() + "\1" + String.valueOf(System.nanoTime() / 1000 - preMs));
 
           if (logger.isDebugEnabled()) {
             hint = "key: " + key + " value: " + val;

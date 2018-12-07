@@ -181,7 +181,7 @@ check.dependsOn 'lint'
 //}
 checkstyle {
 //    toolVersion = "${versions.checkstyle}"
-    config = file("Config/checkStyle.xml")
+    configFile = file("src/config/checkStyle.xml")
 
 }
 

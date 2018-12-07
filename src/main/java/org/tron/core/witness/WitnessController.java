@@ -16,6 +16,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.joda.time.DateTime;
+import org.spongycastle.util.encoders.Hex;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.StringUtil;
 import org.tron.common.utils.Time;
@@ -446,12 +447,10 @@ public class WitnessController {
         accountCapsule.setAllowance(accountCapsule.getAllowance() + pay);
         manager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
 
-        if (b.equals("415624C12E308B03A1A6B21D9B86E3942FAC1AB92B")){
-          logger.info("Block:{},  VoteCount(): {}, voteSum: {}, totalPay: {}, pay: {}, Allowance: {}",
-              manager.cBlock.getBlockId().getString(),
-              getWitnesseByAddress(b).getVoteCount(), voteSum, totalPay, pay, accountCapsule.getAllowance());
-
-        }
+        logger.info("#######  Block:{}, account: {}, VoteCount(): {}, voteSum: {}, totalPay: {}, pay: {}, Allowance: {}",
+            manager.cBlock.getBlockId().getString(),
+            b.toString(),
+            getWitnesseByAddress(b).getVoteCount(), voteSum, totalPay, pay, accountCapsule.getAllowance());
       }
     }
 

@@ -544,15 +544,14 @@ public class Manager {
       throw new BalanceInsufficientException(
           StringUtil.createReadableString(accountAddress) + " insufficient balance");
     }
-    
-    account.setAllowance(allowance + amount);
-    if (Hex.toHexString(accountAddress).equals("415624C12E308B03A1A6B21D9B86E3942FAC1AB92B")){
-      logger.info("Block:{},  amount: {}, allowance: {}, Allowance: {}",
-          this.cBlock.getBlockId().getString(),
-          amount, allowance,
-          account.getAllowance());
 
-    }
+    account.setAllowance(allowance + amount);
+
+    logger.info("####### Block:{},  amount: {}, allowance: {}, Allowance: {}",
+        this.cBlock.getBlockId().getString(),
+        amount, allowance,
+        account.getAllowance());
+
     this.getAccountStore().put(account.createDbKey(), account);
   }
 

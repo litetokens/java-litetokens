@@ -544,7 +544,15 @@ public class Manager {
       throw new BalanceInsufficientException(
           StringUtil.createReadableString(accountAddress) + " insufficient balance");
     }
+    
     account.setAllowance(allowance + amount);
+    if (Hex.toHexString(accountAddress).equals("415624C12E308B03A1A6B21D9B86E3942FAC1AB92B")){
+      logger.info("Block:{},  amount: {}, allowance: {}, Allowance: {}",
+          this.cBlock.getBlockId().getString(),
+          amount, allowance,
+          account.getAllowance());
+
+    }
     this.getAccountStore().put(account.createDbKey(), account);
   }
 
@@ -1255,6 +1263,8 @@ public class Manager {
       ReceiptCheckErrException, VMIllegalException, TooBigTransactionResultException {
     // todo set revoking db max size.
 
+    this.cBlock = block;
+
     if (witnessService != null) {
       witnessService.processBlock(block);
     }
@@ -1402,11 +1412,16 @@ public class Manager {
   /**
    * Perform maintenance.
    */
+  public BlockCapsule cBlock;
   private void processMaintenance(BlockCapsule block) {
     proposalController.processProposals();
     witnessController.updateWitness();
     this.dynamicPropertiesStore.updateNextMaintenanceTime(block.getTimeStamp());
     forkController.reset(block);
+  }
+
+  public void setMode(boolean mode) {
+    revokingStore.setMode(mode);
   }
 
   /**
@@ -1638,10 +1653,6 @@ public class Manager {
     } catch (TooBigTransactionResultException e) {
       logger.debug("too big transaction result");
     }
-  }
-
-  public void setMode(boolean mode) {
-    revokingStore.setMode(mode);
   }
 
 }

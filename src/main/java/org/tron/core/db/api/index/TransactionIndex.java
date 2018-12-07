@@ -7,6 +7,7 @@ import com.googlecode.cqengine.attribute.SimpleAttribute;
 import com.googlecode.cqengine.index.disk.DiskIndex;
 import com.googlecode.cqengine.persistence.disk.DiskPersistence;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +37,10 @@ public class TransactionIndex extends AbstractIndex<TransactionCapsule, Transact
 
   @PostConstruct
   public void init() {
-    initIndex(DiskPersistence.onPrimaryKeyInFile(Transaction_ID, indexPath));
+    Properties properties = new Properties();
+    properties.setProperty("synchronous", "OFF");
+    initIndex(
+        DiskPersistence.onPrimaryKeyInFileWithProperties(Transaction_ID, indexPath, properties));
 //    index.addIndex(DiskIndex.onAttribute(Transaction_ID));
     index.addIndex(DiskIndex.onAttribute(OWNERS));
     index.addIndex(DiskIndex.onAttribute(TOS));

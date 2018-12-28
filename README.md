@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-  <img width=20% src="https://github.com/litetokens/wiki/blob/master/images/java-litetokens.jpg?raw=true">
+  <img width=20% src="https://litetokens.co/assets/images/xlt/xlt-banner.jpg">
   <br>
   java-litetokens
   <br>

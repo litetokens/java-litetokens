@@ -12,7 +12,7 @@ plugins {
     id "org.sonarqube" version "2.6"
 }
 
-group 'org.tron'
+group 'org.litetokens'
 version '1.0.0'
 
 apply plugin: 'java'
@@ -28,7 +28,7 @@ shadowJar.enabled = false
 
 sourceCompatibility = 1.8
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
-mainClassName = 'org.tron.program.FullNode'
+mainClassName = 'org.litetokens.program.FullNode'
 
 publishing {
     publications {
@@ -252,7 +252,7 @@ run {
 }
 
 shadowJar {
-    baseName = 'java-tron'
+    baseName = 'java-litetokens'
     classifier = null
     version = null
 }
@@ -319,7 +319,7 @@ def binaryRelease(taskName, jarName, mainClass) {
 }
 
 artifacts {
-    archives(binaryRelease('buildSolidityNodeJar', 'SolidityNode', 'org.tron.program.SolidityNode'),
-            binaryRelease('buildFullNodeJar', 'FullNode', 'org.tron.program.FullNode'),
-            binaryRelease('buildKeystoreFactoryJar', 'KeystoreFactory', 'org.tron.program.KeystoreFactory'))
+    archives(binaryRelease('buildSolidityNodeJar', 'SolidityNode', 'org.litetokens.program.SolidityNode'),
+            binaryRelease('buildFullNodeJar', 'FullNode', 'org.litetokens.program.FullNode'),
+            binaryRelease('buildKeystoreFactoryJar', 'KeystoreFactory', 'org.litetokens.program.KeystoreFactory'))
 }

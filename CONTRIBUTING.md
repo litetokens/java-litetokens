@@ -1,6 +1,6 @@
-# Contributing to java-tron
+# Contributing to java-litetokens
 
-java-tron is an open source project.
+java-litetokens is an open source project.
 
 It is the work of contributors. We appreciate your help!
 
@@ -11,7 +11,7 @@ please let us know if anything feels wrong or incomplete.
 
 ### Pull requests
 
-First of all, java-tron follows [gitflow workflow](
+First of all, java-litetokens follows [gitflow workflow](
 https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow).
 Please open pull requests to the **develop** branch. Once approved,
 we will close the pull request and merge into master branch.
@@ -27,7 +27,7 @@ detailed as possible to make it easier for us to understand.
 ### Create issues
 
 Any significant improvement should be documented as [a GitHub
-issue](https://github.com/tronprotocol/java-tron/issues) before anyone
+issue](https://github.com/litetokens/java-litetokens/issues) before anyone
 starts working on it.
 
 When filing an issue, make sure to answer these three questions:

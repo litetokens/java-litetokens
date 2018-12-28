@@ -3,51 +3,51 @@
 
 <suite name="Stest suite" parallel="tests" thread-count="4">
   <listeners>
-    <listener class-name="stest.tron.wallet.common.client.utils.RetryListener"/>
+    <listener class-name="stest.litetokens.wallet.common.client.utils.RetryListener"/>
   </listeners>
  <test name="Stest transfer">
           <packages>
-       <package name="stest.tron.wallet.transfer">
+       <package name="stest.litetokens.wallet.transfer">
        </package>
      </packages>
    </test>
    <test name="Stest account">
      <packages>
-       <package name="stest.tron.wallet.account">
+       <package name="stest.litetokens.wallet.account">
        </package>
-       <package name="stest.tron.wallet.node">
+       <package name="stest.litetokens.wallet.node">
        </package>
-       <package name="stest.tron.wallet.witness">
+       <package name="stest.litetokens.wallet.witness">
        </package>
-       <package name="stest.tron.wallet.block">
+       <package name="stest.litetokens.wallet.block">
        </package>
-       <package name="stest.tron.wallet.exchangeandtoken">
+       <package name="stest.litetokens.wallet.exchangeandtoken">
        </package>
-       <package name="stest.tron.wallet.committee">
+       <package name="stest.litetokens.wallet.committee">
        </package>
      </packages>
    </test>
    <test name="Stest block,node,witness">
      <packages>
-       <package name="stest.tron.wallet.contract.linkage">
+       <package name="stest.litetokens.wallet.contract.linkage">
        </package>
      </packages>
    </test>
    <test name="Stest contract">
      <packages>
-       <package name="stest.tron.wallet.contract.exceptionfee">
+       <package name="stest.litetokens.wallet.contract.exceptionfee">
        </package>
-       <package name="stest.tron.wallet.contract.grammar">
+       <package name="stest.litetokens.wallet.contract.grammar">
        </package>
-       <package name="stest.tron.wallet.contract.scenario">
+       <package name="stest.litetokens.wallet.contract.scenario">
        </package>
 
      </packages>
 <!--      <classes>
-            <class name="stest.tron.wallet.exchange.WalletExchange001"/>
+            <class name="stest.litetokens.wallet.exchange.WalletExchange001"/>
           </classes>-->
 <!--               <packages>
-            <package name="stest.tron.wallet.account">
+            <package name="stest.litetokens.wallet.account">
             </package>
           </packages>-->
   </test>

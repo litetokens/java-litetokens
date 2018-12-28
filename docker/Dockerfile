@@ -1,14 +1,14 @@
-FROM tronprotocol/tron-gradle
+FROM litetokensprotocol/litetokens-gradle
 
 RUN set -o errexit -o nounset \
-#  Download and build java-tron
+#  Download and build java-litetokens
     && echo "git clone" \
-    && git clone https://github.com/tronprotocol/java-tron.git \
-    && cd java-tron \
+    && git clone https://github.com/litetokens/java-litetokens.git \
+    && cd java-litetokens \
     && gradle build
 
 # Change work directory
-WORKDIR /java-tron
+WORKDIR /java-litetokens
 
 # open port 18888
 EXPOSE 18888

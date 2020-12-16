@@ -20,24 +20,24 @@
     <img src="https://travis-ci.org/litetokens/java-litetokens.svg?branch=develop">
   </a>
   
-  <a href="https://codecov.io/gh/litetokensprotocol/java-litetokens">
-    <img src="https://codecov.io/gh/litetokensprotocol/java-litetokens/branch/develop/graph/badge.svg" />
+  <a href="https://codecov.io/gh/litetokens/java-litetokens">
+    <img src="https://codecov.io/gh/litetokens/java-litetokens/branch/develop/graph/badge.svg" />
   </a>
   
   <a href="https://github.com/litetokens/java-litetokens/issues">
-    <img src="https://img.shields.io/github/issues/litetokensprotocol/java-litetokens.svg">
+    <img src="https://img.shields.io/github/issues/litetokens/java-litetokens.svg">
   </a>
   
   <a href="https://github.com/litetokens/java-litetokens/pulls">
-    <img src="https://img.shields.io/github/issues-pr/litetokensprotocol/java-litetokens.svg">
+    <img src="https://img.shields.io/github/issues-pr/litetokens/java-litetokens.svg">
   </a>
   
   <a href="https://github.com/litetokens/java-litetokens/graphs/contributors"> 
-    <img src="https://img.shields.io/github/contributors/litetokensprotocol/java-litetokens.svg">
+    <img src="https://img.shields.io/github/contributors/litetokens/java-litetokens.svg">
   </a>
   
   <a href="LICENSE">
-    <img src="https://img.shields.io/github/license/litetokensprotocol/java-litetokens.svg">
+    <img src="https://img.shields.io/github/license/litetokens/java-litetokens.svg">
   </a>
 </p>
 

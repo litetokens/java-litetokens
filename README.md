@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-  <img width=75% src="docs/images/xlt-large.jpg">
+  <img width=100% src="docs/images/xlt-large.jpg">
   <br>
   java-litetokens
   <br>

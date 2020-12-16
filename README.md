@@ -16,8 +16,8 @@
     <img src="https://img.shields.io/badge/chat-on%20discord-brightgreen.svg">
   </a>
     
-  <a href="https://travis-ci.org/litetokensprotocol/java-litetokens">
-    <img src="https://travis-ci.org/litetokensprotocol/java-litetokens.svg?branch=develop">
+  <a href="https://travis-ci.org/litetokens/java-litetokens">
+    <img src="https://travis-ci.org/litetokens/java-litetokens.svg?branch=develop">
   </a>
   
   <a href="https://codecov.io/gh/litetokensprotocol/java-litetokens">

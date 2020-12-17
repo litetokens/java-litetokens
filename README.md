@@ -67,7 +67,8 @@ LITETOKENS Protocol and the Litetokens Virtual Machine (LVM) allow anyone to dev
 * JDK 1.8 (JDK 1.9+ are not supported yet)
 * On Linux Ubuntu system (e.g. Ubuntu 18.04.4 LTS), [__Oracle JDK 8__](https://www.digitalocean.com/community/tutorials/how-to-install-java-with-apt-on-ubuntu-18-04) is not required.  Set up a Litetokens Development Environment:
 ```
-sudo apt-get install -y gcc g++ wget git cmake protobuf-compiler libprotobuf-dev libssl-dev default-jre default-jdk openjfx=8u161-b12-1ubuntu2 libopenjfx-java=8u161-b12-1ubuntu2 libopenjfx-jni=8u161-b12-1ubuntu2
+sudo apt-get install -y gcc g++ wget git cmake protobuf-compiler libprotobuf-dev libssl-dev openjdk-8-jdk openjdk-8-jre openjfx=8u161-b12-1ubuntu2 libopenjfx-java=8u161-b12-1ubuntu2 libopenjfx-jni=8u161-b12-1ubuntu2
+sudo apt-mark hold openjfx libopenjfx-jni libopenjfx-java
 wget https://services.gradle.org/distributions/gradle-4.3-bin.zip -P /tmp
 sudo unzip -d /opt/gradle /tmp/gradle-4.3-bin.zip
 

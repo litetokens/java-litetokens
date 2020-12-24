@@ -168,7 +168,7 @@ https://github.com/litetokens/Documentation/blob/master/XLT/Solidity_and_Full_No
 * Use the [Testnet Config](https://github.com/litetokens/Litetokens-Deployment/blob/master/test_net_config.conf) or use the [Litetokens Deployment Scripts](https://github.com/litetokens/Litetokens-Deployment) 
 
 
-### Running a Super Representative Node for mainnet
+### Running an Envoy Node for mainnet
 
 * Use the executable JAR(Recommended way)
 
@@ -212,7 +212,7 @@ Then observe whether block synchronization success，If synchronization successf
 </details>
 
 
-### Running a Super Representative Node for private testnet
+### Running an Envoy Node for private testnet
 * use master branch
 * You should modify the config.conf
   1. Replace existing entry in genesis.block.witnesses with your address.

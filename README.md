@@ -7,7 +7,7 @@
 </h1>
 
 <h4 align="center">
-  Java implementation of the <a href="https://litetokens.co">Litetokens Protocol</a>
+  Java implementation of the <a href="https://litetokens.org">Litetokens Protocol</a>
 </h4>
 
 
@@ -45,7 +45,7 @@
   <a href="#how-to-build">How to Build</a> •
   <a href="#running">How to Run</a> •
   <a href="#links">Links</a> •
-  <a href="http://developers.litetokens.co">Documentation</a> •
+  <a href="http://developers.litetokens.org">Documentation</a> •
   <a href="CONTRIBUTING.md">Contributing</a> •
   <a href="#community">Community</a>
 </p>

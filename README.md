@@ -50,15 +50,15 @@
   <a href="#community">Community</a>
 </p>
 
-## What's LITETOKENS?
+## What is Litetokens ?
 
-LITETOKENS is a project dedicated to building the infrastructure for a truly decentralized Internet.
+Litetokens is a project dedicated to building the infrastructure for a truly decentralized Internet.
 
-The Litetokens Protocol, one of the largest blockchain based operating systems in the world, offers scalable, high-availability and high-throughput support that underlies all the decentralized applications in the LITETOKENS ecosystem. 
+The Litetokens Protocol, one of the largest blockchain based operating systems in the world, offers scalable, high-availability and high-throughput support that underlies all the decentralized applications in the Litetokens ecosystem. 
 
-LITETOKENS enables large-scale development and engagement. With over 2000 transactions per second (TPS), high concurrency, low latency and massive data transmission, LITETOKENS is ideal for building decentralized entertainment applications. Free features and incentive systems allow developers to create premium app experiences for users.
+Litetokens enables large-scale development and engagement. With over 2000 transactions per second (TPS), high concurrency, low latency and massive data transmission, Litetokens is ideal for building decentralized entertainment applications. Free features and incentive systems allow developers to create premium app experiences for users.
 
-LITETOKENS Protocol and the Litetokens Virtual Machine (LVM) allow anyone to develop decentralized applications (DAPPs) for themselves or their communities with smart contracts thereby making decentralized crowdfunding and token issuance easier than ever.
+Litetokens Protocol and the Litetokens Virtual Machine (LVM) allow anyone to develop decentralized applications (DAPPs) for themselves or their communities with smart contracts thereby making decentralized crowdfunding and token issuance easier than ever.
 
 # How to Build
 

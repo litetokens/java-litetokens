@@ -368,6 +368,6 @@ Read the [Advanced Configurations](src/main/java/org/litetokens/core/config/READ
 
 # Projects
 
-* [LITETOKENS Protocol](https://github.com/litetokens/protocol)
+* [Litetokens Protocol](https://github.com/litetokens/protocol)
 * [Wallet Client](https://github.com/litetokens/wallet-cli)
 * [Wallet Web](https://github.com/litetokens/wallet-web)

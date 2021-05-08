@@ -77,7 +77,7 @@ public class GetLostBlockIdsTest {
         BlockCapsule capsule;
         for (int i = 0; i<5; i++) {
             number = dbManager.getDynamicPropertiesStore().getLatestBlockHeaderNumber() + 1;
-            capsule = createTestBlockCapsule(1533529947843L + 3000L * i ,number, dbManager.getDynamicPropertiesStore().getLatestBlockHeaderHash().getByteString(), addressToProvateKeys);
+            capsule = createTestBlockCapsule(1620400001000L + 3000L * i ,number, dbManager.getDynamicPropertiesStore().getLatestBlockHeaderHash().getByteString(), addressToProvateKeys);
             try {
                 dbManager.pushBlock(capsule);
             } catch (Exception e) {

@@ -10,8 +10,8 @@ public class GenesisBlock implements Serializable {
   private static final long serialVersionUID = 3559533002594201715L;
 
   public static final String DEFAULT_NUMBER = "0";
-  public static final String DEFAULT_TIMESTAMP = "1545883189000";
-  public static final String DEFAULT_PARENT_HASH = "0x0000000000000000f1fc15655669340793f47c9f541b419d7621112a07163ac6";
+  public static final String DEFAULT_TIMESTAMP = "0";
+  public static final String DEFAULT_PARENT_HASH = "0";
 
   @Getter
   private List<Account> assets;

@@ -78,9 +78,9 @@ public class BandWidthRuntimeOutOfTimeTest {
   private static AnnotationConfigApplicationContext context;
   private static Manager dbManager;
 
-  private static String OwnerAddress = "TCWHANtDDdkZCTo2T2peyEq3Eg9c2XB7ut";
-  private String xlt2ContractAddress = "TPMBUANrTwwQAPwShn7ZZjTJz1f3F8jknj";
-  private static String TriggerOwnerAddress = "TCSgeWapPJhCqgWRxXCKb6jJ5AgNWSGjPA";
+  private static String OwnerAddress = "LSW3JYeKerzNUrjvWSu5s7yhsb1ZQWFAf2";
+  private String xlt2ContractAddress = "LcjepiM3vhk27Z7uREq3GGu7tBq6qH4z19";
+  private static String TriggerOwnerAddress = "LeDgf3bhFNrpMpPd3XEvkVo1qBY2y7e1Lz";
 
   static {
     Args.setParam(

@@ -46,6 +46,8 @@ src/main/resources/META-INF/
 
 # output directory
 /output-directory/
+/xlt-testnet-rc1-output-directory/
+/output_ChargeTest/
 
 /output_manager/
 /output_witness/

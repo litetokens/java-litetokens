@@ -11,7 +11,9 @@ buildscript {
 plugins {
     id "org.sonarqube" version "2.6"
 }
-
+tasks.withType(JavaExec) {
+    jvmArgs = ['-Xms2048m', '-Xmx2048m']
+}
 group 'org.litetokens'
 version '1.0.0'
 

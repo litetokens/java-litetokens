@@ -230,21 +230,21 @@ public class ManagerTest {
     byte[] address = ecKey.getAddress();
     WitnessCapsule witnessCapsule = new WitnessCapsule(ByteString.copyFrom(address));
     dbManager.addWitness(ByteString.copyFrom(address));
-    dbManager.generateBlock(witnessCapsule, 1533529947843L, privateKey, false);
+    dbManager.generateBlock(witnessCapsule, 1620400001000L, privateKey, false);
 
     Map<ByteString, String> addressToProvateKeys = addTestWitnessAndAccount();
 
     long num = dbManager.getDynamicPropertiesStore().getLatestBlockHeaderNumber();
     BlockCapsule blockCapsule0 =
         createTestBlockCapsule(
-            1533529947843L + 3000,
+            1620400001000L + 3000,
             num + 1,
             dbManager.getDynamicPropertiesStore().getLatestBlockHeaderHash().getByteString(),
             addressToProvateKeys);
 
     BlockCapsule blockCapsule1 =
         createTestBlockCapsule(
-            1533529947843L + 3000,
+            1620400001000L + 3000,
             num + 1,
             dbManager.getDynamicPropertiesStore().getLatestBlockHeaderHash().getByteString(),
             addressToProvateKeys);
@@ -254,7 +254,7 @@ public class ManagerTest {
 
     BlockCapsule blockCapsule2 =
         createTestBlockCapsule(
-            1533529947843L + 6000,
+            1620400001000L + 6000,
             num + 2, blockCapsule1.getBlockId().getByteString(), addressToProvateKeys);
 
     dbManager.pushBlock(blockCapsule2);
@@ -299,21 +299,21 @@ public class ManagerTest {
     byte[] address = ecKey.getAddress();
     WitnessCapsule witnessCapsule = new WitnessCapsule(ByteString.copyFrom(address));
     dbManager.addWitness(ByteString.copyFrom(address));
-    dbManager.generateBlock(witnessCapsule, 1533529947843L, privateKey, false);
+    dbManager.generateBlock(witnessCapsule, 1620400001000L, privateKey, false);
 
     Map<ByteString, String> addressToProvateKeys = addTestWitnessAndAccount();
 
     long num = dbManager.getDynamicPropertiesStore().getLatestBlockHeaderNumber();
     BlockCapsule blockCapsule0 =
         createTestBlockCapsule(
-            1533529947843L + 3000,
+            1620400001000L + 3000,
             num + 1,
             dbManager.getDynamicPropertiesStore().getLatestBlockHeaderHash().getByteString(),
             addressToProvateKeys);
 
     BlockCapsule blockCapsule1 =
         createTestBlockCapsule(
-            1533529947843L + 3001,
+            1620400001000L + 3001,
             num + 1,
             dbManager.getDynamicPropertiesStore().getLatestBlockHeaderHash().getByteString(),
             addressToProvateKeys);
@@ -328,7 +328,7 @@ public class ManagerTest {
 
     BlockCapsule blockCapsule2 =
         createTestBlockCapsule(
-            1533529947843L + 6000,
+            1620400001000L + 6000,
             num + 2, blockCapsule1.getBlockId().getByteString(), addressToProvateKeys);
     logger.info("******block2:" + blockCapsule2);
     try {
@@ -348,7 +348,7 @@ public class ManagerTest {
     }
 
     BlockCapsule blockCapsule3 =
-        createTestBlockCapsule(1533529947843L + 9000,
+        createTestBlockCapsule(1620400001000L + 9000,
             dbManager.getDynamicPropertiesStore().getLatestBlockHeaderNumber() + 1,
             dbManager.getDynamicPropertiesStore().getLatestBlockHeaderHash().getByteString(),
             addressToProvateKeys);
@@ -363,7 +363,7 @@ public class ManagerTest {
             .getBlockId());
 
     BlockCapsule blockCapsule4 =
-        createTestBlockCapsule(1533529947843L + 12000,
+        createTestBlockCapsule(1620400001000L + 12000,
             dbManager.getDynamicPropertiesStore().getLatestBlockHeaderNumber() + 1,
             blockCapsule3.getBlockId().getByteString(), addressToProvateKeys);
     logger.info("******block4:" + blockCapsule4);
@@ -396,12 +396,12 @@ public class ManagerTest {
     WitnessCapsule witnessCapsule = new WitnessCapsule(ByteString.copyFrom(address));
     dbManager.addWitness(ByteString.copyFrom(address));
     BlockCapsule blockCapsule =
-        dbManager.generateBlock(witnessCapsule, 1533529947843L, privateKey, true);
+        dbManager.generateBlock(witnessCapsule, 1620400001000L, privateKey, true);
 
     //has processed the first block of the maintenance period before starting the block
     dbManager.getWitnessStore().reset();
     dbManager.getDynamicPropertiesStore().saveStateFlag(0);
-    blockCapsule = dbManager.generateBlock(witnessCapsule, 1533529947843L, privateKey, true);
+    blockCapsule = dbManager.generateBlock(witnessCapsule, 1620400001000L, privateKey, true);
     Assert.assertTrue(blockCapsule == null);
   }
 
@@ -421,21 +421,21 @@ public class ManagerTest {
     byte[] address = ecKey.getAddress();
     WitnessCapsule witnessCapsule = new WitnessCapsule(ByteString.copyFrom(address));
     dbManager.addWitness(ByteString.copyFrom(address));
-    dbManager.generateBlock(witnessCapsule, 1533529947843L, privateKey, false);
+    dbManager.generateBlock(witnessCapsule, 1620400001000L, privateKey, false);
 
     Map<ByteString, String> addressToProvateKeys = addTestWitnessAndAccount();
 
     long num = dbManager.getDynamicPropertiesStore().getLatestBlockHeaderNumber();
     BlockCapsule blockCapsule0 =
         createTestBlockCapsule(
-            1533529947843L + 3000,
+            1620400001000L + 3000,
             num + 1,
             dbManager.getDynamicPropertiesStore().getLatestBlockHeaderHash().getByteString(),
             addressToProvateKeys);
 
     BlockCapsule blockCapsule1 =
         createTestBlockCapsule(
-            1533529947843L + 3000,
+            1620400001000L + 3000,
             num + 1,
             dbManager.getDynamicPropertiesStore().getLatestBlockHeaderHash().getByteString(),
             addressToProvateKeys);
@@ -445,7 +445,7 @@ public class ManagerTest {
     try {
       BlockCapsule blockCapsule2 =
           createTestBlockCapsuleError(
-              1533529947843L + 6000,
+              1620400001000L + 6000,
               num + 2, blockCapsule1.getBlockId().getByteString(), addressToProvateKeys);
 
       dbManager.pushBlock(blockCapsule2);
@@ -459,7 +459,7 @@ public class ManagerTest {
 
     BlockCapsule blockCapsule3 =
         createTestBlockCapsule(
-            1533529947843L + 9000,
+            1620400001000L + 9000,
             dbManager.getDynamicPropertiesStore().getLatestBlockHeaderNumber() + 1,
             blockCapsule0.getBlockId().getByteString(), addressToProvateKeys);
     dbManager.pushBlock(blockCapsule3);
@@ -473,7 +473,7 @@ public class ManagerTest {
 
     BlockCapsule blockCapsule4 =
         createTestBlockCapsule(
-            1533529947843L + 12000,
+            1620400001000L + 12000,
             dbManager.getDynamicPropertiesStore().getLatestBlockHeaderNumber() + 1,
             blockCapsule3.getBlockId().getByteString(), addressToProvateKeys);
     dbManager.pushBlock(blockCapsule4);

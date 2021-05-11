@@ -174,7 +174,9 @@ public class GetBlockChainSummaryTest {
       ReflectUtils.setFieldValue(peer_he, "headBlockTimeWeBothHave", System.currentTimeMillis());
       Deque<BlockCapsule.BlockId> retSummary = del
           .getBlockChainSummary(peer_he.getHeadBlockWeBothHave(), peer_he.getSyncBlockToFetch());
-      Assert.assertTrue(retSummary.size() == 4);
+      // kedia debug: logger.info("Kedia The sum is " + retSummary.size());
+      // the below changes to 3 when SOLIDIFIED_THRESHOLD changes to 10
+      Assert.assertTrue(retSummary.size() == 3);
     } catch (Exception e) {
       System.out.println("exception!");
     }

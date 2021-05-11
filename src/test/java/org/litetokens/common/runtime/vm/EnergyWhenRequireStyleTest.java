@@ -87,7 +87,8 @@ public class EnergyWhenRequireStyleTest {
 
     String contractName = "test";
     byte[] address = Hex.decode(OWNER_ADDRESS);
-    String ABI = "[{\"constant\":false,\"inputs\":[],\"name\":\"testThrow\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]";
+    String ABI = "[{\"constant\":false,\"inputs\":[],\"name\":\"testThrow\",\"outputs\":[],"
+        + "\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]";
     String code = "6080604052348015600f57600080fd5b5060838061001e6000396000f3006080604052600436106"
         + "03e5763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663"
         + "50bff6bf81146043575b600080fd5b348015604e57600080fd5b506055603e565b0000a165627a7a7230582"
@@ -140,8 +141,12 @@ public class EnergyWhenRequireStyleTest {
 
     String contractName = "test";
     byte[] address = Hex.decode(OWNER_ADDRESS);
-    String ABI = "[{\"constant\":false,\"inputs\":[],\"name\":\"testRequire\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]";
-    String code = "6080604052348015600f57600080fd5b5060838061001e6000396000f300608060405260043610603e5763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663357815c481146043575b600080fd5b348015604e57600080fd5b506055603e565b0000a165627a7a7230582054141931bcc37d4f266815f02d2fb113f5af20825cbce45d3b0f2fe90ac0145d0029";
+    String ABI = "[{\"constant\":false,\"inputs\":[],\"name\":\"testRequire\",\"outputs\":[],\""
+        + "payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]";
+    String code = "6080604052348015600f57600080fd5b5060838061001e6000396000f3006080604052600436106"
+        + "03e5763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663"
+        + "357815c481146043575b600080fd5b348015604e57600080fd5b506055603e565b0000a165627a7a7230582"
+        + "054141931bcc37d4f266815f02d2fb113f5af20825cbce45d3b0f2fe90ac0145d0029";
     String libraryAddressPair = null;
 
     LVMTestResult result = LVMTestUtils
@@ -195,7 +200,10 @@ public class EnergyWhenRequireStyleTest {
 
     String contractName = "test";
     byte[] address = Hex.decode(OWNER_ADDRESS);
-    String ABI = "[{\"constant\":false,\"inputs\":[],\"name\":\"testAssert\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"testThisFunctionViaMessageCall\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]";
+    String ABI = "[{\"constant\":false,\"inputs\":[],\"name\":\"testAssert\",\"outputs\":[],"
+        + "\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},"
+        + "{\"constant\":false,\"inputs\":[],\"name\":\"testThisFunctionViaMessageCall\","
+        + "\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]";
     String code = "608060405234801561001057600080fd5b50610121806100206000396000f300608060405260043"
         + "61060485763ffffffff7c010000000000000000000000000000000000000000000000000000000060003504"
         + "16632b813bc08114604d5780635df83fe7146061575b600080fd5b348015605857600080fd5b50605f60735"
@@ -266,7 +274,8 @@ public class EnergyWhenRequireStyleTest {
 
     String contractName = "test";
     byte[] address = Hex.decode(OWNER_ADDRESS);
-    String ABI = "[{\"constant\":false,\"inputs\":[],\"name\":\"testThatFunctionViaMessageCall\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]";
+    String ABI = "[{\"constant\":false,\"inputs\":[],\"name\":\"testThatFunctionViaMessageCall\","
+        + "\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]";
     String code = "608060405234801561001057600080fd5b506101e6806100206000396000f300608060405260043"
         + "6106100405763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035"
         + "0416637dbc1cb88114610045575b600080fd5b34801561005157600080fd5b5061005a61005c565b005b600"

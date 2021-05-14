@@ -2,6 +2,7 @@ buildscript {
     repositories {
         mavenCentral()
         jcenter()
+        maven { url 'http://mvnrepository.com' }
     }
     dependencies {
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.3'
@@ -52,8 +53,7 @@ task sourceJar(type: Jar, dependsOn: classes) {
 repositories {
     mavenLocal()
     mavenCentral()
-    maven { url 'http://mvnrepository.com' }
-    maven { url 'http://repo.spring.io/plugins-release' }
+    maven { url 'https://oss.sonatype.org/release' }
 }
 def versions = [
         checkstyle: '8.7',

@@ -1,6 +1,5 @@
 buildscript {
     repositories {
-        maven { url 'https://oss.sonatype.org/release' }
         mavenCentral()
         jcenter()
     }
@@ -54,7 +53,6 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven { url 'https://oss.sonatype.org/release' }
-    maven { url 'https://repo.spring.io/plugins-release' }
     maven { url 'https://maven.scijava.org/content/repositories/public/' }
 }
 def versions = [

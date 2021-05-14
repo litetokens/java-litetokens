@@ -3,6 +3,7 @@ buildscript {
         mavenCentral()
         jcenter()
         maven { url 'http://mvnrepository.com' }
+        maven { url 'https://dl.bintray.com/ethereum/maven/' }
     }
     dependencies {
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.3'

@@ -1,6 +1,6 @@
 buildscript {
     repositories {
-        maven { url 'http://mvnrepository.com' }
+        maven { url 'https://oss.sonatype.org/release' }
         mavenCentral()
         jcenter()
     }

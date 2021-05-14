@@ -176,7 +176,7 @@ public class GetBlockChainSummaryTest {
           .getBlockChainSummary(peer_he.getHeadBlockWeBothHave(), peer_he.getSyncBlockToFetch());
       // kedia debug: logger.info("Kedia The sum is " + retSummary.size());
       // the below changes to 3 when SOLIDIFIED_THRESHOLD changes to 10
-      Assert.assertTrue(retSummary.size() == 3);
+      Assert.assertTrue(retSummary.size() == 4);
     } catch (Exception e) {
       System.out.println("exception!");
     }

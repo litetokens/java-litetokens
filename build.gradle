@@ -52,10 +52,7 @@ task sourceJar(type: Jar, dependsOn: classes) {
 repositories {
     mavenLocal()
     mavenCentral()
-    maven { url 'https://oss.sonatype.org/release' }
-    maven { url 'https://maven.aliyun.com/nexus/content/groups/public' }
-    maven { url 'https://mvnrepository.com' }
-    maven { url 'https://repo1.maven.org/maven2/' }
+    maven { url 'http://mvnrepository.com' }
 }
 def versions = [
         checkstyle: '8.7',

@@ -51,10 +51,10 @@ task sourceJar(type: Jar, dependsOn: classes) {
 }
 
 repositories {
-    maven { url 'https://repo.spring.io/plugins-release' }
-    maven { url 'https://oss.sonatype.org/release' }
     mavenLocal()
     mavenCentral()
+    maven { url 'https://oss.sonatype.org/release' }
+    maven { url 'https://repo.spring.io/plugins-release' }
 }
 def versions = [
         checkstyle: '8.7',

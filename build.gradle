@@ -54,7 +54,8 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven { url 'https://oss.sonatype.org/release' }
-    maven { url 'http://repo.spring.io/plugins-release' }
+    maven { url 'https://repo.spring.io/plugins-release' }
+    maven { url 'https://maven.scijava.org/content/repositories/public/' }
 }
 def versions = [
         checkstyle: '8.7',

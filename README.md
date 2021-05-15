@@ -65,7 +65,7 @@ Litetokens Protocol and the Litetokens Virtual Machine (LVM) allow anyone to dev
 ## Prepare dependencies
 
 * JDK 1.8 (JDK 1.9+ are not supported yet)
-* On Linux Ubuntu system (e.g. Ubuntu 18.04.4 LTS), [__Oracle JDK 8__](https://www.digitalocean.com/community/tutorials/how-to-install-java-with-apt-on-ubuntu-18-04) is not required.  Set up a Litetokens Development Environment:
+* On Linux Ubuntu system (e.g. Ubuntu 18.04.4 LTS), [__Oracle JDK 8__](https://www.digitalocean.com/community/tutorials/how-to-install-java-with-apt-on-ubuntu-18-04) is recommended.  OpenJDK builds have not yet been tested.  For users interested in using OpenJDK to set up a Litetokens Development Environment, follow these instructions:
 ```
 sudo apt-get install -y gcc g++ wget git cmake protobuf-compiler libprotobuf-dev libssl-dev openjdk-8-jdk openjdk-8-jre openjfx=8u161-b12-1ubuntu2 libopenjfx-java=8u161-b12-1ubuntu2 libopenjfx-jni=8u161-b12-1ubuntu2
 sudo apt-mark hold openjfx libopenjfx-jni libopenjfx-java

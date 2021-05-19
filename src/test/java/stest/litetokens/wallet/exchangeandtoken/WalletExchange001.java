@@ -100,9 +100,9 @@ public class WalletExchange001 {
     PublicMethed.printAddress(exchange001Key);
     PublicMethed.printAddress(secondExchange001Key);
 
-    Assert.assertTrue(PublicMethed.sendcoin(exchange001Address, 10240000000L, fromAddress,
+    Assert.assertTrue(PublicMethed.sendcoin(exchange001Address, 10240000000000L, fromAddress,
         testKey002, blockingStubFull));
-    Assert.assertTrue(PublicMethed.sendcoin(secondExchange001Address, 10240000000L, fromAddress,
+    Assert.assertTrue(PublicMethed.sendcoin(secondExchange001Address, 10240000000000L, fromAddress,
         testKey002, blockingStubFull));
 
     Long start = System.currentTimeMillis() + 5000L;

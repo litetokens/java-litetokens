@@ -223,7 +223,7 @@ public class TestApproveProposal {
     defaultCommitteeMap.put("ACCOUNT_UPGRADE_COST",9999000000L);
     defaultCommitteeMap.put("CREATE_ACCOUNT_FEE",100000L);
     defaultCommitteeMap.put("TRANSACTION_FEE",10L);
-    defaultCommitteeMap.put("ASSET_ISSUE_FEE",1024000000L);
+    defaultCommitteeMap.put("ASSET_ISSUE_FEE",1024000000000L);
     defaultCommitteeMap.put("WITNESS_PAY_PER_BLOCK",32000000L);
     defaultCommitteeMap.put("WITNESS_STANDBY_ALLOWANCE",115200000000L);
     defaultCommitteeMap.put("CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT",0L);

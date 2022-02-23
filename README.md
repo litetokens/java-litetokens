@@ -143,7 +143,7 @@ dependencies {
 
 ```bash
 cd java-litetokens
-./gradlew build
+./gradlew build -x test
 ```
 
 
